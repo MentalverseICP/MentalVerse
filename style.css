@@ -70,7 +70,7 @@ li {
   color: var(--color-success-variant);
   font-size: 16px;
   font-weight: 400;
-  line-height: 16px;
+  line-height: 18px;
   letter-spacing: 1px;
 }
 .title h2 {
@@ -720,8 +720,78 @@ hr {
 /* --------------- stories CONTAINER ---------------- */
 .stories {
   grid-area: begin;
+  padding: 100px 200px;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: .1fr 1fr;
+  gap: 50px;
+}
+.stories .top {
+  display: flex;
+  justify-content: space-between;
+  gap: 50px;
+}
+.stories .bottom {
+  overflow: hidden;
+}
+.stories .bottom .cards {
+  display: flex;
+}
+.stories .cards .card {
+  cursor: pointer;
+  padding: 20px;
+  background-color: var(--color-white);
+  display: flex;
+  flex-direction: column;
+  gap: 50px;
+  border-bottom: 5px double var(--color-success-light);
+  border-bottom-right-radius: 10px;
+  border-bottom-left-radius: 10px;
+  
+}
+.stories .bottom .card .text {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.stories .bottom .card .text .circle {
+  width: 50px;
+  height: 50px;
+}
+.stories .bottom .card .text h3 {
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 28px;
+}
+.stories .bottom .card .text .circle {
+  background-color: var(--color-success-variant);
+}
+.stories .bottom .text .circle span {
+  color: var(--color-black);
+}
+.stories .bottom .picText {
+  visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: end;
+  position: absolute;
+  right: -400px;
+  bottom: 30%;
+  color: var(--color-white);
+  transition: var(--transition);
+}
+.stories .bottom .card:hover .picText {
+  visibility: visible;
+  right: 60px;
+}
+.stories .bottom .card .picText p {
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 33.6px;
+}
+.stories .bottom .card .picText span {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 15.6px;
 }
 
 
@@ -729,7 +799,7 @@ hr {
 .begin {
   grid-area: begin;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
 }
 
 /* --------------- footer CONTAINER ---------------- */
@@ -743,10 +813,10 @@ hr {
 @media (max-width: 1300px) {
   .headerImage {
     height: 100%;
-    padding: 0 50px;
+    padding: 0 50px 50px;
     /* background-size: contain; */
   }
-  .about .top, .about .bottom, .statistic .top, .statistic .bottom, .ourServices , .pricingPlan {
+  .about .top, .about .bottom, .statistic .top, .statistic .bottom, .ourServices , .pricingPlan, .stories {
     padding: 100px 50px;
   }
   .nav-container {
@@ -796,7 +866,7 @@ hr {
   .icons .icon:last-child {
     display: block;
   }
-  .about .top, .about .bottom, .statistic .top, .statistic .bottom, .ourServices , .pricingPlan {
+  .about .top, .about .bottom, .statistic .top, .statistic .bottom, .ourServices , .pricingPlan, .stories {
     padding: 100px 100px;
   }
   .header, .about .top, .about .bottom .conditions, .statistic .top, .statistic .bottom {
@@ -818,6 +888,17 @@ hr {
   .pricingPlan .bottom {
     grid-template-columns: repeat(2, 1fr);
     grid-template-rows: repeat(2, 1fr);
+  }
+  .stories .top {
+    scale: .9;
+  }
+  .stories .bottom .picText {
+    bottom: 35%;
+    visibility: visible;
+  }
+  .stories .bottom .card:hover .picText {
+    visibility: visible;
+    right: 60px;
   }
   /* .statistic .top, .statistic .bottom {
     grid-template-columns: 1fr;
