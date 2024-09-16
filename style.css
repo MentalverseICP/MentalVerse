@@ -31,6 +31,7 @@ body {
   /* font-family: Manrope; */
   background-color: transparent;
   overflow-x: hidden;
+
   /* display: grid;
   grid-template-columns: 200px 1fr 200px;
   grid-template-areas: 
@@ -67,9 +68,10 @@ li {
   cursor: pointer;
   background-color: var(--color-black);
   color: var(--color-success-variant);
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 400;
   line-height: 16px;
+  letter-spacing: 1px;
 }
 .title h2 {
   font-weight: 400;
@@ -126,17 +128,20 @@ hr {
 .headerImage {
   width: 100vw;
   height: 1000px;
+  padding: 0 200px;
   display: grid;
-  grid-template-columns: .2fr 1fr .2fr;
+  /* grid-template-columns: .2fr 1fr .2fr; */
   grid-template-rows: .5fr 3fr;
   grid-template-areas: 
   '. nav  .'
   '. header .'
   ;
   row-gap: 70px;
+  justify-items: center;
   background-color: transparent;
   background-image: url(images/Image.png);
   background-repeat: no-repeat;
+  background-position: center;
   background-size: cover;
   color: var(--color-white);
 }
@@ -148,17 +153,17 @@ hr {
 
 /* ---------------------------------------- NAV CONTAINER ------------------------------------------ */
 .nav-container {
-  margin-top: 30px;
+  margin-top: 50px;
   grid-area: nav;
   background-color: transparent;
   height: 100px;
   position: static;
+  top: 0;
   z-index: 11;
   display: grid;
-  gap: 100px;
+  gap: 200px;
   grid-template-columns: .5fr 2fr;
   align-items: center;
-  justify-items: end;
 }
 .logo {
   width: 200px;
@@ -194,6 +199,19 @@ hr {
   padding: 10px;
   border-radius: 50px;
   cursor: pointer;
+  background: linear-gradient(#000 0 0) padding-box, linear-gradient(
+    to bottom right, 
+    #00ffbb 0%,
+    #19cf44a5 14.29%, 
+    #06f1ce4e 25%,
+    #00ffbf38 64.29%,
+    #44ff0041 75%,
+    #aeff00 100%
+  ) border-box;
+  border: 3px solid transparent; 
+}
+.icons .icon:last-child {
+  display: none;
 }
 
 
@@ -244,7 +262,7 @@ hr {
 .header_right {
   display: flex;
   flex-direction: column;
-  row-gap: 200px;
+  gap: 200px;
 }
 .header_right .top {
   display: flex;
@@ -399,9 +417,8 @@ hr {
 .about .bottom {
   background-color: #DDEADE;
   padding: 100px 200px;
-  grid-row: 2 / 3;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: .2fr 1fr;
   row-gap: 40px;
 }
 .about .bottom .title {
@@ -417,7 +434,7 @@ hr {
 .about .bottom .conditions {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  column-gap: 100px;
+  gap: 100px;
   padding: 0 20px;
 }
 .about .conditions .condition_left {
@@ -530,7 +547,9 @@ hr {
 
 
 .pricingPlan .bottom {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: 1fr;
   gap: 20px;
 }
 .pricingPlan .planCard {
@@ -597,7 +616,7 @@ hr {
   padding: 100px 200px;
   display: grid;
   grid-template-columns: .8fr 1fr;
-  gap: 50px;
+  gap: 60px;
 }
 .statistic img {
   width: 100%;
@@ -641,7 +660,7 @@ hr {
   padding: 100px 200px;
   display: grid;
   grid-template-columns: 1fr .8fr;
-  gap: 30px;
+  gap: 60px;
 }
 .statistic .bottom .bottom_left {
   display: flex;
@@ -674,15 +693,16 @@ hr {
   display: flex;
   justify-content: end;
   align-items: end;
-  background-image: url(images/Image-12.png.png);
-  background-repeat: no-repeat;
-  background-size: contain;
 }
 .statistic .bottom_right .reviews {
+  position: absolute;
+  display: grid;
+  justify-content: center;
+  align-items: center;
   background-color: var(--color-white);
-  padding: 100px 60px;
-  margin: 0 -20px -20px;
-  border-radius: 30%;
+  padding: 100px 60px 100px 80px;
+  margin: 0 -30px -30px;
+  border-radius: 80px;
 }
 .statistic .bottom_right .reviewPlus :where(h1, span) {
   /* font-family: Marcellus; */
@@ -717,4 +737,93 @@ hr {
   grid-area: footer;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
+}
+
+
+@media (max-width: 1300px) {
+  .headerImage {
+    height: 100%;
+    padding: 0 50px;
+    /* background-size: contain; */
+  }
+  .about .top, .about .bottom, .statistic .top, .statistic .bottom, .ourServices , .pricingPlan {
+    padding: 100px 50px;
+  }
+  .nav-container {
+    gap: 100px;
+  }
+
+
+}
+/* .animation {
+  view-timeline: --subjectReveal block;
+  animation-timeline: --subjectReveal;
+
+  animation-name: appear;
+  animation-range: entry 10% contain 25%;
+  animation-fill-mode: both;
+  animation-duration: 1ms; 
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+} */
+
+@media (max-width: 1000px) {
+  .headerImage {
+    padding: 0 100px 100px;
+    background-color: var(--color-black);
+    grid-template-rows: .3fr 2fr;
+    row-gap: 100px;
+  }
+  .nav-container {
+    gap: 100px;
+  }
+  .nav-cover {
+    justify-content: end;
+  }
+  .nav-menu {
+    display: none;
+  }
+  .icons .icon:last-child {
+    display: block;
+  }
+  .about .top, .about .bottom, .statistic .top, .statistic .bottom, .ourServices , .pricingPlan {
+    padding: 100px 100px;
+  }
+  .header, .about .top, .about .bottom .conditions, .statistic .top, .statistic .bottom {
+    grid-template-columns: 1fr;
+  }
+  .header {
+    gap: 0;
+  }
+  .header_right {
+    display: flex;
+    flex-direction: row;
+    gap: 100px;
+    justify-self: start;
+  }
+  .ourServices .bottom {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+  }
+  .pricingPlan .bottom {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+  }
+  /* .statistic .top, .statistic .bottom {
+    grid-template-columns: 1fr;
+    gap: 60px;
+  } */
+  .statistic .bottom .bottom_left {
+    /* scale: .9; */
+  }
 }
