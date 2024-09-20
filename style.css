@@ -1283,8 +1283,11 @@ nav .icon:active, .footer_socials li:active {
     justify-content: center;
     justify-items: center;
   }
-  .statistic .top, .statistic .bottom {
+  .statistic .top {
     padding-top: 50px;
+    text-align: center;
+  }
+  .statistic .bottom .title{
     text-align: center;
   }
   .statistic .bottom .principles, .statistic .top .sideText .reviews {
