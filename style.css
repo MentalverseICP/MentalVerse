@@ -1309,6 +1309,11 @@ nav .icon:active, .footer_socials li:active {
   .statistic .bottom_right .reviewPlus p {
     font-size: 12px;
   }
+
+
+  .stories .bottom .picText {
+    bottom: 50%;
+  }
   
   /* --------------- footer CONTAINER ---------------- */
   .footer .top_middle, .footer .bottom {
@@ -1338,7 +1343,7 @@ nav .icon:active, .footer_socials li:active {
 
 @media (max-width: 500px) {
   .headerImage {
-    row-gap: 150px;
+    row-gap: 10px;
   }
   .nav-container {
     scale: .8;
