@@ -1,0 +1,95 @@
+section{
+     height: 100vh;
+}
+.title{
+     font-size: 15px;
+     color: #222222;
+}
+.title::before{
+     content: "";
+     display: inline-block;
+     width: 8px;
+     height: 8px;
+     border-radius: 50%;
+     clip-path: circle();
+     background-color: #6BA50F;
+     margin-right: 10px;
+}
+.head{
+     font-size: 40px;
+     font-weight: 400;
+     line-height: 56px;
+     text-align: left;
+}
+.story{
+     font-family: Manrope;
+     font-size: 16px;
+     font-weight: 400;
+     text-align: left;
+     color: #909090;
+}
+.icon i{
+     font-size: 1em;
+     color: #fff;
+}
+.icon{
+     width: 35px;
+     height: 35px;
+     border-radius: 50%;
+     clip-path: circle();
+     background-color: #6BA50F;
+     display: flex;
+     justify-content: center;
+     align-items: center;
+}
+.col-8 h2{
+     font-size: 24px;
+     font-weight: 500;
+     text-align: left;
+}
+.col-8 h6{
+     color: #909090;
+     font-size: 14px;
+     font-weight: 400;
+     text-align: left;
+}
+form{
+     background-color: #EFF5F0;
+     border-radius: 30px;
+}
+label{
+     font-size: 20px;
+     font-weight: 500;
+     line-height: 28px;
+     text-align: left;
+}
+input{
+     border-radius: 15px;
+}
+input::placeholder{
+     font-size: 10px;
+}
+textarea{
+     resize: none;
+}
+.send{
+     padding: 20px 30px;
+     border-radius: 99px;
+     background-color: #D8FF9A;
+     color: #232323;
+     font-size: 20px;
+}
+.num{
+     font-size: 48px;
+     line-height: 48px;
+     text-align: center;
+}
+.numText{
+     font-size: 20px;
+     line-height: 16px;
+     text-align: center;
+}
+.statistics{
+     background-color: #F8F8F8;
+     height: 100vh;
+}
