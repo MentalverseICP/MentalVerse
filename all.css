@@ -21,6 +21,9 @@ section{
      line-height: 56px;
      text-align: left;
 }
+.Sessions .head{
+     font-size: 30px;
+}
 .story{
      font-family: Manrope;
      font-size: 16px;
@@ -92,4 +95,49 @@ textarea{
 .statistics{
      background-color: #F8F8F8;
      height: 100vh;
+}
+.help{
+     height: 50vh;
+}
+.carddd{
+     background-color: #F8F8F8;
+     border-radius: 30px;
+}
+.carddd h3{
+     font-size: 24px;
+     font-weight: 500;
+     line-height: 33.6px;
+     text-align: left;
+}
+.carddd p {
+     font-size: 14px;
+     font-weight: 400;
+     line-height: 22.4px;
+     text-align: left;
+     color: #909090;
+}
+.help .icon{
+     width: 50px;
+     height: 50px;
+}
+.Touchs{
+     height: 100vh;
+     background-color: #EFF5F0;
+}
+.col-3-5 {
+     flex: 0 0 auto;
+     width: 28%;
+}
+.accordion-item{
+     border: none!important;
+     margin: 15px 0;
+}
+.accordion-button, .accordion-button:not(.collapsed), .accordion-button.collapsed, .accordion-flush > .accordion-item > .accordion-header .accordion-button, .accordion-flush > .accordion-item > .accordion-header .accordion-button.collapsed {
+     background: #F8F8F8;
+     border-radius: 99px;
+     outline: none;
+     border: none!important;
+}
+.accordion-body {
+     border: none!important;
 }
