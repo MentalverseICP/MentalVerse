@@ -9,16 +9,12 @@
   box-sizing: border-box;
 }
 :root {
-  /* --color-primary-variant: hsl(233, 26%, 24%); */
-  /* --color-primary-light: hsla(192, 61%, 70%, 0.885); */
   --color-success: green;
   --color-success-variant: #D8FF9A;
   --color-success-light: #F0FFD9;
-  /* --color-primary: hsl(192, 70%, 51%);     */
   --color-white: #fff;
   --color-grey: #c5c5c5;
   --color-grey-variant:  #F8F8F8;
-
   --color-black: #000;
   --color-gradient: linear-gradient(#000 0 0) padding-box, linear-gradient(
       to bottom right, 
@@ -146,7 +142,7 @@ hr {
   row-gap: 70px;
   justify-items: center;
   background-color: transparent;
-  background-image: url(images/Image.png);
+  background-image: url(/images/Image.png);
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
@@ -414,7 +410,6 @@ nav .icon:active, .footer_socials li:active {
 }
 .about_right .cardContainer p {
   font-size: 13px;
-  letter-spacing: 2;
   font-weight: 200;
   line-height: 18px;
 }
@@ -816,7 +811,7 @@ nav .icon:active, .footer_socials li:active {
   align-content: center;
   text-align: center;
   padding: 100px 200px;
-  background-image: url(images/Image\ \(1\).png);
+  background-image: url(/images/Image\ \(1\).png);
   background-repeat: no-repeat;
   background-size: cover;
   color: var(--color-white);

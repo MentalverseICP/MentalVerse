@@ -1,16 +1,20 @@
 const navActive = document.querySelectorAll('nav .nav-link'),
           menuOpen = document.querySelector('#menu_open'),
-          menuList = document.querySelector('.nav-menu');
+          menuList = document.querySelector('.nav-menu')
+          // logoContainer = document.querySelector('.about_bottom')
+          // logoList = document.querySelectorAll('.about_bottom img')
 
+// WINDOW SCROLL
 window.addEventListener('scroll', () => {
   document.querySelector('nav').classList.toggle('window-scroll', window.scrollY > 0)
 })
 
+// TOGGLE MENU BAR
 menuOpen.addEventListener('click', () => {
   menuList.classList.toggle('open')
 })
 
-
+// ACTIVE NAVBAR
 navActive.forEach(links => {
   links.addEventListener('click', () => {
     links.classList.contains('active') ? links.classList.remove('active') : previous(); links.classList.add('active')
@@ -24,3 +28,10 @@ function previous() {
     check.classList.remove('active')
   }
 }
+
+// LOGO SCROLL
+//  console.log(logoList)
+//  logoList.forEach(logo => {
+//   const clone = logo.cloneNode(true);
+//   logoContainer.appendChild(clone)
+//  })
