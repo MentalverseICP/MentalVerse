@@ -12,9 +12,12 @@
   --color-success: green;
   --color-success-variant: #D8FF9A;
   --color-success-light: #F0FFD9;
+  
   --color-white: #fff;
   --color-grey: #c5c5c5;
   --color-grey-variant:  #F8F8F8;
+  --color-light: #909090;
+
   --color-black: #000;
   --color-gradient: linear-gradient(#000 0 0) padding-box, linear-gradient(
       to bottom right, 
@@ -27,6 +30,7 @@
     ) border-box;
 
   --text-color: #1f1e1eca;
+  --bg-color: #DDEADE;
 
   --border: 2px solid transparent;
 
@@ -417,7 +421,7 @@ nav .icon:active, .footer_socials li:active {
 
 
 .about .bottom {
-  background-color: #DDEADE;
+  background-color: var(--bg-color);
   padding: 100px 200px;
   display: grid;
   grid-template-rows: .2fr 1fr;
@@ -658,7 +662,7 @@ nav .icon:active, .footer_socials li:active {
 }
 
 .statistic .bottom {
-  background-color: #EFF5F0;
+  background-color: var(--bg-color);
   padding: 100px 200px;
   display: grid;
   grid-template-columns: 1fr .8fr;
@@ -827,7 +831,8 @@ nav .icon:active, .footer_socials li:active {
   grid-area: footer;
   display: grid;
   grid-template-rows: 1fr .2fr;
-  background-color: #DDEADE;
+  background-color: var(--bg-color);
+  ;
   gap: 100px;
   padding: 100px 200px;
 }
@@ -1108,6 +1113,9 @@ nav .icon:active, .footer_socials li:active {
 
   .ourServices {
     grid-template-rows: .5fr 2fr;
+  }
+  .ourServices .top {
+    scale: .9;
   }
   .ourServices .bottom {
     grid-template-columns: repeat(2, 1fr);

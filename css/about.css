@@ -134,7 +134,7 @@ p {
 .stories .bottom {
   display: grid;
   gap: 50px;
-  background-color: #EFF5F0;
+  background-color: var(--bg-color);
   padding: 100px;
 }
 .stories .bottom .card {
@@ -173,6 +173,9 @@ p {
 
 
 /* --------------- steps CONTAINER ---------------- */
+.about.steps {
+  background-color: var(--bg-color);
+}
 .about.steps .top {
   gap: 50px;
 }
@@ -190,7 +193,6 @@ p {
 .about.steps .about_bottom  .arrow_right_alt {
   display: block;
   font-size: 30px;
-
 }
 .about.steps .about_bottom  .arrow_downward {
   display: none;
@@ -202,7 +204,109 @@ p {
   flex-direction: column;
   gap: 10px;
   align-items: center;
+  text-align: center;
 }
+.about.steps .about_bottom .card .text {
+  display: grid;
+  grid-template-columns: 150px;
+}
+
+
+/* --------------- teams CONTAINER ---------------- */
+.stories.teams {
+  grid-template-rows: .1fr .2fr;
+}
+.team_container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: 1fr;
+  gap: 50px;
+}
+.team_member {
+  border: 1px solid transparent;
+  position: relative;
+}
+.team_member:hover > img {
+  background-color: transparent;
+}
+.team_member-image img {
+  width: 100%;
+  filter: grayscale(100%);
+}
+.team_member:hover img {
+  filter: none;
+}
+.team_member-info {
+  margin-top: 10px;
+  text-align: center;
+}
+.team_member-info h4, .stories.more .text h3 {
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 33.6px;
+}
+.team_member-info p, .stories.more .text p {
+  color: var(--color-light);
+  font-size: 16px;
+  line-height: 30px;
+}
+.team_member-socials {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-black);
+  border-radius: 16px 0 0 16px;
+  transform: translateY(-50%) rotateY(90deg);
+  transform-origin: right;
+  transition: all 1s cubic-bezier(0.38, 0.23, 0.34, 1.43);
+}
+.team_member:hover .team_member-socials {
+  transform: translateY(-50%) rotateY(0deg);
+}
+.team_member-socials a {
+  padding: 16px;
+  filter: hue-rotate(285deg);
+  cursor: pointer;
+}
+.team_member-socials a:active {
+  scale: .9;
+}
+
+
+  /* --------------- More CONTAINER ---------------- */
+  .stories.more {
+    background-color: var(--color-grey-variant);
+  }
+  .stories.more .top {
+    justify-content: center;
+  }
+  .stories.more .moreCards {
+    display: flex;
+    gap: 50px;
+    justify-content: center;
+  }
+  .stories.more .moreCards .card {
+    background-color: var(--color-white);
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+    border-radius: 30px;
+    box-shadow: -2px 2px 15px -2px var(--color-grey);
+  }
+  .stories.more .moreCards .card img {
+    width: 100%;
+  }
+  .stories.more .card .text {
+    text-align: center;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+  }
+ 
 
 
 
@@ -211,9 +315,7 @@ p {
   .stories {
     gap: 0;
   }
-  .stories .top {
-    scale: 1;
-  }
+
   .about .about_bottom {
     grid-row: 3 /4;
     grid-column: 1 / 2;
@@ -225,11 +327,55 @@ p {
     grid-template-columns: 1fr;
   }
 
+
+  .about.steps .about_bottom {
+    gap: 50px;
+    scale: .9;
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    grid-template-rows: repeat(2,1fr);
+  }
+  .about.steps .about_bottom  .arrow_right_alt, .about.steps .about_bottom .arrow_downward.first, .about.steps .about_bottom .arrow_downward.third {
+    display: none;
+  }
+  .about.steps .about_bottom  .arrow_right_alt.first, .about.steps .about_bottom .arrow_right_alt.third, .about.steps .about_bottom  .arrow_downward {
+    display: block;
+  }
   .about.steps .top .about_left {
     align-items: start;
   }
+  .about.steps .about_bottom .card .text {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+
+  /* --------------- teams CONTAINER ---------------- */
+  .stories.teams {
+    gap: 50px;
+  }
+  .stories.teams .top {
+    scale: .9;
+    display: grid;
+    gap: 5px;
+    justify-content: center;
+    justify-items: center;
+  }
+  .team_container {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+  } 
+
+  /* --------------- More CONTAINER ---------------- */
+  .stories.more {
+    gap: 20px;
+  }
+  .stories.more .moreCards {
+    flex-direction: column;
+  }
 
 }
+
 @media (max-width: 700px) {
   .stories .top {
     flex-direction: row;
@@ -246,14 +392,13 @@ p {
     width: 100%;
   }
   .about.steps .about_bottom {
+    display: flex;
     flex-direction: column;
-    gap: 50px;
-    scale: .9;
   }
-  .about.steps .about_bottom  .arrow_right_alt {
+  .about.steps .about_bottom .arrow_right_alt, .about.steps .about_bottom .arrow_right_alt.first, .about.steps .about_bottom .arrow_right_alt.third {
     display: none;
   }
-  .about.steps .about_bottom  .arrow_downward {
+  .about.steps .about_bottom  .arrow_downward.first, .about.steps .about_bottom .arrow_downward.third, .about.steps .about_bottom .arrow_downward {
     display: block;
   }
 }
@@ -268,5 +413,20 @@ p {
   .about .about_bottom {
     grid-template-columns: repeat(3, .2fr);
   }
+
+
+  .stories.teams .top {
+    justify-items: center;
+  }
+  .stories.teams .top .title {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .team_container {
+    grid-template-columns:  1fr;
+    grid-template-rows: repeat(3, 1fr);
+  } 
+  
 
 }
