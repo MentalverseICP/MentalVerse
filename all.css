@@ -141,3 +141,125 @@ textarea{
 .accordion-body {
      border: none!important;
 }
+
+.plan{
+     font-size: 24px;
+     font-weight: 500;
+     line-height: 33.6px;
+     text-align: left;
+}
+.descrition{
+     font-size: 14px;
+     font-weight: 400;
+     line-height: 22.4px;
+     text-align: left;
+     color: #909090;
+}
+.price{
+     font-size: 28px;
+     font-weight: 500;
+     line-height: 39.2px;
+     text-align: left;
+     color: #6BA50F;
+}
+.price::before{
+     content: "$";
+}
+.length::before{
+     content: "/";
+}
+.length{
+     font-size: 14px;
+     font-weight: 400;
+     line-height: 22.4px;
+     text-align: left;
+     color: #222222;
+}
+.span1{
+     font-size: 12px;
+     font-weight: 400;
+     line-height: 15.6px;
+     text-align: left;
+     color: #232323;
+}
+.vard li{
+     font-size: 14px;
+     font-weight: 400;
+     line-height: 22.4px;
+     text-align: left;
+     color: #909090;
+}
+ul.custom-list {
+     list-style-type: none; /* Remove default bullets */
+}
+ 
+ul.custom-list li {
+     margin-bottom: 10px; /* Optional: Add space between items */
+     background: url('both/fontawesome-free-6.4.2-web/svgs/solid/circle-check.svg'); /* Add your custom image */
+     background-size: 16px 16px; /* Size of the marker image */
+     background-repeat: no-repeat;
+     background-position: 0 5px; /* Adjust the position of the marker */
+     padding-left: 25px; /* Space to align text with the marker */
+}
+ul.custom-list2 li {
+     margin-bottom: 10px; /* Optional: Add space between items */
+     background: url('both/fontawesome-free-6.4.2-web/svgs/solid/check.svg'); /* Add your custom image */
+     background-size: 16px 16px; /* Size of the marker image */
+     background-repeat: no-repeat;
+     background-position: 0 5px; /* Adjust the position of the marker */
+     padding-left: 25px; /* Space to align text with the marker */
+}  
+.getStart{
+     padding: 20px 50px;
+     border-radius: 99px;
+     opacity: 0px;
+     background-color: #222222;
+     color: #B8FF48;
+     font-size: 20px;
+     font-weight: 400;
+     line-height: 14px;
+     text-align: center;
+}
+.vard{
+     background-color: #F8F8F8;
+     padding: 20px;
+     border-radius: 15px ;
+}
+.vard hr{
+     border: 1px solid #DDEADE!important;
+     margin: 0 auto;
+     opacity: 1;
+     width: 80%;
+}
+.num2{
+     font-size: 48px;
+     font-weight: 400;
+     line-height: 48px;
+     text-align: left;
+}
+.numText2{
+     font-size: 12px;
+     font-weight: 400;
+     line-height: 15.6px;
+     text-align: left;
+     color: #909090;
+}
+ul.custom-list3 li {
+     margin-bottom: 10px; /* Optional: Add space between items */
+     background: url('images/Icon.png.png'); /* Add your custom image */
+     background-size: 30px 30px; /* Size of the marker image */
+     background-repeat: no-repeat;
+     background-position: 0 5px; /* Adjust the position of the marker */
+     padding-left: 50px; /* Space to align text with the marker */
+} 
+.custom-list3 li{
+     display: flex;
+     flex-direction: column;
+}
+.custom-list3 li span{
+     font-size: 24px;
+     font-weight: 500;
+     line-height: 33.6px;
+     text-align: left;
+     color: #222222;
+}
