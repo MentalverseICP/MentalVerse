@@ -622,6 +622,7 @@ nav .icon:active, .footer_socials li:active {
   padding: 100px 200px;
   display: grid;
   grid-template-columns: .8fr 1fr;
+  align-items: center;
   gap: 60px;
 }
 .statistic img {

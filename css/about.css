@@ -1,58 +1,3 @@
-/* .headerImage {
-  height: fit-content;
-  background-image: url(images/Image\ \(2\).png);
-  background-position: top;
-  background-size: contain;
-  grid-template-rows: .3fr 500px;
-  row-gap: 0px;
-  justify-content: center;
-  align-items: center;
-}
-.header {
-  display: grid;
-  grid-template-columns: 600px;
-  grid-template-rows: repeat(2, .5fr);
-  gap: 50px;
-  justify-content: center;
-  justify-items: center;
-  align-items: center;
-  text-align: center;
-} 
-.header h2 {
-  font-size: 36px;
-  font-weight: 700;
-  line-height: 78.4px;
-}
-.header p {
-  border-top: 2px solid var(--color-white);
-  padding-top: 20px;
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 25.6px;
-}
-
-
-@media (max-width: 1300px) {
-  .headerImage {
-    background-position: center;
-    background-size: cover;
-  }
-} */
-
-/* h2 {
-  font-size: 36px;
-  font-weight: 700;
-  line-height: 78.4px;
-}
-
-p {
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 25.6px;
-} */
-
-
-
 .headerImage {
   height: fit-content;
   width: 100vw;
@@ -93,16 +38,16 @@ p {
 
 
 /* ------------------------------------ ABOUT CONTAINER -------------------------------------------- */
-.about {
+.about.mission {
   grid-template-rows: 1fr;
 }
-.about .top {
+.about.mission .top {
   grid-template-rows: 1fr .5fr;
   row-gap: 50px;
   overflow: hidden;
   width: 100%;
 }
-.about_bottom {
+.about.mission .about_bottom {
   overflow-x: hidden;
   grid-column: 1 / -1;
   grid-row: 2 / -2;
@@ -115,7 +60,7 @@ p {
   /* opacity: 0; */
   /* animation: scroll 5s linear infinite; */
 }
-.about_bottom img {
+.about.mission .about_bottom img {
   width: 100%;
 }
 @keyframes scroll {
@@ -131,43 +76,43 @@ p {
 
 
 /* --------------- stories CONTAINER ---------------- */
-.stories .bottom {
+.stories.ourStories .bottom {
   display: grid;
   gap: 50px;
   background-color: var(--bg-color);
   padding: 100px;
 }
-.stories .bottom .card {
+.stories.ourStories .bottom .card {
   display: grid;
   grid-template-columns: .1fr 1fr .1fr;
   justify-content: center;
   gap: 30px;
 }
-.stories .bottom .card .card_text {
+.stories.ourStories .bottom .card .card_text {
   display: flex;
   flex-direction: column;
   gap: 20px;
   letter-spacing: 1;
 }
-.stories .card_text h3 {
+.stories.ourStories .card_text h3 {
   font-size: 28px;
   font-weight: 500;
   line-height: 39.2px;
 }
-.stories .card .date, .stories .card_text p, .about.steps .about_left .message {
+.stories.ourStories .card .date, .stories.ourStories .card_text p, .about.steps .about_left .message {
   font-size: 15px;
   font-weight: 500;
   line-height: 28.8px;
 }
-.stories .bottom .card .circle {
+.stories.ourStories .bottom .card .circle {
   background-color: var(--color-success-variant);
 }
-.stories .bottom .card .circle span {
+.stories.ourStories .bottom .card .circle span {
   color: var(--color-black);
 }
 
 /* --------------- statistic CONTAINER ---------------- */
-.statistic {
+.statistic.health{
   grid-template-rows: 1fr;
   padding-bottom: 100px;
 }
@@ -313,18 +258,18 @@ p {
 
 
 @media (max-width: 1000px) {
-  .stories {
+  .stories.ourStories {
     gap: 0;
   }
 
-  .about .about_bottom {
+  .about.mission .about_bottom {
     grid-row: 3 /4;
     grid-column: 1 / 2;
   }
-  .stories .bottom {
+  .stories.ourStories .bottom {
     padding: 50px;
   }
-  .stories .bottom .card {
+  .stories.ourStories .bottom .card {
     grid-template-columns: 1fr;
   }
 
@@ -378,10 +323,12 @@ p {
 }
 
 @media (max-width: 700px) {
-  .stories .top {
+  .stories.ourStories .top {
     flex-direction: row;
     justify-content: space-between;
   }
+
+  
   .about.steps .top {
     gap: 0;
   }
@@ -405,13 +352,13 @@ p {
 }
 
 @media (max-width: 500px) {
-  .stories .top {
+  .stories.ourStories .top {
     flex-direction: column;
     justify-content: space-evenly;
   }
 
 
-  .about .about_bottom {
+  .about.mission .about_bottom {
     grid-template-columns: repeat(3, .2fr);
   }
 

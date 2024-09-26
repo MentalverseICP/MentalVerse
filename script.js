@@ -29,6 +29,30 @@ function previous() {
   }
 }
 
+// SWIPER
+var swiper = new Swiper(".mySwiper", {
+  slidesPerView: 1,
+  spaceBetween: 10,
+  pagination: {
+    el: ".swiper-pagination",
+    clickable: true,
+  },
+  autoplay: {
+    delay: 3000,
+    disableOnInteraction: true,
+    pauseOnMouseEnter: true,
+    reverseDirection: false,
+    stopOnLastSlide: false,
+    waitForTransition: true,
+  },            
+  //when window width is >= 600px
+  breakpoints: {
+    1000: {
+      slidesPerView: 2,
+    }
+  },
+});
+
 // LOGO SCROLL
 //  console.log(logoList)
 //  logoList.forEach(logo => {
