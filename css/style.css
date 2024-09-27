@@ -366,10 +366,9 @@ nav .icon:active, .footer_socials li:active {
   flex-direction: column;
   gap: 25px;
   padding: 0 20px;
-}
-.about_left .message p {
   letter-spacing: .5px;
   font-weight: 400;
+  color: var(--color-light);
 }
 .about_left .post p {
   color: var(--color-success);
