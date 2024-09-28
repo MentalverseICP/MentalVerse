@@ -64,8 +64,9 @@
   .bottom.profiles {
     background-color: var(--color-white);
     grid-template-rows: 1fr;
-    grid-template-columns: 1fr .5fr;
-    gap: 20px;
+    grid-template-columns: .8fr .5fr;
+    gap: 80px;
+    align-items: center;
 
     .left, .right {
       display: flex;
@@ -83,7 +84,7 @@
         display: flex;
         flex-direction: column;
         gap: 25px;
-        padding: 0 20px;
+        padding: 0 20px 0 0px;
         letter-spacing: .5px;
         font-weight: 400;
 
@@ -116,5 +117,13 @@
     }
 
 
+  }
+}
+
+.ourServices.review {
+  background-color: var(--color-grey-variant);
+
+  .bottom {
+    grid-template-rows: 1fr;
   }
 }
