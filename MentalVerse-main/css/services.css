@@ -1,0 +1,35 @@
+.headerImage {
+  background-image: url(/images/Image\ \(9\).png);
+}
+
+.about.services {
+  grid-template-rows: 1fr;
+}
+
+.statistic.health .sideText .assured {
+  display: flex;
+  flex-direction: column;
+  margin-top: 20px;
+  gap: 40px;
+}
+.statistic.health .sideText .assured .assured_text {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.statistic.health .sideText .assured_text p{
+  display: flex;
+  gap: 20px;
+}
+.statistic.health .sideText .assured_text p span:first-child{
+  font-size: 25px;
+}
+
+
+
+
+@media (max-width: 700px) {
+  .statistic.health .sideText .assured {
+    align-items: center;
+  }
+}

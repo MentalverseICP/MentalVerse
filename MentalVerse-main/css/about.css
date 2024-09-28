@@ -1,0 +1,380 @@
+.headerImage {
+  height: fit-content;
+  width: 100vw;
+  background-image: url(/images/Image\ \(2\).png);
+  background-position: top;
+  grid-template-rows: .3fr 500px;
+  grid-template-columns: 1fr;
+  row-gap: 0px;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ------------------------------------------- HEADER CONTAINER ------------------------------------------------------ */
+
+
+.header {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: repeat(2, .5fr);
+  gap: 50px;
+  justify-content: center;
+  justify-items: center;
+  align-items: center;
+  text-align: center;
+} 
+.header h2 {
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 78.4px;
+}
+.header p {
+  border-top: 2px solid var(--color-white);
+  padding-top: 20px;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 25.6px;
+}
+
+
+/* ------------------------------------ ABOUT CONTAINER -------------------------------------------- */
+.about.mission {
+  grid-template-rows: 1fr;
+}
+.about.mission .top {
+  grid-template-rows: 1fr .5fr;
+  row-gap: 50px;
+  overflow: hidden;
+  width: 100%;
+}
+.about.mission .about_bottom {
+  overflow-x: hidden;
+  grid-column: 1 / -1;
+  grid-row: 2 / -2;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: center;
+  justify-content: center;
+  gap: 50px;
+  /* gap: 150px; */
+  /* opacity: 0; */
+  /* animation: scroll 5s linear infinite; */
+}
+.about.mission .about_bottom img {
+  width: 100%;
+}
+@keyframes scroll {
+
+  /* calc(-50% - 4rem) */
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+
+/* --------------- stories CONTAINER ---------------- */
+.stories.ourStories .bottom {
+  display: grid;
+  gap: 50px;
+  background-color: var(--bg-color);
+  padding: 100px;
+}
+.stories.ourStories .bottom .card {
+  display: grid;
+  grid-template-columns: .1fr 1fr .1fr;
+  justify-content: center;
+  gap: 30px;
+}
+.stories.ourStories .bottom .card .card_text {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  letter-spacing: 1;
+}
+.stories.ourStories .card_text h3 {
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 39.2px;
+}
+.stories.ourStories .card .date, .stories.ourStories .card_text p, .about.steps .about_left .message {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 28.8px;
+}
+.stories.ourStories .bottom .card .circle {
+  background-color: var(--color-success-variant);
+}
+.stories.ourStories .bottom .card .circle span {
+  color: var(--color-black);
+}
+
+/* --------------- statistic CONTAINER ---------------- */
+.statistic.health{
+  grid-template-rows: 1fr;
+  padding-bottom: 100px;
+}
+
+
+/* --------------- steps CONTAINER ---------------- */
+.about.steps {
+  background-color: var(--bg-color);
+}
+.about.steps .top {
+  gap: 50px;
+}
+.about.steps .top .about_left {
+  align-items: center;
+}
+.about.steps .about_right {
+ justify-content: center;
+}
+.about.steps .about_bottom {
+  display: flex;
+  text-align: center;
+  gap: 20px;
+}
+.about.steps .about_bottom  .arrow_right_alt {
+  display: block;
+  font-size: 30px;
+}
+.about.steps .about_bottom  .arrow_downward {
+  display: none;
+  font-size: 30px;
+
+}
+.about.steps .about_bottom .card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  text-align: center;
+}
+.about.steps .about_bottom .card .text {
+  display: grid;
+  grid-template-columns: 150px;
+}
+
+
+/* --------------- teams CONTAINER ---------------- */
+.stories.teams {
+  grid-template-rows: .1fr .2fr;
+}
+.team_container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: 1fr;
+  gap: 50px;
+}
+.team_member {
+  border: 1px solid transparent;
+  position: relative;
+}
+.team_member:hover > img {
+  background-color: transparent;
+}
+.team_member-image img {
+  width: 100%;
+  filter: grayscale(100%);
+}
+.team_member:hover img {
+  filter: none;
+}
+.team_member-info {
+  margin-top: 10px;
+  text-align: center;
+}
+.team_member-info h4, .stories.more .text h3 {
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 33.6px;
+}
+.team_member-info p, .stories.more .text p {
+  color: var(--color-light);
+  font-size: 16px;
+  line-height: 30px;
+}
+.team_member-socials {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-black);
+  border-radius: 16px 0 0 16px;
+  transform: translateY(-50%) rotateY(90deg);
+  transform-origin: right;
+  transition: all 1s cubic-bezier(0.38, 0.23, 0.34, 1.43);
+}
+.team_member:hover .team_member-socials {
+  transform: translateY(-50%) rotateY(0deg);
+}
+.team_member-socials a {
+  padding: 16px;
+  filter: hue-rotate(285deg);
+  cursor: pointer;
+}
+.team_member-socials a:active {
+  scale: .9;
+}
+
+
+  /* --------------- More CONTAINER ---------------- */
+  .stories.more {
+    background-color: var(--color-grey-variant);
+  }
+  .stories.more .top {
+    justify-content: center;
+  }
+  .stories.more .moreCards {
+    display: flex;
+    gap: 50px;
+    justify-content: center;
+  }
+  .stories.more .moreCards .card {
+    background-color: var(--color-white);
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+    border-radius: 30px;
+    box-shadow: -2px 2px 15px -2px var(--color-grey);
+  }
+  .stories.more .moreCards .card img {
+    width: 100%;
+  }
+  .stories.more .card .text {
+    text-align: center;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+  }
+ 
+
+
+
+
+@media (max-width: 1000px) {
+  .stories.ourStories {
+    gap: 0;
+  }
+
+  .about.mission .about_bottom {
+    grid-row: 3 /4;
+    grid-column: 1 / 2;
+  }
+  .stories.ourStories .bottom {
+    padding: 50px;
+  }
+  .stories.ourStories .bottom .card {
+    grid-template-columns: 1fr;
+  }
+
+
+  .about.steps .about_bottom {
+    gap: 50px;
+    scale: .9;
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    grid-template-rows: repeat(2,1fr);
+  }
+  .about.steps .about_bottom  .arrow_right_alt, .about.steps .about_bottom .arrow_downward.first, .about.steps .about_bottom .arrow_downward.third {
+    display: none;
+  }
+  .about.steps .about_bottom  .arrow_right_alt.first, .about.steps .about_bottom .arrow_right_alt.third, .about.steps .about_bottom  .arrow_downward {
+    display: block;
+  }
+  .about.steps .top .about_left {
+    align-items: start;
+  }
+  .about.steps .about_bottom .card .text {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+
+  /* --------------- teams CONTAINER ---------------- */
+  .stories.teams {
+    gap: 50px;
+  }
+  .stories.teams .top {
+    scale: .9;
+    display: grid;
+    gap: 5px;
+    justify-content: center;
+    justify-items: center;
+  }
+  .team_container {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+  } 
+
+  /* --------------- More CONTAINER ---------------- */
+  .stories.more {
+    gap: 20px;
+  }
+  .stories.more .moreCards {
+    flex-direction: column;
+  }
+
+}
+
+@media (max-width: 700px) {
+  .stories.ourStories .top {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  
+  .about.steps .top {
+    gap: 0;
+  }
+  .about.steps .top .about_left {
+    align-items: center;
+    gap: 0;
+  }
+  .about.steps .about_right img {
+    width: 100%;
+  }
+  .about.steps .about_bottom {
+    display: flex;
+    flex-direction: column;
+  }
+  .about.steps .about_bottom .arrow_right_alt, .about.steps .about_bottom .arrow_right_alt.first, .about.steps .about_bottom .arrow_right_alt.third {
+    display: none;
+  }
+  .about.steps .about_bottom  .arrow_downward.first, .about.steps .about_bottom .arrow_downward.third, .about.steps .about_bottom .arrow_downward {
+    display: block;
+  }
+}
+
+@media (max-width: 500px) {
+  .stories.ourStories .top {
+    flex-direction: column;
+    justify-content: space-evenly;
+  }
+
+
+  .about.mission .about_bottom {
+    grid-template-columns: repeat(3, .2fr);
+  }
+
+
+  .stories.teams .top {
+    justify-items: center;
+  }
+  .stories.teams .top .title {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .team_container {
+    grid-template-columns:  1fr;
+    grid-template-rows: repeat(3, 1fr);
+  } 
+  
+
+}
