@@ -4,6 +4,7 @@ section{
 .title{
      font-size: 15px;
      color: #222222;
+     text-transform: uppercase;
 }
 .title::before{
      content: "";
@@ -262,4 +263,43 @@ ul.custom-list3 li {
      line-height: 33.6px;
      text-align: left;
      color: #222222;
+}
+.posit{
+     background-color: #DDEADE;
+}
+.cardd{
+     padding: 35px;
+     border-radius: 15px;
+}
+.discription{
+     color: #909090;
+     font-size: 14px;
+     font-weight: 400;
+     line-height: 22.4px;
+     text-align: left;
+}
+.space-y-5 > * + *{
+     margin-top: 1.25rem; /* 20px */
+}
+.gap-20{
+     gap: 20px;
+}
+.grid{
+     display: grid;
+}
+.grid-cols-2{
+     grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.grid-cols-4{
+     grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.icons{
+     height: 50px;
+     width: 50px;
+     border-radius: 50%;
+     background-color: #6BA50F;
+     color: #fff;
+     padding: 0;
+     font-weight: 400;
+     font-size: 20px;
 }
