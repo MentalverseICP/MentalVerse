@@ -17,6 +17,7 @@
   --color-grey: #c5c5c5;
   --color-grey-variant:  #F8F8F8;
   --color-light: #909090;
+  --color-light-variant: #EFF5F0;
 
   --color-black: #000;
   --color-gradient: linear-gradient(#000 0 0) padding-box, linear-gradient(
@@ -941,6 +942,10 @@ font-family: Manrope;
 
 
 @media (max-width: 1300px) {
+  .but {
+    font-size: 12px;
+    line-height: 13px;
+  }
   .headerImage {
     height: 100%;
     padding: 0 50px 50px;
