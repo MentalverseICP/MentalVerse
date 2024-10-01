@@ -1,4 +1,4 @@
-* {
+                                                                                                                                      * {
   margin: 0;
   padding: 0;
   outline: 0;
@@ -340,7 +340,7 @@ nav .icon:active, .footer_socials li:active {
 .about .top {
   padding: 100px 200px;
   display: grid;
-  grid-template-columns: 1fr .6fr;
+  grid-template-columns: 1fr 1fr;
   gap: 100px;
 }
 .about .top .about_left {
@@ -348,29 +348,28 @@ nav .icon:active, .footer_socials li:active {
   flex-direction: column;
   gap: 50px;
 }
-.about .about_left .title {
+.about .about_right .title {
   letter-spacing: 1px;
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
-.about_left .welcome {
+.about_right .welcome {
   display: flex;
   align-items: center;
   gap: 20px;
   border-radius: 15px;
   box-shadow: -2px 2px 15px -2px var(--color-grey);
 }
-.about_left .message {
+.about_right .message {
   display: flex;
   flex-direction: column;
   gap: 25px;
-  padding: 0 20px;
   letter-spacing: .5px;
   font-weight: 400;
   color: var(--color-light);
 }
-.about_left .post p {
+.about_right .post p {
   color: var(--color-success);
 }
 .about_right {
@@ -727,15 +726,21 @@ nav .icon:active, .footer_socials li:active {
 /* --------------- stories CONTAINER ---------------- */
 .stories {
   grid-area: begin;
-  padding: 100px 200px;
+  padding: 100px 0px;
   display: grid;
   grid-template-rows: .1fr 1fr;
   gap: 50px;
+  position: relative;
+
+}
+.ourStories{
+  background-color: #DDEADE;
 }
 .stories .top {
   display: flex;
   justify-content: space-between;
   gap: 50px;
+  padding: 0px 150px;
 }
 .stories .bottom {
   overflow: hidden;
@@ -746,7 +751,7 @@ nav .icon:active, .footer_socials li:active {
 .stories .cards .card {
   cursor: pointer;
   padding: 20px;
-  background-color: var(--color-white);
+  background-color: var(--color-blue);
   display: flex;
   flex-direction: column;
   gap: 50px;
@@ -832,7 +837,6 @@ nav .icon:active, .footer_socials li:active {
   display: grid;
   grid-template-rows: 1fr .2fr;
   background-color: var(--bg-color);
-  ;
   gap: 100px;
   padding: 100px 200px;
 }
@@ -1359,4 +1363,79 @@ nav .icon:active, .footer_socials li:active {
     right: 1%;
     top: 10px;
   }
+}
+
+/*application process*/
+.entire-div{
+ 
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding-left: 110px;
+  column-gap: 25px;
+}
+
+/*statistic-section*/
+.zen{
+  font-size: 40px;
+  margin-bottom: 30px;
+}
+
+.stories2{
+  padding: 60px 0;
+position: relative;
+}
+
+.entire-div .principles-div{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  column-gap: 20px;
+}
+.card{
+  display: flex;
+  gap: 10px;
+}
+.twenty-five {
+  display: flex;
+  align-items: center;
+  position: absolute;
+  background-color: white;
+  top: 20%;
+  left: 45%;
+  gap: 10px;
+  border-radius: 75px;
+  padding: 180px 20px;
+}
+
+.about_bottom{
+  display: flex;
+  justify-content: space-around;
+  padding: 15px 50px;
+}
+.about_bottom .card{
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+.card h3{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.more{
+  padding: 20px 50px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.more p{
+  text-align: center;
+}
+.span-div{
+flex-direction: column;
+display: flex;
+justify-content: center;
+align-items: center;
 }
