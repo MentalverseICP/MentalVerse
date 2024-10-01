@@ -1,6 +1,3 @@
-section{
-     height: 100vh;
-}
 .title{
      font-size: 15px;
      color: #222222;
@@ -93,13 +90,6 @@ textarea{
      line-height: 16px;
      text-align: center;
 }
-.statistics{
-     background-color: #F8F8F8;
-     height: 100vh;
-}
-.help{
-     height: 50vh;
-}
 .carddd{
      background-color: #F8F8F8;
      border-radius: 30px;
@@ -120,10 +110,6 @@ textarea{
 .help .icon{
      width: 50px;
      height: 50px;
-}
-.Touchs{
-     height: 100vh;
-     background-color: #EFF5F0;
 }
 .col-3-5 {
      flex: 0 0 auto;
@@ -287,8 +273,14 @@ ul.custom-list3 li {
 .grid{
      display: grid;
 }
+.grid-cols-1{
+     grid-template-columns: repeat(1, minmax(0, 1fr));
+}
 .grid-cols-2{
      grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.grid-cols-3{
+     grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 .grid-cols-4{
      grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -303,3 +295,37 @@ ul.custom-list3 li {
      font-weight: 400;
      font-size: 20px;
 }
+img{
+     width: 100%;
+     height: 100%;
+     object-fit: cover;
+}
+/* md */
+@media (max-width: 768px) {
+     .md-grid-cols-1{
+          grid-template-columns: repeat(1, minmax(0, 1fr));
+     }
+     .md-grid-cols-2{
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+     }
+     .md-grid-cols-3{
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+     }
+     .md-grid-cols-4{
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+     }
+     section{
+          height: 100vh;
+     }
+     .statistics{
+          background-color: #F8F8F8;
+          height: 100vh;
+     }
+     .help{
+          height: 50vh;
+     }
+     .Touchs{
+          height: 100vh;
+          background-color: #EFF5F0;
+     }
+ }

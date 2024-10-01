@@ -17,6 +17,7 @@
   --color-grey: #c5c5c5;
   --color-grey-variant:  #F8F8F8;
   --color-light: #909090;
+  --color-light-variant: #EFF5F0;
 
   --color-black: #000;
   --color-gradient: linear-gradient(#000 0 0) padding-box, linear-gradient(
@@ -93,11 +94,11 @@ li {
   gap: 16px;
   align-items: center;
 }
-.title .topic p {
+/* .title .topic p {
   font-size: 15px;
   font-weight: 400;
   line-height: 14px;
-}
+} */
 hr {
   width: auto;
   background-color: var(--color-grey);
@@ -458,11 +459,11 @@ nav .icon:active, .footer_socials li:active {
   font-weight: 500;
   line-height: 30px;
 }
-.about .condition_left .condition_list p {
-  font-size: 14px;
+/* .about .condition_left .condition_list p {
+  font-size: 13px;
   font-weight: 400;
-  line-height: 20px;
-}
+  line-height: 16px;
+} */
 .about .condition_right img{
   width: 100%;
   display: block;
@@ -512,11 +513,11 @@ nav .icon:active, .footer_socials li:active {
   font-weight: 500;
   line-height: 33.6px;
 }
-.ourServices .therapyCard p {
+/* .ourServices .therapyCard p {
   font-size: 14px;
   font-weight: 400;
   line-height: 22.4px;
-}
+} */
 
 
 
@@ -543,11 +544,11 @@ nav .icon:active, .footer_socials li:active {
   flex-direction: column;
   align-items: center;
 }
-.pricingPlan .top p {
+/* .pricingPlan .top p {
   font-size: 16px;
   font-weight: 400;
   line-height: 25.6px;
-}
+} */
 
 
 .pricingPlan .bottom {
@@ -653,12 +654,12 @@ nav .icon:active, .footer_socials li:active {
   line-height: 48px;
   display: flex;
 }
-.statistic .top .sideText .reviewPlus p {
-  /* font-family: Marcellus; */
+/* .statistic .top .sideText .reviewPlus p {
+  font-family: Marcellus;
   font-size: 20px;
   font-weight: 400;
   line-height: 16px;
-}
+} */
 
 .statistic .bottom {
   background-color: var(--bg-color);
@@ -687,12 +688,12 @@ nav .icon:active, .footer_socials li:active {
   font-weight: 500;
   line-height: 33.6px;
 }
-.statistic .bottom .principles .card .text p {
-/* font-family: Manrope; */
+/* .statistic .bottom .principles .card .text p {
+font-family: Manrope;
   font-size: 14px;
   font-weight: 400;
   line-height: 22.4px;
-}
+} */
 
 .statistic .bottom .bottom_right {
   display: flex;
@@ -716,11 +717,11 @@ nav .icon:active, .footer_socials li:active {
   font-weight: 400;
   line-height: 48px;
 }
-.statistic .bottom_right .reviewPlus p {
+/* .statistic .bottom_right .reviewPlus p {
   font-size: 12px;
   font-weight: 400;
   line-height: 15.6px;
-}
+} */
 
 
 /* --------------- stories CONTAINER ---------------- */
@@ -795,11 +796,11 @@ nav .icon:active, .footer_socials li:active {
   visibility: visible;
   right: 60px;
 }
-.stories .bottom .card .picText p {
+/* .stories .bottom .card .picText p {
   font-size: 24px;
   font-weight: 500;
   line-height: 33.6px;
-}
+} */
 .stories .bottom .card .picText span {
   font-size: 12px;
   font-weight: 400;
@@ -855,11 +856,11 @@ nav .icon:active, .footer_socials li:active {
   font-weight: 700;
   line-height: 78.4px;
 }
-.footer .top_left p {
+/* .footer .top_left p {
   font-size: 16px;
   font-weight: 400;
   line-height: 25.6px;
-}
+} */
 .footer .top .footer_socials{
   display: flex;
   justify-content: start;
@@ -945,6 +946,10 @@ nav .icon:active, .footer_socials li:active {
 
 
 @media (max-width: 1300px) {
+  .but {
+    font-size: 12px;
+    line-height: 13px;
+  }
   .headerImage {
     height: 100%;
     padding: 0 50px 50px;
@@ -1173,7 +1178,7 @@ nav .icon:active, .footer_socials li:active {
 @media (max-width: 700px) {
 
   body {
-    /* overflow-x: visible; */
+    overflow-x: visible;
   }
   .container {
     width: fit-content;
