@@ -1,4 +1,4 @@
-                                                                                                                                      * {
+* {
   margin: 0;
   padding: 0;
   outline: 0;
@@ -17,7 +17,6 @@
   --color-grey: #c5c5c5;
   --color-grey-variant:  #F8F8F8;
   --color-light: #909090;
-  --color-light-variant: #EFF5F0;
 
   --color-black: #000;
   --color-gradient: linear-gradient(#000 0 0) padding-box, linear-gradient(
@@ -147,7 +146,7 @@ hr {
   row-gap: 70px;
   justify-items: center;
   background-color: transparent;
-  background-image: url(/images/Image.png);
+  background-image: url(../images/Image.png);
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
@@ -341,7 +340,7 @@ nav .icon:active, .footer_socials li:active {
 .about .top {
   padding: 100px 200px;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr .6fr;
   gap: 100px;
 }
 .about .top .about_left {
@@ -349,28 +348,29 @@ nav .icon:active, .footer_socials li:active {
   flex-direction: column;
   gap: 50px;
 }
-.about .about_right .title {
+.about .about_left .title {
   letter-spacing: 1px;
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
-.about_right .welcome {
+.about_left .welcome {
   display: flex;
   align-items: center;
   gap: 20px;
   border-radius: 15px;
   box-shadow: -2px 2px 15px -2px var(--color-grey);
 }
-.about_right .message {
+.about_left .message {
   display: flex;
   flex-direction: column;
   gap: 25px;
+  padding: 0 20px;
   letter-spacing: .5px;
   font-weight: 400;
   color: var(--color-light);
 }
-.about_right .post p {
+.about_left .post p {
   color: var(--color-success);
 }
 .about_right {
@@ -411,11 +411,11 @@ nav .icon:active, .footer_socials li:active {
   font-weight: 500;
   line-height: 18px;
 }
-.about_right .cardContainer p {
+/* .about_right .cardContainer p {
   font-size: 13px;
   font-weight: 200;
   line-height: 18px;
-}
+} */
 
 
 
@@ -727,21 +727,15 @@ font-family: Manrope;
 /* --------------- stories CONTAINER ---------------- */
 .stories {
   grid-area: begin;
-  padding: 100px 0px;
+  padding: 100px 200px;
   display: grid;
   grid-template-rows: .1fr 1fr;
   gap: 50px;
-  position: relative;
-
-}
-.ourStories{
-  background-color: #DDEADE;
 }
 .stories .top {
   display: flex;
   justify-content: space-between;
   gap: 50px;
-  padding: 0px 150px;
 }
 .stories .bottom {
   overflow: hidden;
@@ -752,7 +746,7 @@ font-family: Manrope;
 .stories .cards .card {
   cursor: pointer;
   padding: 20px;
-  background-color: var(--color-blue);
+  background-color: var(--color-white);
   display: flex;
   flex-direction: column;
   gap: 50px;
@@ -821,7 +815,7 @@ font-family: Manrope;
   align-content: center;
   text-align: center;
   padding: 100px 200px;
-  background-image: url(/images/Image\ \(1\).png);
+  background-image: url(../images/Image\ \(1\).png);
   background-repeat: no-repeat;
   background-size: cover;
   color: var(--color-white);
@@ -838,6 +832,7 @@ font-family: Manrope;
   display: grid;
   grid-template-rows: 1fr .2fr;
   background-color: var(--bg-color);
+  ;
   gap: 100px;
   padding: 100px 200px;
 }
@@ -946,10 +941,6 @@ font-family: Manrope;
 
 
 @media (max-width: 1300px) {
-  .but {
-    font-size: 12px;
-    line-height: 13px;
-  }
   .headerImage {
     height: 100%;
     padding: 0 50px 50px;
@@ -1368,79 +1359,4 @@ font-family: Manrope;
     right: 1%;
     top: 10px;
   }
-}
-
-/*application process*/
-.entire-div{
- 
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  padding-left: 110px;
-  column-gap: 25px;
-}
-
-/*statistic-section*/
-.zen{
-  font-size: 40px;
-  margin-bottom: 30px;
-}
-
-.stories2{
-  padding: 60px 0;
-position: relative;
-}
-
-.entire-div .principles-div{
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-  column-gap: 20px;
-}
-.card{
-  display: flex;
-  gap: 10px;
-}
-.twenty-five {
-  display: flex;
-  align-items: center;
-  position: absolute;
-  background-color: white;
-  top: 20%;
-  left: 45%;
-  gap: 10px;
-  border-radius: 75px;
-  padding: 180px 20px;
-}
-
-.about_bottom{
-  display: flex;
-  justify-content: space-around;
-  padding: 15px 50px;
-}
-.about_bottom .card{
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-}
-.card h3{
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-.more{
-  padding: 20px 50px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-.more p{
-  text-align: center;
-}
-.span-div{
-flex-direction: column;
-display: flex;
-justify-content: center;
-align-items: center;
 }
