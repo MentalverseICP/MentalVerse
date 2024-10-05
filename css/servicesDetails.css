@@ -1,3 +1,6 @@
+.headerImage {
+  background-image: url(../images/Image\ \(8\).png);
+}
 .about.meditation {
   background-color: var(--color-white);
   display: grid;
@@ -15,12 +18,20 @@
     .about_left {
       gap: 10px;
     
+      @media (max-width: 700px) {
+        align-items: center;
+      }
       .rating {
         margin-top: 10px;
         display: flex;
         gap: 10px;
         align-items: center;
-      
+        
+        @media (max-width: 1300px) {
+          .rating_star .icon {
+            font-size: 15px
+          }
+        }
         .text {
           color: var(--color-light);
         };
@@ -31,6 +42,15 @@
         }
       }
     }
+    .about_right {
+      img {
+        width: 100%;
+      }
+    }
+    @media (max-width: 1000px) {
+      grid-template-columns: 1fr;
+      gap: 70px;
+    }
   }
   .bottom.cards {
     background-color: var(--color-white);
@@ -39,6 +59,7 @@
     grid-template-rows: 1fr;
     grid-template-columns: repeat(3, 1fr);
     gap: 20px;
+    
     .card {
       background-color: var(--color-grey-variant);
       padding: 30px;
@@ -60,6 +81,9 @@
         gap: 10px;
       }
     }
+    @media (max-width: 1000px) {
+      grid-template-columns: 1fr;
+    }
   }
   .bottom.profiles {
     background-color: var(--color-white);
@@ -79,6 +103,10 @@
       gap: 20px;
       border-radius: 15px;
       box-shadow: -2px 2px 15px -2px var(--color-grey);
+
+      img {
+        width: 100%;
+      }
 
       .message {
         display: flex;
@@ -104,6 +132,12 @@
           }
         }
       }
+      @media (max-width: 500px) {
+        flex-direction: column;
+        .message {
+          padding: 40px;
+        }
+      }
     }
     .assured {
       display: flex;
@@ -116,7 +150,17 @@
       }
     }
 
-
+    @media (max-width: 1000px) {
+      grid-template-columns: 1fr;
+      margin-bottom: 50px;
+    }
+    @media (max-width: 700px) {
+      justify-items: center;
+    }
+    @media (max-width: 500px) {
+      grid-template-columns: 1fr;
+      margin-bottom: 10px;
+    }
   }
 }
 
@@ -125,5 +169,101 @@
 
   .bottom {
     grid-template-rows: 1fr;
+
+    .therapyCard {
+      display: grid;
+      background-color: var(--color-white);
+      padding: 0;
+      gap: 20px;
+      box-shadow: 0 0 50px -35px var(--color-light);
+
+      .top {
+        padding: 30px;
+        display: grid;
+        gap: 30px;
+        line-height: 20px;
+      }
+      .bottom {
+        grid-template-columns: .1fr 1fr;
+        align-items: center;
+        background-color: var(--color-light-variant);
+        border-radius: 0px 0px 10px 10px;
+        padding: 30px 10px;
+
+        @media (max-width: 500px) {
+          gap: 10px;
+        }
+        .post {
+          span {
+            color: var(--color-success);
+          }
+        }
+      }
+    }
+    @media (max-width: 500px) {
+      gap: 70px;
+    }
   }
+}
+
+.about.mission.steps {
+  background-color: var(--color-white);
+}
+
+.ourServices.solutions {
+  background-color: var(--bg-color);
+  .bottom {
+    grid-template-rows: 1fr;
+  }
+}
+
+.statistic.health.faqQue {
+  .questions {
+    display: grid;
+    gap: 30px;
+    height: fit-content;
+    
+    .faq {
+      overflow: hidden;
+      background-color: aliceblue;
+      border-radius: 30px;
+      height: fit-content;
+      display: grid;
+      grid-template-rows: 1fr .1fr;
+      align-items: center;
+      padding: 20px;
+      cursor: pointer;
+
+      .question_title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        h4 {
+          font-size: 16px;
+        }
+        span {
+          color: var(--color-success);
+          transition: all 500ms linear;
+        }
+      }
+    }
+    .question_answer {
+      height: 0px;
+      overflow: hidden;
+      transition: height 500ms linear;
+      p {
+        line-height: 20px;
+      }
+    }
+    .accordian .question_answer {
+      height: 80px;
+    }
+  }
+
+  .accordian .material-symbols-outlined {
+    transition: all 500ms linear;
+    transform: rotate(180deg);
+  }
+
 }

@@ -145,8 +145,8 @@ hr {
   ;
   row-gap: 70px;
   justify-items: center;
-  background-color: ;
-  background-image: url(/mentalverse/images/Image.png);
+  background-color: transparent;
+  background-image: url(../images/Image.png);
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
@@ -411,11 +411,11 @@ nav .icon:active, .footer_socials li:active {
   font-weight: 500;
   line-height: 18px;
 }
-.about_right .cardContainer p {
+/* .about_right .cardContainer p {
   font-size: 13px;
   font-weight: 200;
   line-height: 18px;
-}
+} */
 
 
 
@@ -815,7 +815,7 @@ font-family: Manrope;
   align-content: center;
   text-align: center;
   padding: 100px 200px;
-  background-image: url(/images/Image\ \(1\).png);
+  background-image: url(../images/Image\ \(1\).png);
   background-repeat: no-repeat;
   background-size: cover;
   color: var(--color-white);
@@ -906,6 +906,7 @@ font-family: Manrope;
 .footer .top_right {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 5px;
 }
 .footer .top_right input{

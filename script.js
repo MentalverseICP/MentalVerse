@@ -29,6 +29,33 @@ function previous() {
   }
 }
 
+
+
+// FAQ TOGGLE
+const faq = document.querySelectorAll('.faq')
+
+faq.forEach(qFaq => {
+  qFaq.addEventListener('click', () => {
+    if (qFaq.classList.contains('accordian')) {
+      qFaq.classList.remove('accordian')
+    } else {
+      prevFaq()
+      qFaq.classList.add('accordian')
+    }
+  })
+})
+
+function prevFaq() {
+  const check = document.querySelector('.accordian')
+  if (check) {
+    check.classList.remove('accordian')
+  }
+}
+
+
+
+
+
 // SWIPER
 var swiper = new Swiper(".mySwiper", {
   slidesPerView: 1,
@@ -52,6 +79,8 @@ var swiper = new Swiper(".mySwiper", {
     }
   },
 });
+
+
 
 // LOGO SCROLL
 //  console.log(logoList)
