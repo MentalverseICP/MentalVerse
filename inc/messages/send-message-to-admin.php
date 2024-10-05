@@ -22,7 +22,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
 	
     if ($run) {
         $_SESSION['success'] = "Message sent successfully!";
-        header("Location: ../../home.php"); // Redirect to a success page or the same page
+        header("Location: ../../index.php"); // Redirect to a success page or the same page
     } else {
         $_SESSION['error'] = "Failed to send the message. Please try again.";
         header("Location: ../../contactUs.php"); // Redirect back to the form page
