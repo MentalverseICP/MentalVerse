@@ -336,7 +336,11 @@ footer {
         justify-content: center;
         align-items: center;
         list-style: none;
-        background-color: #7d58c2;
+        background-color: #b594f3;
+        
+        i {
+          color: #311B92;
+        }
       }
     }
     .lang {
