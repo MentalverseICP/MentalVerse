@@ -327,7 +327,7 @@ nav a{
      padding: 5px 10px;
      border-radius: 39px;
 }
-.links button{
+.links a{
      border-radius: 8px;
      border: 1px solid #FFFFFF0F;
      background-color: #222222;
@@ -375,6 +375,120 @@ nav a{
      border: none;
      outline: none;
 }
+.text-sm{	
+     font-size: 0.875rem; /* 14px */
+     line-height: 1.25rem; /* 20px */
+}
+.coming{
+     background:  url(/images/pexels-nappy-935977\ 1.png);
+     background-position: center;
+     background-repeat: no-repeat;
+     background-size: cover;
+     height: 100vh;
+     width: 100vw;
+}
+.logos{
+     width: 400px;
+     height: 96px;
+}
+.headText{
+     font-size: 72px;
+     font-weight: 800;
+     line-height: 87.77px;
+     text-align: center;
+     background: linear-gradient(136.72deg, #B2EBF2 -8.73%, #D1C4E9 74.71%, #F8BBD0 118.95%);
+     -webkit-background-clip: text;
+     -webkit-text-fill-color: transparent;
+     background-clip: text;
+}
+.count{
+     border-radius: 17px;
+     background: #00000033;
+     backdrop-filter: blur(11px);
+     padding: 15px 60px;
+     font-size: 32px;
+     font-weight: 800;
+     line-height: 39.01px;
+     text-align: center;
+     color: #FFFFFF;
+}
+.texts{
+     font-size: 16px;
+     font-weight: 500;
+     line-height: 19.5px;
+     text-align: center;
+     text-transform: capitalize;
+}
+.informate{
+     font-size: 28px;
+     font-weight: 500;
+     line-height: 34.13px;
+     text-align: center;
+     color: #FFFFFF;
+}
+.icon08{
+     width: 50px;
+     height: 50px;
+     border-radius: 50%;
+     clip-path: circle();
+     background: #FFFFFF1F;
+     display: inline-flex;
+     justify-content: center;
+     align-items: center;
+     font-size: 25px;
+     text-decoration: none;
+}
+.fa-facebook-f{
+     color: #1F9BFF;
+}
+.fa-twitter{
+     color: #34C9ED;
+}
+.fa-square-instagram{
+     color: #BC1FFF;
+}
+.fa-linkedin{
+     color: #4CB5F4;
+}
+.email{
+     width: 600px;
+     height: 60px;
+     border-radius: 8px;
+     background: #00000061;
+     border: 1px solid #FFFFFF40;
+     display: flex;
+}
+.email input::placeholder{
+     font-size: 16px;
+     font-weight: 400;
+     line-height: 19.5px;
+     text-align: left;
+     color: #FFFFFF40;
+}
+.email input{
+     width: 100%;
+     color: #fff;
+     background: transparent;
+     outline: none;
+     border: none;
+     text-indent: 10px;
+}
+.email button{
+     border-radius: 40px;
+     margin-left: auto;
+     background: #1FFF50;
+     color: #fff;
+     font-size: 12px;
+     font-weight: 600;
+     line-height: 14.63px;
+     text-align: center;
+     width: 200px;
+     height: 35px;
+     border-radius: 40px;
+     outline: none;
+     border: none;
+}
+
 /* md */
 @media (max-width: 768px) {
      .md-grid-cols-1{
@@ -402,5 +516,27 @@ nav a{
      .Touchs{
           height: 100vh;
           background-color: #EFF5F0;
+     }
+     .headText{
+          font-size: 42px;
+     }
+     .count{
+          font-size: 25px;
+          padding: 15px 30px;
+     }
+     .md-gap-3{
+          gap: 0.75rem!important; /* 12px */
+     }
+     .informate{
+          font-size: 15px;
+     }
+     .email{
+          width: 90vw;
+     }
+     .logos{
+          width: 70vw;
+     }
+     .line{
+          width: 200%;
      }
  }

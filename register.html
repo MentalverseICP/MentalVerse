@@ -30,13 +30,13 @@
           </div>
      </nav>
     
-     <section id="registerSection" class="container py-2 px-4 mt-2 space-y-3" style="background: #000000; border: 1px solid #FFFFFF0F; color: #ffffff;">
+     <form id="registerSection" class="container py-2 px-4 mt-2 space-y-3" style="background: #000000; border: 1px solid #FFFFFF0F; color: #ffffff;">
           <div class="d-flex justify-content-between align-items-center flex-column gap-3">
                <div>Register with:</div>
                <div class="grid grid-cols-3 w-100 links">
-                    <button class="btn btn-outline-light me-3"><i class="fab fa-google"></i> Google</button>
-                    <button class="btn btn-outline-light me-3"><i class="fab fa-github"></i> Github</button>
-                    <button class="btn btn-outline-light"><i class="fas fa-wallet"></i> Wallet Connect</button>
+                    <a class="btn btn-outline-light me-3"><i class="fab fa-google"></i> Google</a>
+                    <a class="btn btn-outline-light me-3"><i class="fab fa-github"></i> Github</a>
+                    <a class="btn btn-outline-light"><i class="fas fa-wallet"></i> Wallet Connect</a>
                </div>
           </div>
           <div class="d-flex justify-content-center align-items-center gap-3">
@@ -48,14 +48,14 @@
                <div class="d-flex justify-content-start align-items-start flex-column">
                     <label for="firstName" class="text-light">First Name</label>
                     <div id="input"  class="d-flex justify-content-start align-items-center px-2 gap-2 w-100">
-                         <i class="fa fa-user-plus fs-5" aria-hidden="true"></i>
+                         <i class="fa fa-user-plus text-sm" aria-hidden="true"></i>
                          <input type="text" class="form-control w-100" id="firstName" placeholder="First Name" />
                     </div>
                </div>
                <div class="d-flex justify-content-start align-items-start flex-column">
                     <label for="lastName" class="text-light">Last Name</label>
                     <div id="input"  class="d-flex justify-content-start align-items-center px-2 gap-2 w-100">
-                         <i class="fa fa-user-plus fs-5" aria-hidden="true"></i>
+                         <i class="fa fa-user-plus text-sm" aria-hidden="true"></i>
                          <input type="text" class="form-control w-100" id="lastName" placeholder="Last Name" />
                     </div>
                </div>
@@ -63,28 +63,28 @@
           <div class="d-flex justify-content-start align-items-start flex-column">
                <label for="username" class="text-light">Username</label>
                <div id="input"  class="d-flex justify-content-start align-items-center px-2 gap-2 w-100">
-                    <i class="fa fa-user-circle fs-5" aria-hidden="true"></i>
+                    <i class="fa fa-user-circle text-sm" aria-hidden="true"></i>
                     <input type="text" class="form-control w-100" id="username" placeholder="Username" />
                </div>
           </div>
           <div class="d-flex justify-content-start align-items-start flex-column">
                <label for="email" class="text-light">Email</label>
                <div id="input"  class="d-flex justify-content-start align-items-center px-2 gap-2 w-100">
-                    <i class="fa fa-envelope fs-5" aria-hidden="true"></i>
+                    <i class="fa fa-envelope text-sm" aria-hidden="true"></i>
                     <input type="email" class="form-control w-100" id="email" placeholder="Email" />
                </div>
           </div>
           <div class="d-flex justify-content-start align-items-start flex-column">
                <label for="password" class="text-light">password</label>
                <div id="input"  class="d-flex justify-content-start align-items-center px-2 gap-2 w-100">
-                    <i class="fa fa-lock fs-5" aria-hidden="true"></i>
+                    <i class="fa fa-lock text-sm" aria-hidden="true"></i>
                     <input type="password" class="form-control w-100" id="password" placeholder="password" />
                </div>
                <div class="info">Minimum length is 8 characters.</div>
           </div>
           <button type="submit" class="w-100 submit">Sign Up</button>
           <div class="info">By creating an account, you agree to the <a href="#">Terms of Service</a>.  We'll occasionally send you account-related emails.</div>
-     </section>
+     </form>
 
 
      <!-- BootStrap Js -->
