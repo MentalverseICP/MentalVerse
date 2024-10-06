@@ -153,8 +153,8 @@
   text-align: center;
 }
 .about.steps .about_bottom .card .text {
-  display: grid;
-  grid-template-columns: 150px;
+  /* display: grid; */
+  /* grid-template-columns: 150px; */
 }
 
 

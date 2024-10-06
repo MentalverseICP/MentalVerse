@@ -1,3 +1,165 @@
-.about.mission.steps {
-  
+.about {
+  grid-template-rows: 1fr;
+
+  .top {
+    grid-template-columns: .4fr 1fr;
+    gap: 100px;
+
+    @media (max-width: 1000px) {
+      gap: 50px;
+      padding: 100px 50px;
+    }
+    @media (max-width: 700px) {
+      grid-template-columns: 1fr;
+      gap: 50px;
+
+      .about_left {
+        margin: 0 100px;
+      }
+      .about_right {
+        padding: 0 30px;
+      }
+    }
+    @media (max-width: 500px) {
+      .about_left {
+        margin: 0;
+      }
+      .about_right {
+        padding: 0;
+      }
+    }
+
+    .about_left {
+      background-color: var(--bg-color);
+      padding: 30px 50px 20px 30px;
+      border-radius: 10px;
+      height: fit-content;
+
+      .application {
+        display: flex;
+        flex-direction: column;
+        gap: 50px;
+
+        .apply {
+          display: flex;
+          gap: 20px;
+          align-items: center;
+
+          .text {
+            p {
+              color: var(--color-light);
+            }
+          }
+        }
+      }
+      .learn {
+        display: flex;
+        justify-content: center;
+      }
+    }
+    .about_right {
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+
+      p {
+        color: var(--color-light);
+        line-height: 15px;
+        padding-left: 20px;
+      }
+      .title {
+        h2 {
+          margin-bottom: 10px;
+        }
+      }
+      .responsiblities {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+    }
+    
+  }
+}
+
+.about.mission .top {    
+  overflow: visible;
+  grid-template-rows: .2fr 1fr .2fr;
+  grid-template-columns: 1fr;
+  justify-items: center;
+
+  .title {
+    h2 {
+      text-align: center;
+    }
+  }
+  .text {
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+    text-align: center;
+    
+    p {
+      color: var(--color-light);
+      line-height: 20px;
+    }
+  }
+  @media (max-width: 1000px) {
+    grid-template-rows: .5fr .5fr;
+    gap: 10px;
+  }
+  @media (max-width: 700px) {
+    /* padding: 50px; */
+    /* width: 100vw; */
+  }
+}
+
+.ourServices.position {
+
+  .bottom {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);   
+    
+    @media (max-width: 1000px) {
+      grid-template-columns: 1fr;
+    }
+
+    .therapyCard {
+      padding: 40px 50px;
+      background-color: var(--color-white);
+      border: 1px solid var(--color-grey);
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+
+      .top_text {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      p {
+        color: var(--color-light);
+      }
+      .bottom_text {
+        display: flex;
+        gap: 30px;
+
+        .place {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+
+          span {
+            color: var(--color-success);
+            align-items: center;
+          }
+          p {
+            color: var(--color-black);
+          }
+        }
+      }
+    }
+  }
 }

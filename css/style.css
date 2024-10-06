@@ -874,10 +874,13 @@ font-family: Manrope;
   align-items: center;
   cursor: pointer;
 }
-.footer .footer_socials li img {
+.footer .footer_socials li i {
+  color: white;
+}
+/* .footer .footer_socials li img {
   width: 20px;
   height: 20px;
-}
+} */
 .footer .top_middle {
   display: flex;
   align-items: start;
@@ -906,6 +909,7 @@ font-family: Manrope;
 .footer .top_right {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 5px;
 }
 .footer .top_right input{
