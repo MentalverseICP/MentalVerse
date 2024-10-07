@@ -2,8 +2,6 @@ const navActive = document.querySelectorAll('nav .nav-link'),
           menuOpen = document.querySelector('#menu_open'),
           menuList = document.querySelector('.nav-menu'),
           dropdowns = document.querySelectorAll('.dropdown')
-          // logoContainer = document.querySelector('.about_bottom')
-          // logoList = document.querySelectorAll('.about_bottom img')
 
 // WINDOW SCROLL
 window.addEventListener('scroll', () => {
@@ -57,22 +55,20 @@ function prevFaq() {
 // DROPDOWN MENU
 dropdowns.forEach(dropdown => {
   const select = dropdown.querySelector('.select'),
-            // caret = dropdown.querySelector('.caret'),
+            caret = dropdown.querySelector('.caret'),
             dropdownMenu = dropdown.querySelector('.dropdown_menu'),
             options = dropdown.querySelectorAll('.dropdown_menu li'),
             selected = dropdown.querySelector('.selected')
 
   select.addEventListener('click', () => {
-    // select.classList.toggle('select-clicked')
-    // caret.classList.toggle('caret-rotate')
+    caret.classList.toggle('caret-rotate')
     dropdownMenu.classList.toggle('dropdown_menu-open')
   })
 
   options.forEach(option => {
     option.addEventListener('click', () => {
       selected.innerText = option.innerText;
-      // select.classList.remove('select-clicked')
-      // caret.classList.remove('caret-rotate')
+      caret.classList.remove('caret-rotate')
       dropdownMenu.classList.remove('dropdown_menu-open')
 
       options.forEach(option => {
@@ -109,12 +105,3 @@ var swiper = new Swiper(".mySwiper", {
     }
   },
 });
-
-
-
-// LOGO SCROLL
-//  console.log(logoList)
-//  logoList.forEach(logo => {
-//   const clone = logo.cloneNode(true);
-//   logoContainer.appendChild(clone)
-//  })

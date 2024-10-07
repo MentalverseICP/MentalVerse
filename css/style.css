@@ -195,13 +195,11 @@ hr {
 .nav-menu .nav-link {
   font-size: 12px;
   position: relative;
+  cursor: pointer;
 }
 .nav-menu .nav-link span {
   font-size: 20px;
   position: absolute;
-  /* opacity: 0; */
-  /* visibility: hidden; */
-  /* transition: opacity .4s, visibility .4s; */
 }
 
 .icons {
@@ -235,9 +233,6 @@ nav .icon:active, .footer_socials li:active {
 .select {
   transition: transform .3s ease;
 }
-/* .caret-rotate {
-  transform: rotate(180deg);
-} */
 .dropdown_menu {
   padding: 0.2em 0.5em;
   background: linear-gradient(#000 0 0) padding-box, 
@@ -295,7 +290,7 @@ nav .icon:active, .footer_socials li:active {
     transform: translateY(6px);
   }
 }
-.dropdown_menu-open .material-symbols-outlined {
+.caret-rotate {
   transition: all 500ms linear;
   transform: rotate(180deg);
 }
