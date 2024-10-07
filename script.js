@@ -67,7 +67,9 @@ dropdowns.forEach(dropdown => {
 
   options.forEach(option => {
     option.addEventListener('click', () => {
-      selected.innerText = option.innerText;
+      //  to change the text from service to the selected item
+      // selected.innerText = option.innerText;
+      // selected.innerHTML = `<span class="material-symbols-outlined caret">play_for_work</span>`
       caret.classList.remove('caret-rotate')
       dropdownMenu.classList.remove('dropdown_menu-open')
 

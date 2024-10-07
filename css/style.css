@@ -401,7 +401,6 @@ nav .icon:active, .footer_socials li:active {
 
 /* ------------------------------------ ABOUT CONTAINER -------------------------------------------- */
 .about {
-  grid-area: about;
   display: grid;
   grid-template-rows: repeat(2, .5fr);
   align-items: center;
@@ -546,7 +545,6 @@ nav .icon:active, .footer_socials li:active {
 
 /* ---------------------------------- ourServices CONTAINER ------------------------------------- */
 .ourServices {
-  grid-area: services;
   display: grid;
   grid-template-rows: .5fr 1fr;
   padding: 100px 200px;
@@ -592,7 +590,6 @@ nav .icon:active, .footer_socials li:active {
 
 /* --------------------------------- pricingPlan CONTAINER ---------------------------------- */
 .pricingPlan {
-  grid-area: pricing;
   display: grid;
   grid-template-rows: .4fr 1fr;
   gap: 60px;
@@ -681,7 +678,6 @@ nav .icon:active, .footer_socials li:active {
 
 /* --------------- statistic CONTAINER ---------------- */
 .statistic {
-  grid-area: statistic;
   display: grid;
   grid-template-rows: repeat(2, .5fr);
   align-items: center;
@@ -795,7 +791,6 @@ font-family: Manrope;
 
 /* --------------- stories CONTAINER ---------------- */
 .stories {
-  grid-area: begin;
   padding: 100px 200px;
   display: grid;
   grid-template-rows: .1fr 1fr;
@@ -874,7 +869,6 @@ font-family: Manrope;
 /* --------------- begin CONTAINER ---------------- */
 .begin {
   min-height: 800px;
-  grid-area: begin;
   display: grid;
   grid-template-rows: 150px repeat(2, 100px);
   grid-template-columns: .5fr;
@@ -897,7 +891,6 @@ font-family: Manrope;
 
 /* --------------- footer CONTAINER ---------------- */
 .footer {
-  grid-area: footer;
   display: grid;
   grid-template-rows: 1fr .2fr;
   background-color: var(--bg-color);
@@ -1120,7 +1113,7 @@ font-family: Manrope;
     border-radius: 5px;
     transition: width 500ms ease-out;
   }
-  .nav-menu .nav-link:hover::after {
+  .nav-menu .nav-link.active::after {
     width: 100%;
   }
   .nav-menu .nav-link:hover span {
