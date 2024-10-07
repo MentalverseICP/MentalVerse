@@ -1,6 +1,7 @@
 const navActive = document.querySelectorAll('nav .nav-link'),
           menuOpen = document.querySelector('#menu_open'),
-          menuList = document.querySelector('.nav-menu')
+          menuList = document.querySelector('.nav-menu'),
+          dropdowns = document.querySelectorAll('.dropdown')
           // logoContainer = document.querySelector('.about_bottom')
           // logoList = document.querySelectorAll('.about_bottom img')
 
@@ -18,7 +19,6 @@ menuOpen.addEventListener('click', () => {
 navActive.forEach(links => {
   links.addEventListener('click', () => {
     links.classList.contains('active') ? links.classList.remove('active') : previous(); links.classList.add('active')
-  console.log('done')
   })
 })
 
@@ -52,6 +52,36 @@ function prevFaq() {
   }
 }
 
+
+
+// DROPDOWN MENU
+dropdowns.forEach(dropdown => {
+  const select = dropdown.querySelector('.select'),
+            // caret = dropdown.querySelector('.caret'),
+            dropdownMenu = dropdown.querySelector('.dropdown_menu'),
+            options = dropdown.querySelectorAll('.dropdown_menu li'),
+            selected = dropdown.querySelector('.selected')
+
+  select.addEventListener('click', () => {
+    // select.classList.toggle('select-clicked')
+    // caret.classList.toggle('caret-rotate')
+    dropdownMenu.classList.toggle('dropdown_menu-open')
+  })
+
+  options.forEach(option => {
+    option.addEventListener('click', () => {
+      selected.innerText = option.innerText;
+      // select.classList.remove('select-clicked')
+      // caret.classList.remove('caret-rotate')
+      dropdownMenu.classList.remove('dropdown_menu-open')
+
+      options.forEach(option => {
+        option.classlist.remove('drop')
+      })
+      option.classList.add('drop')
+    })
+  })
+})
 
 
 

@@ -188,20 +188,20 @@ hr {
 .nav-menu {
   display: flex;
   gap: 40px;
-  overflow: hidden;
 }
 .nav-menu .nav-link {
   font-size: 12px;
+  position: relative;
 }
 .nav-menu .nav-link span {
   font-size: 20px;
   position: absolute;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity .4s, visibility .4s;
+  /* opacity: 0; */
+  /* visibility: hidden; */
+  /* transition: opacity .4s, visibility .4s; */
 }
 
-.icons{
+.icons {
   border-left: 2px solid var(--color-white);
   padding-left: 30px;
   display: flex;
@@ -224,7 +224,78 @@ hr {
 nav .icon:active, .footer_socials li:active {
   transform: scale(0.94);
 }
+/* ---------------- DROP DOWN ----------------- */
+.dropdown {
+  min-width: fit-content;
+  position: relative;
+}
+.select {
+  transition: transform .3s ease;
+}
+/* .caret-rotate {
+  transform: rotate(180deg);
+} */
+.dropdown_menu {
+  padding: 0.2em 0.5em;
+  background: linear-gradient(#000 0 0) padding-box, 
+  linear-gradient(
+  #00ffbb 0%,
+  #19cf44a5 14.29%, 
+  #06f1ce4e 25%,
+  #00ffbf38 64.29%,
+  #44ff0041 75%,
+  #aeff00 100%) border-box;
+  box-shadow: 0 0.5em 1em rgba(0, 0, 0, 0.2);
+  border-radius: 0 0 0.5em 0.5em;
+  color: #9fa5b5;
+  position: absolute;
+  top: 3em;
+  width: fit-content;
+  transform: translateY(-150%);
+  opacity: 0;
+  transition: 0.2s;
+}
+.dropdown_menu li {
+  padding: 0.7em 0.5em;
+  margin: 0.3em 0;
+  border-radius: 0.5em;
+  cursor: pointer;
+}
+.dropdown_menu li:hover {
+  background-color: #2a2d35;
+}
+.drop {
+  background-color: #23242a;
+}
+.dropdown_menu-open {
+  opacity: 1;
+  animation: dropdown 500ms ease forwards;
+}
 
+@keyframes dropdown {
+  0% {
+    opacity: 0;
+  } 
+  50% {
+    opacity: 0;
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(6px);
+  }
+  90% {
+    opacity: 1;
+    transform: translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(6px);
+  }
+}
+.dropdown_menu-open .material-symbols-outlined {
+  transition: all 500ms linear;
+  transform: rotate(180deg);
+}
 
 
 
@@ -790,11 +861,11 @@ font-family: Manrope;
   visibility: visible;
   right: 60px;
 }
-/* .stories .bottom .card .picText p {
+.stories .bottom .card .picText p {
   font-size: 24px;
   font-weight: 500;
   line-height: 33.6px;
-} */
+}
 .stories .bottom .card .picText span {
   font-size: 12px;
   font-weight: 400;

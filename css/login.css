@@ -47,10 +47,11 @@ body {
       border: none;
       cursor: pointer;
 
-      p {
+      a {
         color: black;
         font-weight: 600;
         letter-spacing: 1px;
+        text-decoration: none;
       }
       span {
         display: none;
@@ -68,10 +69,11 @@ body {
       background-color: transparent;
       cursor: pointer;
       
-      p {
+      a {
         color: black;
         font-weight: 600;
         letter-spacing: 1px;
+        text-decoration: none;
       }
       span {
         display: none;
@@ -407,6 +409,7 @@ footer {
     }
     .registerBut {
       background-color: #C0FF0E;
+      border-radius: 20px;
       border: none;
     }
     @media (max-width: 500px) {
