@@ -58,7 +58,7 @@ li {
 .icon.sunny, .icon.check_circle {
   color: var(--color-success);
 }
-.li{
+.li {
   color: var(--color-success-variant);
 }
 .but {
@@ -196,6 +196,21 @@ hr {
   font-size: 12px;
   position: relative;
   cursor: pointer;
+}
+.nav-menu .nav-link::after {
+  content: "";
+  background: var(--color-gradient);
+  border: var(--border);
+  display: block;
+  position: relative;
+  margin-top: 10px;
+  height: 3px;
+  width: 0;
+  border-radius: 5px;
+  transition: width 500ms ease-out;
+}
+.nav-menu .nav-link.active::after {
+  width: 100%;
 }
 .nav-menu .nav-link span {
   font-size: 20px;
@@ -436,6 +451,8 @@ nav .icon:active, .footer_socials li:active {
   padding: 0 20px;
   letter-spacing: .5px;
   font-weight: 400;
+}
+.about_left .message p, .about_right .cardContainer .card p, .bottom .condition_list p, .ourServices .therapyCard p, .pricingPlan .planCard p, .statistic .sideText span, .statistic .principles .text p, .footer .top_left p, .top_middle li a, .top_middle li {
   color: var(--color-light);
 }
 .about_left .post p {

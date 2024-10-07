@@ -1,3 +1,7 @@
+.stories.ourStories .card_text p, .about.mission .message {
+  color: var(--color-light);
+}
+
 .headerImage {
   height: fit-content;
   width: 100vw;

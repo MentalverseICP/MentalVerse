@@ -62,8 +62,12 @@
       flex-direction: column;
       gap: 40px;
 
+      h4 {
+        font-size: 17px;
+      }
       p {
         color: var(--color-light);
+        font-size: 13.5px;
         line-height: 15px;
         padding-left: 20px;
       }
