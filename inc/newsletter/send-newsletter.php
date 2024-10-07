@@ -1,5 +1,5 @@
 <?php
-include('../../../connection/connection.php');
+include('../../connection/connection.php');
 include('../cleaninput.php');
 include("../../dev/messages/function.php");
 include('../session.php');
@@ -13,10 +13,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($run) {
             $_SESSION['success'] = "Succsessfully Subscribed";
-            header("Location: ../../home.php"); // Redirect to a success page or the same page
+            header("Location: ../../index.php"); // Redirect to a success page or the same page
         } else {
             $_SESSION['error'] = "Subscription Failed";
-            header("Location: ../../home.php"); // Redirect back to the form page
+            header("Location: ../../index.php"); // Redirect back to the form page
         }
     }
 }

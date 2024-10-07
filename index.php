@@ -2,12 +2,13 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-include('../connection/connection.php');
-include('../mentalverse/inc/cleaninput.php');
+include('connection/connection.php');
+include('inc/cleaninput.php');
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,23 +16,15 @@ include('../mentalverse/inc/cleaninput.php');
   <link rel="shortcut icon" href="images/Logo mark with letter mark.png" type="image/x-icon">
 
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-      <!-- swiper js -->
-    <link rel="stylesheet" href="package/swiper-bundle.css">
-    <!-- <link rel="stylesheet" href="https://unpkg.com/swiper@7/swiper-bundle.min.css"> -->
-  
+  <!-- swiper js -->
+  <link rel="stylesheet" href="package/swiper-bundle.css">
+  <!-- <link rel="stylesheet" href="https://unpkg.com/swiper@7/swiper-bundle.min.css"> -->
+
 
   <title>MentalVerse</title>
 </head>
+
 <body>
-
-              <!-- <span class="icon material-symbols-outlined">Play_Arrow</span>
-          <span class="icon material-symbols-outlined">play_arrowC</span>
-          <span class="icon sunny material-symbols-outlined" style="font-variation-settings: 'FILL' 1, 'wght' 100, 'GRAD' 0, 'opsz' 24;">sunny</span>
-          <span class="icon material-symbols-outlined" style="font-variation-settings: 'FILL' 1, 'wght' 100, 'GRAD' 200, 'opsz' 24;">star_rate</span>
-          <span class="icon check_circle material-symbols-outlined" style="font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' -25, 'opsz' 24;">check_circle</span>
-          <span class="icon material-symbols-outlined" style="font-variation-settings: 'FILL' 1, 'wght' 100, 'GRAD' 200, 'opsz' 24;">add</span>
-          <span class="icon material-symbols-outlined" style="font-variation-settings: 'FILL' 1, 'wght' 100, 'GRAD' 200, 'opsz' 24;">arrow_right_alt</span> -->
-
   <div class="headerImage">
     <nav class="nav-container">
       <div class="logo">
@@ -40,15 +33,15 @@ include('../mentalverse/inc/cleaninput.php');
       <div class="nav-cover" id="nav-menu">
         <ul class="nav-menu">
           <li class="nav-item"><a href="index.php" class="nav-link active">HOME</a></li>
-          <li class="nav-item"><a href="#" class="nav-link">ABOUT US</a></li>
-          <li class="nav-item"><a href="#" class="nav-link">SERVICES</a></li>
+          <li class="nav-item"><a href="about.php" class="nav-link">ABOUT US</a></li>
+          <li class="nav-item"><a href="services.php" class="nav-link">SERVICES</a></li>
           <li class="nav-item"><a href="#" class="nav-link">PAGE <span class="material-symbols-outlined">keyboard_arrow_down</span></a></li>
-          <li class="nav-item"><a href="../mentalverse/contactUs.php" class="nav-link">CONTACT US</a></li>
+          <li class="nav-item"><a href="contactUs.php" class="nav-link">CONTACT US</a></li>
         </ul>
         <div class="icons">
           <span class="icon material-symbols-outlined">call</span>
-          <span class="icon material-symbols-outlined">mail</span>      
-          <span  class="icon material-symbols-outlined" style="font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' -25, 'opsz' 24" id="menu_open">menu_open</span>
+          <span class="icon material-symbols-outlined">mail</span>
+          <span class="icon material-symbols-outlined" style="font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' -25, 'opsz' 24" id="menu_open">menu_open</span>
         </div>
 
       </div>
@@ -62,7 +55,7 @@ include('../mentalverse/inc/cleaninput.php');
         <hr>
         <p>Odio cras proin proin sit quis fringilla aliquet. Consectetur elementum viverraegestas egestas nulla ullamcorper varius quam.</p>
         <div class="learn">
-          <button class="but start">LEARN MORE</button>
+          <button class="but start"><a href="about.php" style="color: black">LEARN MORE</a></button>
         </div>
         <p class="rating"><i>4.9/5</i> RATING FROM OUR CLIENTS</p>
       </div>
@@ -96,7 +89,7 @@ include('../mentalverse/inc/cleaninput.php');
         </div>
       </div>
 
-    </section>      
+    </section>
   </div>
 
   <section class="container about">
@@ -148,7 +141,7 @@ include('../mentalverse/inc/cleaninput.php');
             <p>Vulputate bibendum erat morbi interdum diam sit. Eu sit dolor vel sodales sed nibh ut. Ac fringilla fames eget a aliquet. Gravida placerat viverra purus sed ac ultricies sem nulla.</p>
           </div>
         </div>
-      </div>        
+      </div>
     </div>
 
     <div class="bottom">
@@ -281,7 +274,7 @@ include('../mentalverse/inc/cleaninput.php');
           </li>
         </ul>
         <div class="learn">
-          <button class="but">GET STARTED</button>
+          <button class="but"><a href="register.php" class="li">GET STARTED</a></button>
         </div>
       </div>
       <div class="planCard">
@@ -312,7 +305,7 @@ include('../mentalverse/inc/cleaninput.php');
           </li>
         </ul>
         <div class="learn">
-          <button class="but">GET STARTED</button>
+          <button class="but"><a href="register.php" class="li">GET STARTED</a></button>
         </div>
       </div>
       <div class="planCard">
@@ -343,7 +336,7 @@ include('../mentalverse/inc/cleaninput.php');
           </li>
         </ul>
         <div class="learn">
-          <button class="but">GET STARTED</button>
+          <button class="but"><a href="register.php" class="li">GET STARTED</a></button>
         </div>
       </div>
     </div>
@@ -364,19 +357,19 @@ include('../mentalverse/inc/cleaninput.php');
         <div class="reviews">
           <div class="reviewPlus">
             <h1>500<span class="icon material-symbols-outlined" style="font-variation-settings: 'FILL' 1, 'wght' 100, 'GRAD' 200, 'opsz' 24;">add</span></h1>
-            <p>SATISFIED CLIENTS</p> 
+            <p>SATISFIED CLIENTS</p>
           </div>
           <div class="reviewPlus">
             <h1>1,200<span class="icon material-symbols-outlined" style="font-variation-settings: 'FILL' 1, 'wght' 100, 'GRAD' 200, 'opsz' 24;">add</span></h1>
-            <p>POSITIVE REVIEWS</p> 
+            <p>POSITIVE REVIEWS</p>
           </div>
           <div class="reviewPlus">
             <h1>200<span class="icon material-symbols-outlined" style="font-variation-settings: 'FILL' 1, 'wght' 100, 'GRAD' 200, 'opsz' 24;">add</span></h1>
-            <p>WORKSHOPS HELD</p> 
+            <p>WORKSHOPS HELD</p>
           </div>
           <div class="reviewPlus">
             <h1>1,800<span class="icon material-symbols-outlined" style="font-variation-settings: 'FILL' 1, 'wght' 100, 'GRAD' 200, 'opsz' 24;">add</span></h1>
-            <p>THERAPY SESSIONS</p> 
+            <p>THERAPY SESSIONS</p>
           </div>
         </div>
       </div>
@@ -435,7 +428,7 @@ include('../mentalverse/inc/cleaninput.php');
           <div class="reviewPlus">
             <h1>25</h1>
             <span class="icon material-symbols-outlined" style="font-variation-settings: 'FILL' 1, 'wght' 100, 'GRAD' 200, 'opsz' 24;">add</span>
-            <p>Qualified <br>Professionals</p> 
+            <p>Qualified <br>Professionals</p>
           </div>
         </div>
       </div>
@@ -453,59 +446,59 @@ include('../mentalverse/inc/cleaninput.php');
     </div>
     <div class="bottom mySwiper">
       <div class="cards swiper-wrapper">
-          <div class="card swiper-slide">
-            <div class="picText">
-              <p>Sarah Johnson</p>
-              <span>Marketing Manager</span>
-            </div>
-            <img src="images/Image (5).png" alt="">
-            <div class="text">
-              <div class="circle">
-                <span class="icon material-symbols-outlined">play_arrow</span>
-              </div>  
-              <h3>Overcoming Anziety and Finding Peace</h3>
-            </div>
+        <div class="card swiper-slide">
+          <div class="picText">
+            <p>Sarah Johnson</p>
+            <span>Marketing Manager</span>
           </div>
-          <div class="card swiper-slide">
-            <div class="picText">
-              <p>Emily and James Parker</p>
-              <span>Teacher and Graphic Designer</span>
+          <img src="images/Image (5).png" alt="">
+          <div class="text">
+            <div class="circle">
+              <span class="icon material-symbols-outlined">play_arrow</span>
             </div>
-            <img src="images/Image (4).png" alt="">
-            <div class="text">
-              <div class="circle">
-                <span class="icon material-symbols-outlined">play_arrow</span>
-              </div>              
-              <h3>Strengthening Our Relationship</h3>
-            </div>
+            <h3>Overcoming Anziety and Finding Peace</h3>
           </div>
-          <div class="card swiper-slide">
-            <div class="picText">
-              <p>Sarah Johnson</p>
-              <span>Marketing Manager</span>
-            </div>
-            <img src="images/Image (5).png" alt="">
-            <div class="text">
-              <div class="circle">
-                <span class="icon material-symbols-outlined">play_arrow</span>
-              </div>              
-              <h3>Overcoming Anziety and Finding Peace</h3>
-            </div>
+        </div>
+        <div class="card swiper-slide">
+          <div class="picText">
+            <p>Emily and James Parker</p>
+            <span>Teacher and Graphic Designer</span>
           </div>
-          <div class="card swiper-slide">
-            <div class="picText">
-              <p>Emily and James Parker</p>
-              <span>Teacher and Graphic Designer</span>
+          <img src="images/Image (4).png" alt="">
+          <div class="text">
+            <div class="circle">
+              <span class="icon material-symbols-outlined">play_arrow</span>
             </div>
-            <img src="images/Image (4).png" alt="">
-            <div class="text">
-              <div class="circle">
-                <span class="icon material-symbols-outlined">play_arrow</span>
-              </div>              
-              <h3>Strengthening Our Relationship</h3>
+            <h3>Strengthening Our Relationship</h3>
+          </div>
+        </div>
+        <div class="card swiper-slide">
+          <div class="picText">
+            <p>Sarah Johnson</p>
+            <span>Marketing Manager</span>
+          </div>
+          <img src="images/Image (5).png" alt="">
+          <div class="text">
+            <div class="circle">
+              <span class="icon material-symbols-outlined">play_arrow</span>
             </div>
-          </div>          
-      </div>    
+            <h3>Overcoming Anziety and Finding Peace</h3>
+          </div>
+        </div>
+        <div class="card swiper-slide">
+          <div class="picText">
+            <p>Emily and James Parker</p>
+            <span>Teacher and Graphic Designer</span>
+          </div>
+          <img src="images/Image (4).png" alt="">
+          <div class="text">
+            <div class="circle">
+              <span class="icon material-symbols-outlined">play_arrow</span>
+            </div>
+            <h3>Strengthening Our Relationship</h3>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -516,13 +509,13 @@ include('../mentalverse/inc/cleaninput.php');
         <p>START YOUR JOURNEY</p>
       </div>
       <h2>Begin Your Path to Wellness</h2>
-    </div>      
+    </div>
     <p>Vulputate bibendum erat morbi interdum diam sit. Eu sit dolor vel sodales sed nibh ut. Ac fringilla fames eget a aliquet. Gravida placerat viverra purus sed ac ultricies sem nulla.</p>
     <div class="learn">
       <button class="start but">SCHEDULE A CONSULTATION</button>
     </div>
     <div class="learn">
-      <button class="but">CONTACT US</button>
+      <button class="but"><a href="contactUs.php" class="li">CONTACT US</a></button>
     </div>
   </section>
 
@@ -533,28 +526,28 @@ include('../mentalverse/inc/cleaninput.php');
         <p>Feel free to call us in working hours Mon – fri {8:00 – 16.00}. Our team will be happy to help answer your queries</p>
         <ul class="footer_socials">
           <li>
-            <a href="https://facebook.com"><img src="images/icon_facebook.png" alt=""></a>
+            <a href="https://facebook.com"><i class="fab fa-facebook-f"></i></a>
           </li>
           <li>
-            <a href="https://instagram.com"><img src="images/icon_x.png" alt=""></a>
+            <a href="https://twitter.com"><i class="fab fa-twitter"></i></a>
           </li>
           <li>
-            <a href="https://twitter.com"><img src="images/icon_linkedin.png" alt=""></a>
+            <a href="https://linkedin.com"><i class="fab fa-linkedin-in"></i></a>
           </li>
           <li>
-            <a href="https://twitter.com"><img src="images/icon_instagram.png" alt=""></a>
+            <a href="https://instagram.com"><i class="fab fa-instagram"></i></a>
           </li>
-        </ul>        
+        </ul>
       </div>
       <div class="top_middle">
         <div class="foot_company">
           <h2>Company</h2>
           <ul class="footer_menu">
-            <li><a href="index.html" class="nav-link">Home</a></li>
-            <li><a href="message.html" class="nav-link">About us</a></li>
-            <li><a href="#" class="nav-link">Courses</a></li>
-            <li><a href="login.html" class="nav-link">Programs</a></li>
-          </ul>            
+            <li><a href="index.php" class="nav-link">Home</a></li>
+            <li><a href="about.php" class="nav-link">About us</a></li>
+            <li><a href="register.php" class="nav-link">Courses</a></li>
+            <li><a href="register.php" class="nav-link">Programs</a></li>
+          </ul>
         </div>
         <div class="foot_service">
           <h2>Services</h2>
@@ -563,15 +556,17 @@ include('../mentalverse/inc/cleaninput.php');
             <li>Group Therapy</li>
             <li>Family Counseling</li>
             <li>Couples Counseling</li>
-          </ul>            
+          </ul>
         </div>
 
       </div>
       <div class="top_right">
         <p>Subscribe to our newsletter</p>
         <div>
-          <input type="email" placeholder="Enter in your Email" required>
-          <button type="submit" class="but start">SUBSCRIBE</button>
+          <form action="inc/newsletter/send-newsletter.php" method="post">
+            <input type="email" placeholder="Enter in your Email" name="email" required>
+            <button type="submit" class="but start">SUBSCRIBE</button>
+          </form>
         </div>
       </div>
     </div>
@@ -587,9 +582,13 @@ include('../mentalverse/inc/cleaninput.php');
     </div>
   </section>
 
-      <!-- <script src="https://unpkg.com/swiper-bundle.min.js"></script> -->
+  <!-- <script src="https://unpkg.com/swiper-bundle.min.js"></script> -->
   <script src="package/swiper-bundle.js"></script>
+  <!-- Font Awsome -->
+  <script src="https://kit.fontawesome.com/2a49fbdbb8.js" crossorigin="anonymous"></script>
+
   <script src="script.js"></script>
 
 </body>
+
 </html>
