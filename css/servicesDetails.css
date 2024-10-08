@@ -218,6 +218,9 @@
 }
 
 .statistic.health.faqQue {
+  .icon {
+    color: var(--color-success);
+  }
   .questions {
     display: grid;
     gap: 30px;
