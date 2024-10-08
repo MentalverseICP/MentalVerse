@@ -34,14 +34,32 @@ include('inc/cleaninput.php');
         <ul class="nav-menu">
           <li class="nav-item"><a href="index.php" class="nav-link active">HOME</a></li>
           <li class="nav-item"><a href="about.php" class="nav-link">ABOUT US</a></li>
-          <li class="nav-item"><a href="services.php" class="nav-link">SERVICES</a></li>
-          <li class="nav-item"><a href="#" class="nav-link">PAGE <span class="material-symbols-outlined">keyboard_arrow_down</span></a></li>
+          <li class="nav-item dropdown">
+            <a href="#" class="nav-link select">
+              <p class="selected">SERVICES <span class="material-symbols-outlined caret">play_for_work</span></p>
+            </a>
+            <ul class="dropdown_menu">
+              <li><a href="services.php" class="drop-link">SERVICES</a></li>
+              <li><a href="servicesDetails.php" class="drop-link">SERVICES DETAILS</a></li>
+            </ul>
+          </li>
+          <li class="nav-item dropdown">
+            <a href="#" class="nav-link select">
+              <p class="selected">PAGE <span class="material-symbols-outlined caret">play_for_work</span></p>
+            </a>
+            <ul class="dropdown_menu">
+              <li><a href="career.php" class="drop-link">CAREER</a></li>
+              <li><a href="careerDetails.php" class="drop-link">CAREER DETAILS</a></li>
+              <li><a href="pricing.php" class="drop-link">PRICING</a></li>
+              <li><a href="helpCenter.php" class="drop-link">HELP CENTER</a></li>
+            </ul>
+          </li>
           <li class="nav-item"><a href="contactUs.php" class="nav-link">CONTACT US</a></li>
         </ul>
         <div class="icons">
-          <span class="icon material-symbols-outlined">call</span>
-          <span class="icon material-symbols-outlined">mail</span>
-          <span class="icon material-symbols-outlined" style="font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' -25, 'opsz' 24" id="menu_open">menu_open</span>
+          <a href="login.php" class="icon material-symbols-outlined"><span class="">login</span></a>
+          <a href="register.php" class="icon material-symbols-outlined"><span class="">group_add</span></a>     
+          <span  class="icon material-symbols-outlined" style="font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' -25, 'opsz' 24" id="menu_open">menu_open</span>
         </div>
 
       </div>
