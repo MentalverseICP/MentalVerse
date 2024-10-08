@@ -182,6 +182,8 @@ hr {
   width: 100%;
   display: block;
   object-fit: cover;
+
+  height: auto;
 }
 .nav-cover {
   display: flex;
@@ -191,6 +193,8 @@ hr {
 .nav-menu {
   display: flex;
   gap: 40px;
+
+  margin-bottom: 0;
 }
 .nav-menu .nav-link {
   font-size: 12px;
@@ -224,6 +228,15 @@ hr {
   gap: 20px;
   justify-content: center;
   align-items: center;
+
+  background-color: transparent;
+  height: auto;
+  width: auto;
+  border-radius: 0;
+  color: #fff;
+  padding: auto;
+  font-weight: normal;
+  font-size: auto;
 }
 .icons .icon {
   background-color: transparent;
@@ -233,6 +246,12 @@ hr {
   cursor: pointer;
   background: var(--color-gradient);
   border: var(--border); 
+
+  width: auto;
+  height: auto;
+  border-radius: auto;
+  clip-path: none;
+  display: block;
 }
 .icons .icon:last-child {
   display: none;
@@ -273,6 +292,10 @@ nav .icon:active, .footer_socials li:active {
   margin: 0.3em 0;
   border-radius: 0.5em;
   cursor: pointer;
+}
+.dropdown_menu li a {
+  color: #fff;
+  font-size: 12px;
 }
 .dropdown_menu li:hover {
   background-color: #2a2d35;
