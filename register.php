@@ -1,42 +1,50 @@
+<?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+$title = "Register";
+include('connection/connection.php');
+include('inc/cleaninput.php');
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <link rel="stylesheet" href="css/login.css">
+  <link rel="stylesheet" href="css/login.css">
   <link rel="shortcut icon" href="images/Logo mark with letter mark.png" 
   type="image/x-icon">
   <!-- Font -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 
-  <title>MentalVerse | Login</title>
+  <title>MentalVerse | Register</title>
 </head>
 <body>
 
-  <section class="container">
     <div class="bg">
       <img src="images/Deco Left.png" alt="">
     </div>
     <div class="bg">
       <img src="images/Deco RIght.png" alt="">
     </div>
-    <nav class="nav-container">
+    <nav class="nav-container register">
       <div class="logo">
         <img src="images/Asset 6.png" alt="">
       </div>
       <div class="icons">
         <button class="loginBut">
-          <a href="login.html">Login</a>
+          <p>Login</p>
           <span class="icon material-symbols-outlined">login</span>
         </button>
         <button class="registerBut">
-          <a href="signup.html">REGISTER</a>
+          <p>REGISTER</p>
           <span class="icon material-symbols-outlined">group_add</span>
         </button>
       </div>
     </nav>
 
-    <section class="login-container">
+    <section class="login-container register">
       <div class="top">
         <h3>Login with:</h3>
         <div class="socials">
@@ -54,32 +62,49 @@
           </button>
         </div>
       </div>
+      <div class="line">
+        <hr>
+        <span>Or</span> 
+        <hr>
+      </div>
       <div class="bottom">
         <div class="form">
-          <div class="inputBox">
-            <label for="username">Username or email</label>
-            <span class="icon material-symbols-outlined" style="font-variation-settings: 'FILL' 0, 'wght' 100, 'GRAD' 200, 'opsz' 24;">person</span>
-            <input type="text" name="username" id="username" placeholder="Username or email">
+          <div class="names">
+            <div class="inputBox">
+              <label for="fname">First Name</label>
+              <span class="icon material-symbols-outlined" style="font-variation-settings: 'FILL' 0, 'wght' 100, 'GRAD' 200, 'opsz' 24;">person</span>
+              <input type="text" name="fname" id="fname" placeholder="First Name">
+            </div>
+            <div class="inputBox">
+              <label for="lname">Last Name</label>
+              <span class="icon material-symbols-outlined" style="font-variation-settings: 'FILL' 0, 'wght' 100, 'GRAD' 200, 'opsz' 24;">person</span>
+              <input type="text" name="lname" id="lname" placeholder="Last Name">
+            </div>
           </div>
           <div class="inputBox">
-            <div class="text">
-              <label for="password">Password</label>
-              <a href="#" class="next">Forgot Password?</a>              
-            </div>
+            <label for="username">Username</label>
+            <span class="icon material-symbols-outlined" style="font-variation-settings: 'FILL' 0, 'wght' 100, 'GRAD' 200, 'opsz' 24;">person_add</span>
+            <input type="text" name="username" id="username" placeholder="Username">
+          </div>
+          <div class="inputBox">
+            <label for="email">Email</label>
+            <span class="icon material-symbols-outlined" style="font-variation-settings: 'FILL' 0, 'wght' 100, 'GRAD' 200, 'opsz' 24;">mail</span>
+            <input type="email" name="email" id="email" placeholder="Email">
+          </div>
+          <div class="inputBox">
+            <label for="password">Password</label>
             <span class="icon material-symbols-outlined" style="font-variation-settings: 'FILL' 0, 'wght' 100, 'GRAD' 200, 'opsz' 24;">lock</span>
             <input type="password" name="password" id="password" placeholder="Password">
           </div>
         </div>
         <div class="check">
-          <input type="checkbox" name="" id="">
-          <span>Remember Me</span>
+          <p>Minimum length is 8 characters.</p>
         </div>
-        <button class="login">Login</button>
-        <p>Do not have an account? <span class="next">Sign Up</span></p>
+        <button class="login">Sign Up</button>
+        <p>By creating an account, you agree to the <a href="#">Terms of Service</a>. We'll occasionally send you account-related emails.</p>
       </div>
     </section>
 
-  </section>
 
   <footer>
     <div class="left">
@@ -150,7 +175,6 @@
 
   <!-- Font Awsome -->
   <script src="https://kit.fontawesome.com/2a49fbdbb8.js" crossorigin="anonymous"></script>
-
 
 </body>
 </html>

@@ -1,3 +1,12 @@
+<?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+$title = "Login";
+include('connection/connection.php');
+include('inc/cleaninput.php');
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -26,11 +35,11 @@
       </div>
       <div class="icons">
         <button class="loginBut">
-          <a href="login.html">Login</a>
+          <p>Login</p>
           <span class="icon material-symbols-outlined">login</span>
         </button>
         <button class="registerBut">
-          <a href="signup.html">REGISTER</a>
+          <p>REGISTER</p>
           <span class="icon material-symbols-outlined">group_add</span>
         </button>
       </div>

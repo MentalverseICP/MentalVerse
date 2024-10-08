@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
       <!-- swiper js -->
     <link rel="stylesheet" href="package/swiper-bundle.css">
-    <!-- <link rel="stylesheet" href="https://unpkg.com/swiper@7/swiper-bundle.min.css"> -->
+    <link rel="stylesheet" href="https://unpkg.com/swiper@7/swiper-bundle.min.css">
   
 
   <title>MentalVerse</title>
@@ -24,13 +24,31 @@
         <ul class="nav-menu">
           <li class="nav-item"><a href="#" class="nav-link active">HOME</a></li>
           <li class="nav-item"><a href="#" class="nav-link">ABOUT US</a></li>
-          <li class="nav-item"><a href="#" class="nav-link">SERVICES</a></li>
-          <li class="nav-item"><a href="#" class="nav-link">PAGE <span class="material-symbols-outlined">keyboard_arrow_down</span></a></li>
+          <li class="nav-item dropdown">
+            <span class="nav-link select">
+              <p class="selected">SERVICES <span class="material-symbols-outlined caret">play_for_work</span></p>
+            </span>
+            <ul class="dropdown_menu">
+              <li><a href="#" class="drop-link">SERVICES</a></li>
+              <li><a href="#" class="drop-link">SERVICES DETAILS</a></li>
+            </ul>
+          </li>
+          <li class="nav-item dropdown">
+            <span class="nav-link select">
+              <p class="selected">PAGE <span class="material-symbols-outlined caret">play_for_work</span></p>
+            </span>
+            <ul class="dropdown_menu">
+              <li><a href="#" class="drop-link">CAREER</a></li>
+              <li><a href="#" class="drop-link">CAREER DETAILS</a></li>
+              <li><a href="#" class="drop-link">PRICING</a></li>
+              <li><a href="#" class="drop-link">HELP CENTER</a></li>
+            </ul>
+          </li>
           <li class="nav-item"><a href="#" class="nav-link">CONTACT US</a></li>
         </ul>
         <div class="icons">
-          <span class="icon material-symbols-outlined">call</span>
-          <span class="icon material-symbols-outlined">mail</span>      
+          <span class="icon material-symbols-outlined">login</span>
+          <span class="icon material-symbols-outlined">group_add</span>      
           <span  class="icon material-symbols-outlined" style="font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' -25, 'opsz' 24" id="menu_open">menu_open</span>
         </div>
 
@@ -570,7 +588,7 @@
     </div>
   </section>
 
-      <!-- <script src="https://unpkg.com/swiper-bundle.min.js"></script> -->
+  <script src="https://unpkg.com/swiper-bundle.min.js"></script>
   <script src="package/swiper-bundle.js"></script>
   <!-- Font Awsome -->
   <script src="https://kit.fontawesome.com/2a49fbdbb8.js" crossorigin="anonymous"></script>
