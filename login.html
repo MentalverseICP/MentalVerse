@@ -54,12 +54,12 @@
           </button>
         </div>
       </div>
-      <div class="bottom">
+      <form class="bottom" action="index.html" method="post">
         <div class="form">
           <div class="inputBox">
             <label for="username">Username or email</label>
             <span class="icon material-symbols-outlined" style="font-variation-settings: 'FILL' 0, 'wght' 100, 'GRAD' 200, 'opsz' 24;">person</span>
-            <input type="text" name="username" id="username" placeholder="Username or email">
+            <input type="text" name="username" id="username" placeholder="Username or email" required>
           </div>
           <div class="inputBox">
             <div class="text">
@@ -67,16 +67,16 @@
               <a href="#" class="next">Forgot Password?</a>              
             </div>
             <span class="icon material-symbols-outlined" style="font-variation-settings: 'FILL' 0, 'wght' 100, 'GRAD' 200, 'opsz' 24;">lock</span>
-            <input type="password" name="password" id="password" placeholder="Password">
+            <input type="password" name="password" id="password" placeholder="Password" required>
           </div>
         </div>
         <div class="check">
-          <input type="checkbox" name="" id="">
+          <input type="checkbox" name="" id="" required>
           <span>Remember Me</span>
         </div>
-        <button class="login">Login</button>
-        <p>Do not have an account? <span class="next">Sign Up</span></p>
-      </div>
+        <button type="submit" class="login">Login</button>
+        <p>Do not have an account? <a href="signup.html" class="next">Sign Up</a></p>
+      </form>
     </section>
 
   </section>

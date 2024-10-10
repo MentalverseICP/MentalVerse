@@ -247,18 +247,24 @@ body {
         accent-color: #d6dd13;
       }
     }
-    button {
+    .login {
       background: linear-gradient(180deg, #ECF15E 0%, #D6DD13 100%);
       padding: 15px;
       border-radius: 10px;
       font-size: 23px;
       font-weight: 600px;
       letter-spacing: 1px;
+      border: none;
+      cursor: pointer;
     }
     p {
       text-align: center;
       letter-spacing: 1px;
       font-weight: 300;
+
+      a {
+        text-decoration: none;
+      }
     }
   }
 }
