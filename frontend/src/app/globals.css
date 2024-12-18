@@ -1,0 +1,135 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5% 64.9%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+  }
+}
+
+.sidebar-icon {
+  @apply h-5 w-5 text-muted-foreground;
+}
+
+.active .sidebar-icon {
+  @apply text-foreground;
+}
+
+/* Add any additional custom styles needed */
+
+/* Add these styles */
+@media (max-width: 768px) {
+  [data-sidebar="menu-button"] span {
+    display: none;
+  }
+  
+  [data-sidebar="group-label"],
+  [data-sidebar="footer-content"] {
+    display: none;
+  }
+
+  /* Add these styles for better mobile theme toggle */
+  .theme-toggle-button {
+    position: relative;
+    z-index: 60;
+  }
+}
+
+/* Add these mobile-specific styles */
+@media (max-width: 768px) {
+  [data-state=open] .sidebar-content {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .sidebar-content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Ensure proper z-index layering */
+  [role="dialog"] {
+    pointer-events: auto;
+  }
+
+  [role="dialog"] .sidebar-content {
+    z-index: 51;
+  }
+
+  /* Ensure clickable elements work */
+  [data-sidebar="menu-button"],
+  [data-sidebar="menu-item"],
+  .theme-toggle-button {
+    position: relative;
+    z-index: 52;
+  }
+}
+
+/* Add these styles for better interaction */
+.sidebar-menu-button {
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure theme toggle is always clickable */
+.theme-toggle-button {
+  position: relative;
+  z-index: 60;
+}
+
+/* Remove pointer-events from overlay when sidebar is open */
+[data-state="open"] .sidebar-overlay {
+  pointer-events: none;
+}
+
+/* Add transition for theme changes */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Ensure the theme toggle is visible in the sheet */
+[role="dialog"] .theme-toggle-button {
+  z-index: 100;
+}
