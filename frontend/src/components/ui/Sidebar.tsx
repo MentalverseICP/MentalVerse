@@ -136,7 +136,7 @@ export const Sidebar = React.forwardRef<
     const { isMobile, state } = useSidebar()
     const isCollapsed = state === "collapsed"
 
-    if (isMobile) {
+    if (isMobile && isCollapsed) {
       return (
         <div
           ref={ref}

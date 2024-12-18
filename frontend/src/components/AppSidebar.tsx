@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/Sidebar"
 import { Link, useLocation } from "react-router-dom"
 import mentalIcon from "@/assets/mental_Icon.svg"
+import mentalIconDark from "@/assets/mental_Icon_dark.svg"
 import mentalIconMobileLight from "@/assets/mental_Icon_mobile_light.svg"
 import mentalIconMobileDark from "@/assets/mental_Icon_mobile_dark.svg"
 import { useTheme } from "@/components/theme-provider"
@@ -81,7 +82,7 @@ export function AppSidebar() {
     if (isMobile) {
       return theme === 'dark' ? mentalIconMobileDark : mentalIconMobileLight
     }
-    return isCollapsed ? (theme === 'dark' ? mentalIconMobileDark : mentalIconMobileLight) : mentalIcon
+    return isCollapsed ? (theme === 'dark' ? mentalIconMobileDark : mentalIconMobileLight) : (theme === 'dark' ? mentalIconDark : mentalIcon)
   }
 
   const sidebarContent = (
