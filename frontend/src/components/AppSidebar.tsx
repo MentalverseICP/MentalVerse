@@ -18,12 +18,15 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   useSidebar,
+  SidebarTrigger,
 } from "@/components/ui/Sidebar"
 import { Link, useLocation } from "react-router-dom"
 import mentalIcon from "@/assets/mental_Icon.svg"
-import { ThemeToggle } from "@/components/ThemeToggle"
+import mentalIconMobileLight from "@/assets/mental_Icon_mobile_light.svg"
+import mentalIconMobileDark from "@/assets/mental_Icon_mobile_dark.svg"
 import { useTheme } from "@/components/theme-provider"
 import { cn } from "@/lib/utils"
+import { Separator } from "@radix-ui/react-separator"
 
 const mainNavItems = [
   {
@@ -74,30 +77,30 @@ export function AppSidebar() {
   const isCollapsed = state === "collapsed"
   const location = useLocation()
 
+  const getIcon = () => {
+    if (isMobile) {
+      return theme === 'dark' ? mentalIconMobileDark : mentalIconMobileLight
+    }
+    return isCollapsed ? (theme === 'dark' ? mentalIconMobileDark : mentalIconMobileLight) : mentalIcon
+  }
+
   const sidebarContent = (
-    <Sidebar className="border-r bg-background">
+    <Sidebar className="border rounded-3xl m-3 w-44 min-h-[95vh]">
       <SidebarHeader className="border-b">
-        <div className="flex items-center justify-between px-4 py-2 relative z-[52]">
-          <div className="flex items-center gap-2">
-            <img 
-              src={mentalIcon} 
-              alt="Mental Verse" 
-              className={cn(
-                "h-full w-full transition-colors",
-                theme === 'dark' ? 'invert' : 'invert-0'
-              )}
+        <div className={cn("flex items-center justify-between", isCollapsed ? 'gap-0' : 'gap-7')}>
+          <Link to={"/"} className="flex items-center justify-between px-1 relative z-[52]">
+            <img
+              src={getIcon()}
+              alt="Mental Verse"
+              className={cn("transition-all", isCollapsed ? 'h-fit w-fit' : 'h-20 w-48')}
             />
-            {/* {(!isCollapsed || isMobile) && ( */}
-              {/* // <span className="font-semibold">Mental Verse</span> */}
-            {/* )} */}
-          </div>
-          <div className="relative z-[53]">
-            <ThemeToggle />
-          </div>
+          </Link>
+          <Separator orientation="vertical" className="mr-2 h-4" />
+          <SidebarTrigger className="-ml-1" />
         </div>
       </SidebarHeader>
       <SidebarContent className="flex flex-col gap-4">
-        <SidebarMenu>
+        <SidebarMenu className="flex gap-5">
           {mainNavItems.map((item) => (
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
@@ -107,7 +110,7 @@ export function AppSidebar() {
               >
                 <Link
                   to={item.href}
-                  className="flex items-center gap-2"
+                  className="flex items-center md:gap-6"
                 >
                   <item.icon className="h-4 w-4" />
                   {!isCollapsed && <span>{item.title}</span>}
@@ -136,7 +139,7 @@ export function AppSidebar() {
               >
                 <Link
                   to={item.href}
-                  className={`flex items-center gap-2 ${item.className || ''}`}
+                  className={`flex items-center md:gap-6 ${item.className || ''}`}
                 >
                   <item.icon className="h-4 w-4" />
                   {!isCollapsed && <span>{item.title}</span>}

@@ -4,15 +4,14 @@ import * as React from "react"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/Button"
-import { Sheet, SheetContent } from "@/components/ui/Sheet"
 import { TooltipProvider } from "@/components/ui/Tooltip"
 import { Slot } from "@radix-ui/react-slot"
-import { BoxesIcon } from "lucide-react"
+import { ChevronsLeftRightEllipsis } from "lucide-react"
 
 const SIDEBAR_COOKIE_NAME = "sidebar:state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
-const SIDEBAR_WIDTH = "16rem"
-const SIDEBAR_WIDTH_ICON = "5rem"
+const SIDEBAR_WIDTH = "20rem"
+const SIDEBAR_WIDTH_ICON = "7rem"
 
 type SidebarContext = {
   state: "expanded" | "collapsed"
@@ -134,23 +133,32 @@ export const Sidebar = React.forwardRef<
     },
     ref
   ) => {
-    const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+    const { isMobile, state } = useSidebar()
+    const isCollapsed = state === "collapsed"
 
     if (isMobile) {
       return (
-        <Sheet open={openMobile} onOpenChange={setOpenMobile}>
-          <SheetContent
-            side={side}
-            className={cn(
-              "w-[var(--sidebar-width)]",
-              "border-r bg-background",
-              "flex flex-col",
-              className
-            )}
-          >
-            {children}
-          </SheetContent>
-        </Sheet>
+        <div
+          ref={ref}
+          className={cn(
+            "flex flex-col",
+            "w-[var(--sidebar-width-icon)]",
+            "border-r bg-background",
+            className
+          )}
+          data-state={state}
+          {...props}
+        >
+          {React.Children.map(children, (child) => {
+            if (React.isValidElement(child)) {
+              return React.cloneElement(child, {
+                className: cn("flex items-center justify-center"),
+                ...child.props,
+              })
+            }
+            return child;
+          })}
+        </div>
       )
     }
 
@@ -158,7 +166,7 @@ export const Sidebar = React.forwardRef<
       <div
         ref={ref}
         className={cn(
-          "hidden md:flex flex-col",
+          "md:flex flex-col",
           "data-[state=expanded]:w-[var(--sidebar-width)]",
           "data-[state=collapsed]:w-[var(--sidebar-width-icon)]",
           "transition-[width] duration-300",
@@ -260,7 +268,7 @@ export const SidebarTrigger = React.forwardRef<
       }}
       {...props}
     >
-      <BoxesIcon />
+      <ChevronsLeftRightEllipsis />
     </Button>
   )
 })
@@ -307,9 +315,9 @@ export const SidebarMenuButton = React.forwardRef<
       data-sidebar="menu-button"
       data-active={isActive}
       className={cn(
-        "flex w-full items-center gap-2 rounded-md p-2 text-sm",
-        "text-foreground outline-none relative z-[1]",
-        "hover:bg-accent hover:text-accent-foreground",
+        "flex w-full items-center gap-2 p-2 text-sm transition-all",
+        "text-foreground outline-none relative z-[1] md:tracking-wide md:text-base font-semibold",
+        "hover:bg-white hover:text-green-600",
         "focus-visible:ring-2 focus-visible:ring-ring",
         className
       )}

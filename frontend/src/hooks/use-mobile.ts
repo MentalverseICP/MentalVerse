@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 export function useIsMobile() {
   const [isMobile, setIsMobile] = useState(() => {
     // Check if window is defined to avoid SSR issues
-    return typeof window !== "undefined" ? window.innerWidth < 768 : false
+    return typeof window !== "undefined" ? window.innerWidth < 280 : false
   })
 
   useEffect(() => {
@@ -11,7 +11,7 @@ export function useIsMobile() {
     if (typeof window === "undefined") return
 
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
+      setIsMobile(window.innerWidth < 280)
     }
 
     checkMobile()

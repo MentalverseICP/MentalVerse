@@ -1,3 +1,4 @@
+import { ThemeToggle } from "@/components/ThemeToggle"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -14,7 +15,7 @@ export default function Home() {
     <div className="flex flex-col">
       <header className="flex h-16 shrink-0 items-center gap-2 border-b">
         <div className="flex items-center gap-2 px-4">
-          <SidebarTrigger className="-ml-1" />
+          <SidebarTrigger />
           <Separator orientation="vertical" className="mr-2 h-4" />
           <Breadcrumb>
             <BreadcrumbList>
@@ -29,6 +30,9 @@ export default function Home() {
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
+        </div>
+        <div className="relative z-[53]">
+          <ThemeToggle />
         </div>
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4">
