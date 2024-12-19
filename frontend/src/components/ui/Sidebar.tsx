@@ -10,7 +10,7 @@ import { ChevronsLeftRightEllipsis } from "lucide-react"
 
 const SIDEBAR_COOKIE_NAME = "sidebar:state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
-const SIDEBAR_WIDTH = "20rem"
+const SIDEBAR_WIDTH = "18rem"
 const SIDEBAR_WIDTH_ICON = "7rem"
 
 type SidebarContext = {
@@ -97,7 +97,7 @@ export const SidebarProvider = React.forwardRef<
         <TooltipProvider delayDuration={0}>
           <div
             ref={ref}
-            className={cn("group/sidebar-wrapper flex min-h-screen w-full", className)}
+            className={cn("font-poppins", "group/sidebar-wrapper flex min-h-screen w-full", className)}
             style={{
               "--sidebar-width": SIDEBAR_WIDTH,
               "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
@@ -166,7 +166,7 @@ export const Sidebar = React.forwardRef<
       <div
         ref={ref}
         className={cn(
-          "md:flex flex-col",
+          "md:flex flex-col fixed",
           "data-[state=expanded]:w-[var(--sidebar-width)]",
           "data-[state=collapsed]:w-[var(--sidebar-width-icon)]",
           "transition-[width] duration-300",
@@ -200,7 +200,7 @@ export const SidebarContent = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex-1 overflow-auto p-4", className)}
+    className={cn("flex-1 overflow-auto", className)}
     {...props}
   />
 ))
@@ -261,14 +261,14 @@ export const SidebarTrigger = React.forwardRef<
       data-sidebar="trigger"
       variant="ghost"
       size="icon"
-      className={cn("h-7 w-7", className)}
+      className={cn("h-5 w-5", className)}
       onClick={(event) => {
         onClick?.(event)
         toggleSidebar()
       }}
       {...props}
     >
-      <ChevronsLeftRightEllipsis />
+      <ChevronsLeftRightEllipsis className="h-5 w-5" />
     </Button>
   )
 })
@@ -294,7 +294,7 @@ const SidebarMenuItem = React.forwardRef<
   <li
     ref={ref}
     data-sidebar="menu-item"
-    className={cn("group/menu-item relative", className)}
+    className={cn("group/menu-item relative hover:text-green-600 px-4 py-1", className)}
     {...props}
   />
 ))
@@ -316,8 +316,8 @@ export const SidebarMenuButton = React.forwardRef<
       data-active={isActive}
       className={cn(
         "flex w-full items-center gap-2 p-2 text-sm transition-all",
-        "text-foreground outline-none relative z-[1] md:tracking-wide md:text-base font-semibold",
-        "hover:bg-white hover:text-green-600",
+        "text-foreground outline-none relative z-[1] md:tracking-wide font-semibold",
+        "hover:text-green-600",
         "focus-visible:ring-2 focus-visible:ring-ring",
         className
       )}

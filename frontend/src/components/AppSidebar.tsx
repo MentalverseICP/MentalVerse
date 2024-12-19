@@ -1,13 +1,14 @@
 "use client"
 
 import {
-  LayoutDashboard,
-  Calendar,
+  Combine,
+  CalendarRange,
   Users,
-  FileText,
-  MessageSquare,
-  Settings,
+  SquareActivity,
+  MessagesSquare,
+  Cog,
   LogOut,
+  Vibrate,
 } from "lucide-react"
 import {
   Sidebar,
@@ -32,12 +33,12 @@ import { Separator } from "@radix-ui/react-separator"
 const mainNavItems = [
   {
     title: "Overview",
-    icon: LayoutDashboard,
+    icon: Combine,
     href: "/home",
   },
   {
     title: "Appointments",
-    icon: Calendar,
+    icon: CalendarRange,
     href: "/appointments",
   },
   {
@@ -47,12 +48,12 @@ const mainNavItems = [
   },
   {
     title: "Pathology Results",
-    icon: FileText,
+    icon: SquareActivity,
     href: "/pathology-results",
   },
   {
     title: "Chats",
-    icon: MessageSquare,
+    icon: MessagesSquare,
     href: "/chats",
     badge: "1",
   },
@@ -61,7 +62,7 @@ const mainNavItems = [
 const accountNavItems = [
   {
     title: "Settings",
-    icon: Settings,
+    icon: Cog,
     href: "/settings",
   },
   {
@@ -86,24 +87,24 @@ export function AppSidebar() {
   }
 
   const sidebarContent = (
-    <Sidebar className="border rounded-3xl m-3 w-44 min-h-[95vh]">
+    <Sidebar className={cn("md:relative border rounded-3xl m-3 w-44 min-h-[95vh] z-50 tracking-wider flex flex-col", theme === 'dark' ? 'bg-background' : 'bg-zinc-50')}>
       <SidebarHeader className="border-b">
-        <div className={cn("flex items-center justify-between", isCollapsed ? 'gap-0' : 'gap-7')}>
+        <div className={cn("flex items-center justify-between", isCollapsed ? 'gap-0' : 'md:gap-7 gap-1')}>
           <Link to={"/"} className="flex items-center justify-between px-1 relative z-[52]">
             <img
               src={getIcon()}
               alt="Mental Verse"
-              className={cn("transition-all", isCollapsed ? 'h-fit w-fit' : 'h-20 w-48')}
+              className={cn("transition-all logo", isCollapsed ? 'h-16 w-7' : 'md:h-20 md:w-48 h-16 w-32')}
             />
           </Link>
-          <Separator orientation="vertical" className="mr-2 h-4" />
-          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="w-px h-5 bg-gray-500" />
+          <SidebarTrigger className={cn("-ml-1 w-7 h-7 flex items-center justify-center hover:-translate-y-1  rounded-lg transition-all duration-300 hover:border-t hover:border-b", theme === 'dark' ? 'bg-background hover:bg-black hover:shadow-[0_2px_0_0_rgba(204,255,0,0.811)] hover:border-lime-400' : 'bg-white hover:border-black hover:shadow-[0_2px_0_0_rgba(0,0,0,0.811)]')} />
         </div>
       </SidebarHeader>
-      <SidebarContent className="flex flex-col gap-4">
-        <SidebarMenu className="flex gap-5">
+      <SidebarContent className="flex flex-col gap-2 md:gap-4">
+        <SidebarMenu className="flex gap-2 md:gap-5">
           {mainNavItems.map((item) => (
-            <SidebarMenuItem key={item.href}>
+            <SidebarMenuItem key={item.href} className={cn("h-full w-full", theme === 'dark' ? 'hover:bg-white' : 'hover:bg-[#DFE0E2]', location.pathname === item.href && (theme === 'dark' ? 'bg-white' : 'bg-[#DFE0E2]'))}>
               <SidebarMenuButton
                 asChild
                 isActive={location.pathname === item.href}
@@ -111,7 +112,7 @@ export function AppSidebar() {
               >
                 <Link
                   to={item.href}
-                  className="flex items-center md:gap-6"
+                  className={`flex items-center md:gap-6 ${location.pathname === item.href ? 'text-green-500 font-medium' : (theme === 'dark' ? 'text-white' : 'text-black')}`}
                 >
                   <item.icon className="h-4 w-4" />
                   {!isCollapsed && <span>{item.title}</span>}
@@ -132,7 +133,8 @@ export function AppSidebar() {
 
         <SidebarMenu>
           {accountNavItems.map((item) => (
-            <SidebarMenuItem key={item.href}>
+            <SidebarMenuItem key={item.href} className={cn("h-full w-full", theme === 'dark' ? 'hover:bg-white' : 'hover:bg-[#DFE0E2]', location.pathname === item.href && (theme === 'dark' ? 'bg-white' : 'bg-[#DFE0E2]'))}>
+            {/* // <SidebarMenuItem key={item.href} className={cn(`h-full w-full ${theme === 'dark' ? 'hover:bg-white' : 'hover:bg-[#DFE0E2]'} ${location.pathname === item.href && (theme === 'dark' ? 'bg-white' : 'bg-[#DFE0E2]')}`)}> */}
               <SidebarMenuButton
                 asChild
                 isActive={location.pathname === item.href}
@@ -140,7 +142,7 @@ export function AppSidebar() {
               >
                 <Link
                   to={item.href}
-                  className={`flex items-center md:gap-6 ${item.className || ''}`}
+                  className={cn(`flex items-center md:gap-6 ${location.pathname === item.href ? 'text-green-500 font-medium' : (theme === 'dark' ? 'text-white' : 'text-black')}`, item.className)}
                 >
                   <item.icon className="h-4 w-4" />
                   {!isCollapsed && <span>{item.title}</span>}
@@ -150,12 +152,15 @@ export function AppSidebar() {
           ))}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter className="border-t p-4">
+      <SidebarFooter className="border-t p-4 pl-6 tracking-wide flex flex-row gap-5 h-fit">
+        <Vibrate className="self-center" />
         {!isCollapsed && (
-          <div className="flex flex-col gap-2">
-            <div className="text-xs font-semibold text-green-500">Emergency Helpline:</div>
-            <div className="text-xs text-muted-foreground">+234 812 345 6789</div>
-            <div className="text-xs text-muted-foreground">+234 812 345 6789</div>
+          <div className="flex flex-col gap-2 justify-items-end">
+            <div className="text-sm font-semibold text-red-500">Emergency Hotlines:</div>
+            <div className="flex flex-col justify-between ml-2">
+              <div className="text-xs text-muted-foreground">+234 812 345 6789</div>
+              <div className="text-xs text-muted-foreground">+234 812 345 6789</div>
+            </div>
           </div>
         )}
       </SidebarFooter>
