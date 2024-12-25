@@ -13,6 +13,10 @@
   scale: 1.06;
   transition: scale 300ms;
 }
+.fill-mental {
+  fill: #18E614;
+  /* filter: hue-rotate(231deg); */
+}
 
 @layer base {
   :root {

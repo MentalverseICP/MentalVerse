@@ -1,6 +1,6 @@
 const Doctors = () => {
   return (
-    <div>Doctors</div>
+    <div className='max-md:ml-44 mt-20'>Doctors</div>
   )
 }
 

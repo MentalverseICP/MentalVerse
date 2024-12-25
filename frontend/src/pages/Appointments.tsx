@@ -1,6 +1,6 @@
 const Appointments = () => {
   return (
-    <div>Appointments</div>
+    <div className='max-md:ml-44 mt-20'>Appointments</div>
   )
 }
 

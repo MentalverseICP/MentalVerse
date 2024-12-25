@@ -10,8 +10,8 @@ import { ChevronsLeftRightEllipsis } from "lucide-react"
 
 const SIDEBAR_COOKIE_NAME = "sidebar:state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
-const SIDEBAR_WIDTH = "18rem"
-const SIDEBAR_WIDTH_ICON = "7rem"
+const SIDEBAR_WIDTH = "16rem"
+const SIDEBAR_WIDTH_ICON = "4rem"
 
 type SidebarContext = {
   state: "expanded" | "collapsed"
@@ -261,7 +261,7 @@ export const SidebarTrigger = React.forwardRef<
       data-sidebar="trigger"
       variant="ghost"
       size="icon"
-      className={cn("h-5 w-5", className)}
+      className={cn("p-1", className)}
       onClick={(event) => {
         onClick?.(event)
         toggleSidebar()
@@ -294,7 +294,7 @@ const SidebarMenuItem = React.forwardRef<
   <li
     ref={ref}
     data-sidebar="menu-item"
-    className={cn("group/menu-item relative hover:text-green-600 px-4 py-1", className)}
+    className={cn("group/menu-item relative", className)}
     {...props}
   />
 ))
@@ -315,9 +315,8 @@ export const SidebarMenuButton = React.forwardRef<
       data-sidebar="menu-button"
       data-active={isActive}
       className={cn(
-        "flex w-full items-center gap-2 p-2 text-sm transition-all",
-        "text-foreground outline-none relative z-[1] md:tracking-wide font-semibold",
-        "hover:text-green-600",
+        "flex w-full items-center gap-2 px-6 py-[18px] text-sm transition-all",
+        "outline-none relative z-[1] md:tracking-wide font-semibold",
         "focus-visible:ring-2 focus-visible:ring-ring",
         className
       )}

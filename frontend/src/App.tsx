@@ -1,19 +1,34 @@
 import './App.css'
+import { useState } from 'react'
 import { BrowserRouter } from 'react-router-dom'
 import { SidebarProvider } from "@/components/ui/Sidebar"
 import { ThemeProvider } from './components/theme-provider'
 import { AppSidebar } from './components/AppSidebar'
-import { Routes } from './Routes'
+import { AppRoutes } from './AppRoutes'
+import SearchBar from './components/SearchBar'
+import { ThemeToggle } from './components/ThemeToggle'
 
 function App() {
+
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    // Add your search logic here
+  };
+
   return (
     <ThemeProvider defaultTheme='dark' storageKey='vite-ui-theme'>
       <BrowserRouter>
         <SidebarProvider defaultOpen={true}>
           <div className="flex min-h-screen">
-            <AppSidebar />
-            <main className="flex-1 flex flex-col overflow-hidden">
-              <Routes />
+            <AppSidebar className={''} />
+            <main className="flex-1 flex flex-col gap-32 overflow-hidden">
+              <SearchBar onSearchChange={handleSearchChange} className='max-md:ml-24 max-sm:ml-16 fixed top-3' />
+              <div className='fixed top-32 ml-80 z-10'>
+                <ThemeToggle />
+              </div>
+              <AppRoutes />
             </main>
           </div>
         </SidebarProvider>

@@ -1,6 +1,6 @@
 const Logout = () => {
   return (
-    <div>Logout</div>
+    <div className='max-md:ml-44 mt-20'>Logout</div>
   )
 }
 
