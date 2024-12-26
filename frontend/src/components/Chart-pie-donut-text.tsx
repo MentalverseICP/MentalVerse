@@ -1,13 +1,14 @@
 "use client"
 
 import * as React from "react"
-import { TrendingUp } from "lucide-react"
 import { Label, Pie, PieChart } from "recharts"
+import { useTheme } from "@/components/theme-provider"
+
 
 import {
   Card,
   CardContent,
-  CardDescription,
+  // CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -19,54 +20,70 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 const chartData = [
-  { browser: "chrome", visitors: 275, fill: "var(--color-chrome)" },
-  { browser: "safari", visitors: 200, fill: "var(--color-safari)" },
-  { browser: "firefox", visitors: 287, fill: "var(--color-firefox)" },
-  { browser: "edge", visitors: 173, fill: "var(--color-edge)" },
-  { browser: "other", visitors: 190, fill: "var(--color-other)" },
+  { sicknesses: "TYPHOID =", patients: 18000, fill: "var(--color-typhoid)" },
+  { sicknesses: "COLD =", patients: 36000, fill: "var(--color-cold)" },
+  { sicknesses: "MALARIA =", patients: 55000, fill: "var(--color-malaria)" },
+  { sicknesses: "OTHERS =", patients: 78000, fill: "var(--color-other)" },
 ]
 
 const chartConfig = {
   visitors: {
     label: "Visitors",
   },
-  chrome: {
-    label: "Chrome",
-    color: "hsl(var(--chart-1))",
+  typhoid: {
+    label: "Typhoid",
+    color: "#0DB16A",
   },
-  safari: {
-    label: "Safari",
-    color: "hsl(var(--chart-2))",
+  cold: {
+    label: "Cold",
+    color: "#FECA57",
   },
-  firefox: {
-    label: "Firefox",
-    color: "hsl(var(--chart-3))",
-  },
-  edge: {
-    label: "Edge",
-    color: "hsl(var(--chart-4))",
+  malaria: {
+    label: "Malaria",
+    color: "#18E614",
   },
   other: {
     label: "Other",
-    color: "hsl(var(--chart-5))",
+    color: "#F80D38",
   },
 } satisfies ChartConfig
 
-export function Component() {
+export function ChartDonut() {
   const totalVisitors = React.useMemo(() => {
-    return chartData.reduce((acc, curr) => acc + curr.visitors, 0)
+    return chartData.reduce((acc, curr) => acc + curr.patients, 0)
   }, [])
 
+  const { theme } = useTheme()
+
+  // const chartItems = [
+  //   {
+  //     label: "Typhoid",
+  //     color: "#0DB16A",
+  //   },
+  //   {
+  //     label: "Cold",
+  //     color: "#FECA57",
+  //   },
+  //   {
+  //     label: "Malaria",
+  //     color: "#18E614",
+  //   },
+  //   {
+  //     label: "Other",
+  //     color: "#F80D38",
+  //   }
+  // ] 
+
   return (
-    <Card className="flex flex-col">
-      <CardHeader className="items-center pb-0">
-        <CardTitle>Pie Chart - Donut with Text</CardTitle>
-        <CardDescription>January - June 2024</CardDescription>
+    <Card className="flex flex-col h-fit rounded-3xl  shadow-md">
+      <CardHeader className="items-start pb-0 mb-0">
+        <CardTitle className="uppercase font-bold text-xs">Diagnostics</CardTitle>
+        {/* <CardDescription>January - June 2024</CardDescription> */}
       </CardHeader>
       <CardContent className="flex-1 pb-0">
         <ChartContainer
           config={chartConfig}
-          className="mx-auto aspect-square max-h-[250px]"
+          className="mx-auto aspect-square max-h-[200px]"
         >
           <PieChart>
             <ChartTooltip
@@ -75,9 +92,9 @@ export function Component() {
             />
             <Pie
               data={chartData}
-              dataKey="visitors"
-              nameKey="browser"
-              innerRadius={60}
+              dataKey="patients"
+              nameKey="sicknesses"
+              innerRadius={50}
               strokeWidth={5}
             >
               <Label
@@ -93,16 +110,16 @@ export function Component() {
                         <tspan
                           x={viewBox.cx}
                           y={viewBox.cy}
-                          className="fill-foreground text-3xl font-bold"
+                          className={`text-2xl font-bold ${theme === 'dark' ? 'fill-white' : 'fill-[#18E614]'}`}
                         >
-                          {totalVisitors.toLocaleString()}
+                          {`${totalVisitors >= 100000 ? Math.floor(totalVisitors / 1000).toFixed(1) : totalVisitors.toLocaleString()}k`}
                         </tspan>
                         <tspan
                           x={viewBox.cx}
                           y={(viewBox.cy || 0) + 24}
-                          className="fill-muted-foreground"
+                          className={`fill-[#18E614] text-[10px] font-bold uppercase tracking-wide ${theme === 'dark' ? 'fill-white' : 'fill-[#18E614]'}`}
                         >
-                          Visitors
+                          Patients
                         </tspan>
                       </text>
                     )
@@ -114,12 +131,31 @@ export function Component() {
         </ChartContainer>
       </CardContent>
       <CardFooter className="flex-col gap-2 text-sm">
-        <div className="flex items-center gap-2 font-medium leading-none">
-          Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
+        <div className="flex items-center gap-5">
+          {/* {chartItems.map((item) => 
+            <div className="flex items-center gap-1" key={item.color}>
+              <div className={`w-2 h-2 rounded-full bg-[${item.color}] border`} />
+              <span className="font-bold text-[9px] tracking-wide">{item.label}</span>  
+            </div>   
+          )} */}
+            <div className="flex items-center gap-1">
+              <div className={`w-2 h-2 rounded-full bg-[#0DB16A]`} />
+              <span className="font-bold text-[9px] tracking-wide">Typhoid</span>  
+            </div>
+            <div className="flex items-center gap-1">
+              <div className={`w-2 h-2 rounded-full bg-[#FECA57]`} />
+              <span className="font-bold text-[9px] tracking-wide">Cold</span>  
+            </div>
+            <div className="flex items-center gap-1">
+              <div className={`w-2 h-2 rounded-full bg-[#18E614]`} />
+              <span className="font-bold text-[9px] tracking-wide">Malaria</span>  
+            </div>
+            <div className="flex items-center gap-1">
+              <div className={`w-2 h-2 rounded-full bg-[#F80D38]`} />
+              <span className="font-bold text-[9px] tracking-wide">Other</span>  
+            </div>
         </div>
-        <div className="leading-none text-muted-foreground">
-          Showing total visitors for the last 6 months
-        </div>
+
       </CardFooter>
     </Card>
   )

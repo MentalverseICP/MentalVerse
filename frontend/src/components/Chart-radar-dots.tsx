@@ -33,14 +33,14 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-export function Component() {
+export function ChartRadar() {
   return (
-    <Card>
-      <CardHeader className="items-center">
-        <CardTitle>Radar Chart - Dots</CardTitle>
-        <CardDescription>
+    <Card className=" shadow-md">
+      <CardHeader className="items-start">
+        <CardTitle className="uppercase text-xs font-bold">CAUSES RANGE</CardTitle>
+        {/* <CardDescription>
           Showing total visitors for the last 6 months
-        </CardDescription>
+        </CardDescription> */}
       </CardHeader>
       <CardContent className="pb-0">
         <ChartContainer
