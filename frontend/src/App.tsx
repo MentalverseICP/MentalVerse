@@ -25,9 +25,9 @@ function App() {
             <AppSidebar className={''} />
             <main className="flex-1 flex flex-col gap-32 overflow-hidden">
               <SearchBar onSearchChange={handleSearchChange} className='max-md:ml-24 max-sm:ml-16 fixed top-3' />
-              <div className='max-md:ml-24 max-sm:ml-16 fixed top-32 right-10 flex items-center justify-between z-10'>
+              <div className='max-md:ml-24 max-sm:ml-16 fixed top-28 right-10 flex items-center justify-between z-10 rounded-lg overflow-hidden backdrop-blur-xl'>
                 <ThemeToggle />
-                <h1>Apply dark theme</h1>
+                <h1 className='mx-2'>Apply dark theme</h1>
               </div>
               <AppRoutes />
             </main>

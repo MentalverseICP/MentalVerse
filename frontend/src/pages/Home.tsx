@@ -14,7 +14,7 @@ export default function Home() {
   const isCollapsed = state === "collapsed"
 
   return (
-    <div className={`grid grid-cols-12 justify-evenly max-xs:ml-[4.5rem] max-md:ml-20 mt-44 mb-4 mr-2 w-fit max-sm:w-fit ${isCollapsed ? 'gap-5 w-fit md:pr-4 md:pl-2' : 'xl:gap-5 gap-5'}`}>
+    <div className={`grid grid-cols-12 justify-evenly max-xs:ml-[4.5rem] max-md:ml-20 mt-40 mb-4 mr-2 w-fit max-sm:w-fit ${isCollapsed ? 'gap-5 w-fit md:pr-4 md:pl-2' : 'xl:gap-5 gap-5'}`}>
       <ChartDonut className="col-start-1 col-span-3 max-xl:col-span-4 max-lg:col-span-6 max-sm:col-span-full" />
       <ChartInteractive className="col-start-4 col-span-3 max-xl:col-start-5 max-xl:col-span-4 max-lg:col-start-7 max-lg:col-span-6  max-sm:col-start-1 max-sm:col-span-full" />
       <StackedBarLineChart className='col-start-7 col-span-3 max-xl:col-start-9 max-xl:col-span-4 max-lg:col-start-1 max-lg:col-span-6 max-md:col-span-full' />
