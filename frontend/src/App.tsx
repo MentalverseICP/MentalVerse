@@ -18,16 +18,16 @@ function App() {
   };
 
   return (
-    <ThemeProvider defaultTheme='dark' storageKey='vite-ui-theme'>
+    <ThemeProvider defaultTheme='light' storageKey='vite-ui-theme'>
       <BrowserRouter>
         <SidebarProvider defaultOpen={false}>
           <div className="flex min-h-screen">
             <AppSidebar className={''} />
             <main className="flex-1 flex flex-col gap-32 overflow-hidden">
               <SearchBar onSearchChange={handleSearchChange} className='max-md:ml-24 max-sm:ml-16 fixed top-3' />
-              <div className='max-md:ml-24 max-sm:ml-16 fixed top-32 flex items-center justify-between z-10'>
-                <h1>time</h1>
+              <div className='max-md:ml-24 max-sm:ml-16 fixed top-32 right-10 flex items-center justify-between z-10'>
                 <ThemeToggle />
+                <h1>Apply dark theme</h1>
               </div>
               <AppRoutes />
             </main>
