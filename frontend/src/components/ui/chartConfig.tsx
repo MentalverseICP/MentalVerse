@@ -61,8 +61,7 @@ export const chartOptions = {
     x: {
       stacked: true,
       grid: { display: false },
-      barPercentage: 0.4, // Reduced width of the bars
-      categoryPercentage: 0.8, // Adjusted category spacing
+      // barPercentage: 0.4, // Reduced width of the bars
       ticks: {
         color: '#000000',
         font: {
@@ -77,12 +76,14 @@ export const chartOptions = {
       ticks: { display: false },
     },
   },
+  categoryPercentage: 1, // Adjusted category spacing
+  barPercentage: 0.3, // Adjust the width of the bars
   layout: {
     padding: {
       top: 10,
       bottom: 13,
-      left: 11,
-      right: 18,
+      left: 12,
+      right: 20,
     },
   },
   maintainAspectRatio: false,

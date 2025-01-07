@@ -48,7 +48,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-export function ChartDonut() {
+export function ChartDonut({className}: {className? : string}) {
   const totalVisitors = React.useMemo(() => {
     return chartData.reduce((acc, curr) => acc + curr.patients, 0)
   }, [])
@@ -75,9 +75,9 @@ export function ChartDonut() {
   // ] 
 
   return (
-    <Card className="flex flex-col h-fit rounded-3xl  shadow-md">
+    <Card className={`flex flex-col h-fit rounded-3xl shadow-md ${className}`}>
       <CardHeader className="items-start pb-0 mb-0">
-        <CardTitle className="uppercase font-bold text-xs">Diagnostics</CardTitle>
+        <CardTitle className="uppercase font-bold text-xs max-lg:text-lg">Diagnostics</CardTitle>
         {/* <CardDescription>January - June 2024</CardDescription> */}
       </CardHeader>
       <CardContent className="flex-1 pb-0">
@@ -131,7 +131,7 @@ export function ChartDonut() {
         </ChartContainer>
       </CardContent>
       <CardFooter className="flex-col gap-2 text-sm">
-        <div className="flex items-center gap-5">
+        <div className="flex flex-wrap items-center gap-5">
           {/* {chartItems.map((item) => 
             <div className="flex items-center gap-1" key={item.color}>
               <div className={`w-2 h-2 rounded-full bg-[${item.color}] border`} />
@@ -140,19 +140,19 @@ export function ChartDonut() {
           )} */}
             <div className="flex items-center gap-1">
               <div className={`w-2 h-2 rounded-full bg-[#0DB16A]`} />
-              <span className="font-bold text-[9px] tracking-wide">Typhoid</span>  
+              <span className="font-bold text-[9px] max-md:text-[12px] max-sm:text-[15px] tracking-wide">Typhoid</span>  
             </div>
             <div className="flex items-center gap-1">
               <div className={`w-2 h-2 rounded-full bg-[#FECA57]`} />
-              <span className="font-bold text-[9px] tracking-wide">Cold</span>  
+              <span className="font-bold text-[9px] max-md:text-[12px] max-sm:text-[15px] tracking-wide">Cold</span>  
             </div>
             <div className="flex items-center gap-1">
               <div className={`w-2 h-2 rounded-full bg-[#18E614]`} />
-              <span className="font-bold text-[9px] tracking-wide">Malaria</span>  
+              <span className="font-bold text-[9px] max-md:text-[12px] max-sm:text-[15px] tracking-wide">Malaria</span>  
             </div>
             <div className="flex items-center gap-1">
               <div className={`w-2 h-2 rounded-full bg-[#F80D38]`} />
-              <span className="font-bold text-[9px] tracking-wide">Other</span>  
+              <span className="font-bold text-[9px] max-md:text-[12px] max-sm:text-[15px] tracking-wide">Other</span>  
             </div>
         </div>
 

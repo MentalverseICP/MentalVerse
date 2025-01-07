@@ -18,34 +18,58 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 const chartData = [
-  { month: "January", desktop: 186 },
-  { month: "February", desktop: 305 },
-  { month: "March", desktop: 237 },
-  { month: "April", desktop: 273 },
-  { month: "May", desktop: 209 },
-  { month: "June", desktop: 214 },
+  { month: "SEVERE HEADACHE", desktop: 186, fill: "var(--color-headache)"},
+  { month: "TYPHOID", desktop: 305, fill: "var(--color-typhoid)" },
+  { month: "COLD", desktop: 237, fill: "var(--color-cold)" },
+  { month: "MALARIA", desktop: 273, fill: "var(--color-malaria)" },
+  { month: "COUGH", desktop: 209, fill: "var(--color-cough)" },
+  { month: "CHOLERA", desktop: 214, fill: "var(--color-cholera)" },
 ]
 
 const chartConfig = {
   desktop: {
-    label: "Desktop",
+    label: "Range",
     color: "hsl(var(--chart-1))",
+  },
+  headache: {
+    label: "SEVERE HEADACHE",
+    color: "#F80D38",
+  },
+  typhoid: {
+    label: "TYPHOID",
+    color: "#0DB16A",
+  },
+  cold: {
+    label: "COLD",
+    color: "#FECA57",
+  },
+  malaria: {
+    label: "MALARIA",
+    color: "#57dafe",
+  },
+  cough: {
+    label: "COUGH",
+    color: "#b10d8d",
+  },
+  cholera: {
+    label: "CHOLERA",
+    color: "#165001",
   },
 } satisfies ChartConfig
 
-export function ChartRadar() {
+export function ChartRadar({ className }: { className?: string }) {
   return (
-    <Card className=" shadow-md">
-      <CardHeader className="items-start">
-        <CardTitle className="uppercase text-xs font-bold">CAUSES RANGE</CardTitle>
+    <Card className={`flex flex-col justify-start max-lg:gap-y-10 h-full rounded-3xl shadow-md ${className}`}>
+      <CardHeader className="relative">
+        <CardTitle className="max-lg:absolute uppercase text-xs font-bold max-lg:text-lg">Causes range</CardTitle>
         {/* <CardDescription>
           Showing total visitors for the last 6 months
         </CardDescription> */}
       </CardHeader>
-      <CardContent className="pb-0">
+      <CardContent className="max-lg:mt-14 max-md:mt-10">
         <ChartContainer
           config={chartConfig}
-          className="mx-auto aspect-square max-h-[250px]"
+          className="-mx-4 max-sm:-mx-3 aspect-square text-[11px] max-lg:text-[13px] max-md:h-96 max-md:m-auto max-sm:h-full max-sm:text-[10px]"
         >
           <RadarChart data={chartData}>
             <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
@@ -53,7 +77,7 @@ export function ChartRadar() {
             <PolarGrid />
             <Radar
               dataKey="desktop"
-              fill="var(--color-desktop)"
+              fill="#0ed80ad8"
               fillOpacity={0.6}
               dot={{
                 r: 4,
@@ -63,14 +87,14 @@ export function ChartRadar() {
           </RadarChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col gap-2 text-sm">
+      {/* <CardFooter className="flex-col gap-2 text-sm">
         <div className="flex items-center gap-2 font-medium leading-none">
           Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
         </div>
         <div className="flex items-center gap-2 leading-none text-muted-foreground">
           January - June 2024
         </div>
-      </CardFooter>
+      </CardFooter> */}
     </Card>
   )
 }

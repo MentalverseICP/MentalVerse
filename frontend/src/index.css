@@ -3,6 +3,9 @@
 @tailwind components;
 @tailwind utilities;
 
+body {
+  font-family: 'Poppins', sans-serif;
+}
 
 .logo {
   will-change: filter;
@@ -17,6 +20,26 @@
   fill: #18E614;
   /* filter: hue-rotate(231deg); */
 }
+
+/* Scrollbar Track */
+.scrollbar-custom::-webkit-scrollbar {
+  height: 8px; /* Horizontal scrollbar height */
+  background: transparent; /* Background of the entire scrollbar */
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background-color: #8180808b; /* Adjust for light or dark mode */
+  border-radius: 8px; /* Rounded edges */
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb:hover {
+  background-color: #8180808b; /* Darker on hover */
+}
+
+.scrollbar-custom::-webkit-scrollbar-track {
+  background-color: inherit; /* Match the background of the table/page */
+}
+
 
 @layer base {
   :root {

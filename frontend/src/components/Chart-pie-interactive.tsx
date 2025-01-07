@@ -66,7 +66,7 @@ const chartConfig = {
   // },
 } satisfies ChartConfig
 
-export function ChartInteractive() {
+export function ChartInteractive({ className }: { className?: string }) {
 
   const { theme } = useTheme()
 
@@ -80,11 +80,11 @@ export function ChartInteractive() {
   const months = React.useMemo(() => desktopData.map((item) => item.month), [])
 
   return (
-    <Card data-chart={id} className="flex flex-col h-[287px] rounded-3xl w-[280px] shadow-md">
+    <Card data-chart={id} className={`flex flex-col h-fit rounded-3xl shadow-md ${className}`}>
       <ChartStyle id={id} config={chartConfig} />
       <CardHeader className="flex-row items-start space-y-0 pb-0">
         <div className="grid gap-1">
-          <CardTitle className="uppercase font-bold text-xs">Patients</CardTitle>
+          <CardTitle className="uppercase font-bold text-xs max-lg:text-lg">Patients</CardTitle>
           {/* <CardDescription>January - June 2024</CardDescription> */}
         </div>
       </CardHeader>

@@ -93,7 +93,7 @@ export function AppSidebar({ className }: { className?: string }) {
   }
 
   const sidebarContent = (
-    <Sidebar className={cn(`md:relative border rounded-3xl m-3 max-sm:mx-0 w-44 min-h-[95vh] max-xs:h-screen max-xs:pb-5  z-50 tracking-wider flex flex-col  ${className}`, theme === 'dark' ? 'bg-background' : 'bg-zinc-50')}>
+    <Sidebar className={cn(`md:relative border rounded-3xl m-3 max-sm:mx-0 w-44 min-h-[95vh] max-md:h-screen max-xs:pb-5 z-50 tracking-wider flex flex-col  ${className}`, theme === 'dark' ? 'bg-background' : 'bg-zinc-50')}>
       <SidebarHeader className="border-b h-24">
         <div className={cn("flex items-center justify-between", isCollapsed ? 'gap-0' : 'md:gap-7 gap-1')}>
           <Link to={"/home"} className="flex items-center justify-between px-1 relative z-[52]">
