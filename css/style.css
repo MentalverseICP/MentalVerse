@@ -39,7 +39,7 @@
 
 body {
   font-family: monospace;
-  /* font-family: Manrope; */
+  font-family: Manrope;
   background-color: transparent;
   overflow-x: hidden;
 }
