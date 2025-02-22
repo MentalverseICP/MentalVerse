@@ -266,6 +266,7 @@ nav .icon:active, .footer_socials li:active {
 }
 /* ---------------- DROP DOWN ----------------- */
 .dropdown {
+  min-width: -webkit-fill-available;
   min-width: fit-content;
   position: relative;
 }
