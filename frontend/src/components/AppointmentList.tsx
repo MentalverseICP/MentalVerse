@@ -54,7 +54,7 @@ const AppointmentList: React.FC<prop> = ({ className }) => {
           {upcomingAppointments.map((appointment, index) => (
             <li
               key={index}
-              className="flex justify-between items-center bg-transparent border rounded-lg p-4"
+              className="flex justify-between items-center bg-transparent rounded-lg p-4 dark:border-[#2f3339] border-2"
             >
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 bg-gray-600 rounded-full"></div>
@@ -74,8 +74,9 @@ const AppointmentList: React.FC<prop> = ({ className }) => {
       {/* Previous Appointments */}
       <div>
         <h2 className={`text-sm font-bold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Previous Appointments</h2>
-        <div className="flex justify-between mt-4 border rounded-lg overflow-hidden">
+        <div className="flex justify-between mt-4 rounded-lg overflow-hidden dark:border-[#2f3339] border-2">
           <button
+            type='button'
             className={`px-4 py-2 uppercase text-xs font-bold ${
               tab === 'day' ? 'bg-[#F80D38] text-white' : 'bg-transparent text-gray-400'
             }`}
@@ -84,6 +85,7 @@ const AppointmentList: React.FC<prop> = ({ className }) => {
             Day
           </button>
           <button
+            type='button'
             className={`px-4 py-2 uppercase text-xs font-bold ${
               tab === 'week' ? 'bg-[#F80D38] text-white' : 'bg-transparent text-gray-400'
             }`}
@@ -92,6 +94,7 @@ const AppointmentList: React.FC<prop> = ({ className }) => {
             Week
           </button>
           <button
+            type='button'
             className={`px-4 py-2 uppercase text-xs font-bold ${
               tab === 'month' ? 'bg-[#F80D38] text-white' : 'bg-transparent text-gray-400'
             }`}
@@ -104,7 +107,7 @@ const AppointmentList: React.FC<prop> = ({ className }) => {
           {previousAppointments[tab].map((appointment, index) => (
             <li
               key={index}
-              className="flex justify-between items-center bg-transparent border rounded-lg p-4"
+              className="flex justify-between items-center bg-transparent rounded-lg p-4 dark:border-[#2f3339] border-2"
             >
               <div className="flex items-center gap-4">
                 <div className="w-5 h-5 bg-gray-600 rounded-full"></div>

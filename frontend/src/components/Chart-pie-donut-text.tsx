@@ -131,7 +131,7 @@ export function ChartDonut({className}: {className? : string}) {
         </ChartContainer>
       </CardContent>
       <CardFooter className="flex-col gap-2 text-sm">
-        <div className="flex flex-wrap items-center gap-5">
+        <div className="flex max-md:flex-wrap items-center gap-5">
           {/* {chartItems.map((item) => 
             <div className="flex items-center gap-1" key={item.color}>
               <div className={`w-2 h-2 rounded-full bg-[${item.color}] border`} />
@@ -140,19 +140,19 @@ export function ChartDonut({className}: {className? : string}) {
           )} */}
             <div className="flex items-center gap-1">
               <div className={`w-2 h-2 rounded-full bg-[#0DB16A]`} />
-              <span className="font-bold text-[9px] max-md:text-[12px] max-sm:text-[15px] tracking-wide">Typhoid</span>  
+              <span className="font-bold text-[9px] max-md:text-[9px] max-sm:text-[15px] tracking-wide">Typhoid</span>  
             </div>
             <div className="flex items-center gap-1">
               <div className={`w-2 h-2 rounded-full bg-[#FECA57]`} />
-              <span className="font-bold text-[9px] max-md:text-[12px] max-sm:text-[15px] tracking-wide">Cold</span>  
+              <span className="font-bold text-[9px] max-md:text-[9px] max-sm:text-[15px] tracking-wide">Cold</span>  
             </div>
             <div className="flex items-center gap-1">
               <div className={`w-2 h-2 rounded-full bg-[#18E614]`} />
-              <span className="font-bold text-[9px] max-md:text-[12px] max-sm:text-[15px] tracking-wide">Malaria</span>  
+              <span className="font-bold text-[9px] max-md:text-[9px] max-sm:text-[15px] tracking-wide">Malaria</span>  
             </div>
             <div className="flex items-center gap-1">
               <div className={`w-2 h-2 rounded-full bg-[#F80D38]`} />
-              <span className="font-bold text-[9px] max-md:text-[12px] max-sm:text-[15px] tracking-wide">Other</span>  
+              <span className="font-bold text-[9px] max-md:text-[9px] max-sm:text-[15px] tracking-wide">Other</span>  
             </div>
         </div>
 

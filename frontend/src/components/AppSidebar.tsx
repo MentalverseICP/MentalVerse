@@ -34,27 +34,27 @@ import { Separator } from "@radix-ui/react-separator"
 const mainNavItems = [
   {
     title: "Overview",
-    icon: () => (<img src={overview} />),
+    icon: () => (<img src={overview} alt="Overview Icon" />),
     href: "/home",
   },
   {
     title: "Appointments",
-    icon: () => (<img src={appointments} />),
+    icon: () => (<img src={appointments} alt="Appointments Icon" />),
     href: "/appointments",
   },
   {
     title: "Doctors",
-    icon: () => (<img src={doctors} />),
+    icon: () => (<img src={doctors} alt="Doctors Icon" />),
     href: "/doctors",
   },
   {
     title: "Medical",
-    icon: () => (<img src={medicalIcon} />),
+    icon: () => (<img src={medicalIcon} alt="Medical Icon" />),
     href: "/medical",
   },
   {
     title: "Chats",
-    icon: () => (<img src={chats} />),
+    icon: () => (<img src={chats} alt="Chats Icon" />),
     href: "/chats",
     badge: "1",
   },
@@ -68,12 +68,12 @@ const mainNavItems = [
 const accountNavItems = [
   {
     title: "Settings",
-    icon: () => (<img src={setttings} />),
+    icon: () => (<img src={setttings} alt="Settings Icon" />),
     href: "/settings",
   },
   {
     title: "Logout",
-    icon: () => (<img src={logout} />),
+    icon: () => (<img src={logout} alt="Logout Icon" />),
     href: "/logout",
     className: "text-[#F80D38] hover:text-red-600",
   },
@@ -93,8 +93,8 @@ export function AppSidebar({ className }: { className?: string }) {
   }
 
   const sidebarContent = (
-    <Sidebar className={cn(`md:relative border rounded-3xl m-3 max-sm:mx-0 w-44 min-h-[95vh] max-md:h-screen max-xs:pb-5 z-50 tracking-wider flex flex-col  ${className}`, theme === 'dark' ? 'bg-background' : 'bg-zinc-50')}>
-      <SidebarHeader className="border-b h-24">
+    <Sidebar className={cn(`md:relative rounded-3xl m-3 max-sm:mx-0 w-44 min-h-[95vh] max-md:h-screen max-xs:pb-5 z-50 dark:border-[#2f3339] border-2 tracking-wider flex flex-col  ${className}`, theme === 'dark' ? 'bg-background' : 'bg-zinc-50')}>
+      <SidebarHeader className="border-b dark:border-[#2f3339]  h-24">
         <div className={cn("flex items-center justify-between", isCollapsed ? 'gap-0' : 'md:gap-7 gap-1')}>
           <Link to={"/home"} className="flex items-center justify-between px-1 relative z-[52]">
             <img
@@ -103,7 +103,7 @@ export function AppSidebar({ className }: { className?: string }) {
               className={cn("transition-all logo fill-mental", isCollapsed ? 'h-16 w-7' : 'md:h-20 md:w-48 h-16 w-32')}
             />
           </Link>
-          <Separator orientation="vertical" className="w-px h-5 bg-gray-500" />
+          <Separator orientation="vertical" className="w-px h-5 bg-[#2f3339]" />
           <SidebarTrigger className={cn("-ml-1 w-7 h-7 flex items-center justify-center hover:-translate-y-1  rounded-lg transition-all duration-300 hover:border-t hover:border-b", theme === 'dark' ? 'bg-background hover:bg-black hover:shadow-[0_2px_0_0_rgba(204,255,0,0.811)] hover:border-[#18E614]' : 'bg-white hover:border-black hover:shadow-[0_2px_0_0_rgba(0,0,0,0.811)]')} />
         </div>
       </SidebarHeader>
@@ -160,7 +160,7 @@ export function AppSidebar({ className }: { className?: string }) {
           ))}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter className="border-t p-4 pl-6 tracking-wide flex flex-row gap-5 h-fit">
+      <SidebarFooter className="border-t dark:border-[#2f3339] p-4 pl-6 tracking-wide flex flex-row gap-5 h-fit">
         <Vibrate className="self-center text-[#18E614]" />
         {!isCollapsed && (
           <div className="flex flex-col gap-2 justify-items-end">

@@ -7,6 +7,10 @@ body {
   font-family: 'Poppins', sans-serif;
 }
 
+input::-webkit-calendar-picker-indicator {
+  display: none;
+}
+
 .logo {
   will-change: filter;
   transition: filter 300ms;
@@ -20,6 +24,38 @@ body {
   fill: #18E614;
   /* filter: hue-rotate(231deg); */
 }
+
+.rbc-month-view,
+.rbc-day-bg,
+.rbc-header, .rbc-month-row,
+.rbc-time-slot, .rbc-time-header-content, .rbc-time-column, 
+.rbc-events-container, .rbc-agenda-table {
+  border-color: #2f3339 !important;
+}
+
+.rbc-time-view,
+.rbc-time-content, .rbc-timeslot-group, .rbc-day-slot {
+  border-color: #989090 !important;
+}
+
+.rbc-month-view, .rbc-time-view {
+  border-radius: 15px;
+}
+
+.rbc-header {
+  padding: 20px 0 40px 10px !important;
+  height: 20px;
+}
+
+.rbc-btn-group button {
+  border-color: #2f3339 !important;
+  color: #ffffff;
+}
+
+.rbc-active {
+  border-color: #2f3339 !important;
+}
+
 
 /* Scrollbar Track */
 .scrollbar-custom::-webkit-scrollbar {
@@ -40,6 +76,17 @@ body {
   background-color: inherit; /* Match the background of the table/page */
 }
 
+.calendar-container {  /* Or whatever class you use for the calendar's parent */
+  width: 100%; /* Occupy full width */
+  overflow-x: auto; /* Handle potential horizontal overflow */
+}
+
+/* Optional: Adjust margins/padding as needed for different screen sizes */
+@media (max-width: 768px) { /* Example breakpoint */
+  .calendar-container {
+    padding: 10px;
+  }
+}
 
 @layer base {
   :root {

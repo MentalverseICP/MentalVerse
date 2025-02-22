@@ -57,7 +57,7 @@ const DoctorList: React.FC<prop> = ({className}) => {
         <h1 className="uppercase font-bold text-xs max-sm:text-sm max-lg:text-lg mr-5 sm:mr-10 lg:mr-20">
           DOCTORS
         </h1>
-        <div className="flex-grow flex items-center rounded-md p-1 bg-transparent shadow-sm border overflow-hidden">
+        <div className="flex-grow flex items-center rounded-md p-1 bg-transparent shadow-sm overflow-hidden dark:border-[#2f3339] border-2">
           <Search className="h-4 w-4 flex-none text-gray-500 dark:text-gray-400 ml-3" />
           <input
             type="text"
@@ -68,13 +68,14 @@ const DoctorList: React.FC<prop> = ({className}) => {
           />
         </div>
 
-        <div className="flex border rounded-md overflow-hidden">
+        <div className="flex rounded-md overflow-hidden dark:border-[#2f3339] border-2">
           {['All', 'Men', 'Women'].map((gender) => (
             <button
+              type='button'
               key={gender}
               onClick={() => setSelectedGender(gender as 'All' | 'Men' | 'Women')}
               className={`px-3 sm:px-4 py-2 text-xs sm:text-sm ${
-                selectedGender === gender ? 'bg-[#F80D38] text-white' : 'border-x'
+                selectedGender === gender ? 'bg-[#F80D38] text-white' : 'border-x dark:border-[#2f3339]'
               }`}
             >
               {gender}
@@ -117,8 +118,9 @@ const DoctorList: React.FC<prop> = ({className}) => {
                 </td>
                 <td className="p-4">
                   <button
+                    type='button'
                     onClick={() => handleBookClick(doctor.id)}
-                    className={`px-5 sm:px-6 py-2 rounded-full font-bold border hover:-translate-y-1 transition-all duration-300 hover:border-t hover:border-b ${
+                    className={`px-5 sm:px-6 py-2 rounded-full font-bold border hover:-translate-y-1 transition-all duration-300 hover:border-t hover:border-b text-xs ${
                       doctor.booked
                         ? theme === 'dark'
                           ? 'bg-[#1d1b1b]'
@@ -139,7 +141,8 @@ const DoctorList: React.FC<prop> = ({className}) => {
 
       <Link to={'/doctors'} className="mt-6 flex justify-center">
         <button
-          className={`px-6 sm:px-8 py-2 sm:py-3 rounded-full font-bold border hover:-translate-y-1 transition-all duration-300 hover:border-t hover:border-b ${
+          type='button'
+          className={`px-6 sm:px-8 py-2 sm:py-3 rounded-full font-bold border hover:-translate-y-1 transition-all duration-300 hover:border-t hover:border-b text-sm ${
             theme === 'dark'
               ? 'bg-background hover:bg-black hover:shadow-[0_2px_0_0_rgba(204,255,0,0.811)] hover:border-[#18E614]'
               : 'hover:bg-zinc-100 bg-white hover:border-black hover:shadow-[0_2px_0_0_rgba(0,0,0,0.811)]'

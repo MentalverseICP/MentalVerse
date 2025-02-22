@@ -16,4 +16,5 @@ export default {
     terser(),
     // other plugins if needed
   ],
+  
 };

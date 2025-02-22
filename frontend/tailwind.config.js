@@ -2,8 +2,7 @@
 export default {
     darkMode: ["class"],
     content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
+    "./src/**/*.{js,jsx,ts,tsx}",
   ],  theme: {
   	extend: {
 			fontFamily: {
@@ -58,7 +57,8 @@ export default {
   				'3': 'hsl(var(--chart-3))',
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
-  			}
+  			},
+  			primary: '#0070f3',
   		}
   	}
   },

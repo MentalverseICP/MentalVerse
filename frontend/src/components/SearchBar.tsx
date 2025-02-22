@@ -24,8 +24,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const isCollapsed = state === "collapsed"
 
   return (
-    <div className={cn(`bg-zinc-50 dark:bg-transparent border rounded-3xl h-24 ml-2 mr-4 max-sm:mr-0 p-5 max-sm:p-3 grid grid-flow-col grid-cols-12 max-sm:grid-cols-6 items-center justify-between z-20 backdrop-blur-xl overflow-hidden ${className}`, isCollapsed ? 'xl:gap-20 lg:gap-10 max-md:gap-5 max-sm:gap-0' : 'xl:gap-14')}>
-      <div className={`col-span-8 max-sm:col-span-4 max-xs:col-span-3 max-sm:col-start-1 flex items-center rounded-md p-1 bg-white shadow-sm border overflow-hidden`}>
+    <div className={cn(`bg-zinc-50 dark:bg-transparent dark:border-[#2f3339] border-2 rounded-3xl h-24 ml-2 mr-4 max-sm:mr-0 p-5 max-sm:p-3 grid grid-flow-col grid-cols-12 max-sm:grid-cols-6 items-center justify-between z-20 backdrop-blur-xl overflow-hidden ${className}`, isCollapsed ? 'xl:gap-20 lg:gap-10 max-md:gap-5 max-sm:gap-0' : 'xl:gap-14')}>
+      <div className={`col-span-8 max-sm:col-span-4 max-xs:col-span-3 max-sm:col-start-1 flex items-center rounded-md p-1 bg-white  dark:border-[#2f3339] border-2 shadow-sm overflow-hidden`}>
         <Search className="h-4 w-4 flex-none text-gray-500 dark:text-gray-400 ml-3" />
         <input
           type="text"
@@ -58,7 +58,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
               </div>
             </div>
           ) : ( 
-            <button title='Profile' className='cursor-default'>
+            <button type='button' title='Profile' className='cursor-default'>
               <Bot  className='text-[#18E614]' />
             </button>
           )}
