@@ -5,15 +5,33 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import "tailwindcss/tailwind.css";
 import * as Popover from "@radix-ui/react-popover";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+
 import { Pen, Plus, ShoppingBasket, ChevronDown, X, Clock } from "lucide-react";
 import { useSidebar } from '@/components/ui/Sidebar';
 
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css"; 
+
+import doctorsData, { Doctor }  from '../data/DoctorsData';
+
+
+
 const localizer = momentLocalizer(moment); 
 
-const initialEvents = [
-  { title: "Hand Infection", start: new Date(2024, 9, 4, 12, 30), end: new Date(2024, 9, 4, 13, 0), type: "consultation" },
-  { title: "Monthly Checkup", start: new Date(2024, 9, 6, 11, 30), end: new Date(2024, 9, 6, 12, 0), type: "routine" },
-  { title: "Malaria Fever", start: new Date(2024, 9, 12), end: new Date(2024, 9, 15), type: "sick" }
+type EventType = keyof typeof eventColors;
+
+interface Event {
+    title: string;
+    start: Date;
+    end: Date;
+    type: EventType;
+    doctor?: string;
+}
+
+const initialEvents: Event[] = [
+    { title: "Hand Infection", start: new Date(2024, 9, 4, 12, 30), end: new Date(2024, 9, 4, 13, 0), type: "consultation", doctor: "Dr. Smith" },
+    { title: "Monthly Checkup", start: new Date(2024, 9, 6, 11, 30), end: new Date(2024, 9, 6, 12, 0), type: "routine", doctor: "Dr. Johnson" },
+    { title: "Malaria Fever", start: new Date(2024, 9, 12), end: new Date(2024, 9, 15), type: "sick", doctor: "Dr. Williams" }
 ];
 
 const eventColors = {
@@ -24,7 +42,7 @@ const eventColors = {
   sick: "bg-[#18E614]",
 };
 
-type EventType = keyof typeof eventColors;
+const doctors = ["Dr. Smith", "Dr. Johnson", "Dr. Williams", "Dr. Brown"];
 
 const eventStyleGetter = (event: { title: string; start: Date; end: Date; type: EventType }) => {
   return { className: `${eventColors[event.type] || "bg-transparent"} text-white p-1 px-3 rounded-xl shadow-md text-sm w-[90%] mx-auto` };
@@ -43,13 +61,16 @@ const CustomCalendar = () => {
 
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
-  const [selectedEvent, setSelectedEvent] = useState<{ title: string; start: Date; end: Date; type: EventType } | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<{ title: string; start: Date; end: Date; type: EventType; doctor?: string } | null>(null);
   const [selectedSlots, setSelectedSlots] = useState<{ start: Date; end: Date }[]>([]);
   
   const [eventTitle, setEventTitle] = useState("");
   const [eventType, setEventType] = useState("consultation");
   const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 });
   const calendarRef = useRef<HTMLDivElement>(null);
+
+  const [selectedDoctor, setSelectedDoctor] = useState(""); 
+
 
   useEffect(() => {
     localStorage.setItem("events", JSON.stringify(events));
@@ -61,6 +82,7 @@ const CustomCalendar = () => {
       setEventType(selectedEvent.type);
       setStartTime(moment(selectedEvent.start).format("HH:mm"));
       setEndTime(moment(selectedEvent.end).format("HH:mm"));
+      setSelectedDoctor(selectedEvent.doctor || "")
     }
   }, [selectedEvent]);
 
@@ -105,8 +127,8 @@ const CustomCalendar = () => {
       let left = box.x - calendarRect.left + window.scrollX;
       let top = box.y - calendarRect.top + window.scrollY;
 
-      const popoverWidth = 256;
-      const popoverHeight = 300;
+      const popoverWidth = 300;
+      const popoverHeight = 400;
       const windowWidth = window.innerWidth;
       const windowHeight = window.innerHeight;
 
@@ -130,8 +152,8 @@ const CustomCalendar = () => {
       let left = mouseEvent.clientX - calendarRect.left + window.scrollX;
       let top = mouseEvent.clientY - calendarRect.top + window.scrollY;
 
-      const popoverWidth = 256;
-      const popoverHeight = 300;
+      const popoverWidth = 300;
+      const popoverHeight = 400;
       const windowWidth = window.innerWidth;
       const windowHeight = window.innerHeight;
 
@@ -147,34 +169,46 @@ const CustomCalendar = () => {
   };
 
   const addOrUpdateEvent = () => {
-      if (eventTitle.trim() && selectedSlots.length > 0 && startTime && endTime) {
-          const [startHours, startMinutes] = startTime.split(":").map(Number);
-          const [endHours, endMinutes] = endTime.split(":").map(Number);
+    if (eventTitle.trim() && selectedSlots.length > 0 && startTime && endTime && selectedDoctor) { // Added selectedDoctor check
+      const [startHours, startMinutes] = startTime.split(":").map(Number);
+      const [endHours, endMinutes] = endTime.split(":").map(Number);
 
-          const slot = selectedSlots[0];
+      const slot = selectedSlots[0];
 
-          const start = new Date(slot.start);
-          start.setHours(startHours || 0, startMinutes || 0);
+      const start = new Date(slot.start);
+      start.setHours(startHours || 0, startMinutes || 0);
 
-          const end = new Date(slot.end);
-          end.setHours(endHours || 0, endMinutes || 0);
+      const end = new Date(slot.end);
+      end.setHours(endHours || 0, endMinutes || 0);
 
-          const newEvent = { title: eventTitle, start, end, type: eventType as EventType };
+      const newEvent = {
+        title: eventTitle,
+        start,
+        end,
+        type: eventType as EventType,
+        doctor: selectedDoctor,
+      };
 
-          setEvents((prev: typeof initialEvents) => [...prev, newEvent]);
-          setSelectedSlots([]); // Clear selectedSlots here!
-      } else if (selectedEvent) { //
-          setEvents((prev: typeof initialEvents) =>
-              prev.map((ev) =>
-                  ev === selectedEvent
-                      ? { ...ev, title: eventTitle, type: eventType as EventType, start: selectedEvent.start, end: selectedEvent.end }
-                      : ev
-              )
-          );
-      }
-      closePopover();
-  };
-
+      setEvents((prev: typeof initialEvents) => [...prev, newEvent]);
+      setSelectedSlots([]);
+    } else if (selectedEvent) {
+        setEvents((prev: typeof initialEvents) =>
+          prev.map((ev) =>
+            ev === selectedEvent
+              ? {
+                  ...ev,
+                  title: eventTitle,
+                  type: eventType as EventType,
+                  start: selectedEvent.start,
+                  end: selectedEvent.end,
+                  doctor: selectedDoctor, 
+                }
+                : ev
+          )
+        );
+    }
+    closePopover();
+};
   const deleteEvent = () => {
     if (selectedEvent) {
       setEvents((prev: typeof initialEvents) => prev.filter((ev) => ev !== selectedEvent));
@@ -265,35 +299,76 @@ const CustomCalendar = () => {
                 </DropdownMenu.Root>
               </div>
 
-              <div className="flex justify-between">
-                <div>
-                  <label className="block mt-4 ml-1 text-[#2f3339] dark:text-gray-200 font-medium text-[10px] uppercase">
+              <div>
+                <label htmlFor="doctor" className="block mt-4 ml-1 text-[#2f3339] dark:text-gray-200 font-medium text-[10px] uppercase">Doctors</label>
+                <DropdownMenu.Root>
+                  <DropdownMenu.Trigger asChild>
+                    <button type="button" className="w-full border border-[#2f3339] dark:border-[#2f3339] bg-transparent p-1.5 text-xs rounded-full flex justify-between items-center focus:outline-none focus:ring-1 focus:ring-[#18E614]">
+                      {selectedDoctor || "Select Doctor"}
+                      <ChevronDown size={16} />
+                    </button>
+                  </DropdownMenu.Trigger>
+                  <DropdownMenu.Content className="bg-white dark:bg-black border border-[#2f3339] dark:border-[#2f3339] shadow-md rounded-md w-44 text-xs z-10">
+                    {doctors.map((doctor) => (
+                      <DropdownMenu.Item
+                        key={doctor}
+                        className="p-2 hover:bg-gray-200 dark:hover:bg-[#2f3339] cursor-pointer"
+                        onSelect={() => setSelectedDoctor(doctor)}
+                      >
+                        {doctor}
+                      </DropdownMenu.Item>
+                    ))}
+                  </DropdownMenu.Content>
+                </DropdownMenu.Root>
+            </div>
+
+              <div className="flex justify-between gap-5">
+                <div className="flex flex-col">
+                  <label className="block mt-4 ml-1 text-[#2f3339] dark:text-gray-200 font-bold text-[10px] uppercase">
                     Start Time
                   </label>
                   <div className="relative flex items-center">
                     <Clock className="absolute left-2 text-[#2f3339] dark:text-gray-400" size={16} />
-                    <input
-                      type="time"
-                      className="w-fit pl-8 border border-[#2f3339] dark:border-[#2f3339] bg-transparent p-1.5 text-xs rounded-full focus:outline-none focus:ring-1 focus:ring-[#18E614] hover:border-[#18E614] dark:hover:border-[#18E614]"
-                      value={startTime}
-                      onChange={(e) => setStartTime(e.target.value)}
-                      title="Select start time"
+                    <DatePicker
+                      selected={startTime ? moment(startTime, "HH:mm").toDate() : null}
+                      onChange={(date) => setStartTime(date ? moment(date).format("HH:mm") : "")}
+                      showTimeSelect
+                      showTimeSelectOnly
+                      timeIntervals={15}
+                      timeCaption="Time"
+                      dateFormat="HH:mm"
+                      className="w-full pl-8 border border-[#2f3339] dark:border-[#2f3339] bg-transparent p-1.5 text-xs rounded-full focus:outline-none focus:ring-1 focus:ring-[#18E614] hover:border-[#18E614] dark:hover:border-[#18E614]"
+                      onChangeRaw={(e) => {
+                        if (e && e.target) {
+                          const target = e.target as HTMLInputElement;
+                          target.value = target.value.replace(/[^0-9:]/g, '');
+                        }
+                      }}
                     />
                   </div>
                 </div>
 
-                <div>
-                  <label className="block mt-4 ml-1 text-[#2f3339] dark:text-gray-200 font-medium text-[10px] uppercase">
+                <div className="flex flex-col">
+                  <label className="block mt-4 ml-1 text-[#2f3339] dark:text-gray-200 font-bold text-[10px] uppercase">
                     End Time
                   </label>
                   <div className="relative flex items-center">
                     <Clock className="absolute left-2 text-[#2f3339] dark:text-gray-400" size={16} />
-                    <input
-                      type="time"
+                    <DatePicker
+                      selected={endTime ? moment(endTime, "HH:mm").toDate() : null}
+                      onChange={(date) => setEndTime(date ? moment(date).format("HH:mm") : "")}
+                      showTimeSelect
+                      showTimeSelectOnly
+                      timeIntervals={15}
+                      timeCaption="Time"
+                      dateFormat="HH:mm"
                       className="w-full pl-8 border border-[#2f3339] dark:border-[#2f3339] bg-transparent p-1.5 text-xs rounded-full focus:outline-none focus:ring-1 focus:ring-[#18E614] hover:border-[#18E614] dark:hover:border-[#18E614]"
-                      value={endTime}
-                      onChange={(e) => setEndTime(e.target.value)}
-                      title="Select end time"
+                      onChangeRaw={(e) => {
+                        if (e && e.target) {
+                          const target = e.target as HTMLInputElement;
+                          target.value = target.value.replace(/[^0-9:]/g, '');
+                        }
+                      }}
                     />
                   </div>
                 </div>
