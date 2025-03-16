@@ -1,92 +1,6 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-body {
-  font-family: 'Poppins', sans-serif;
-}
-
-input::-webkit-calendar-picker-indicator {
-  display: none;
-}
-
-.logo {
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #ccff00cf);
-  scale: 1.06;
-  transition: scale 300ms;
-}
-.fill-mental {
-  fill: #18E614;
-  /* filter: hue-rotate(231deg); */
-}
-
-.rbc-month-view,
-.rbc-day-bg,
-.rbc-header, .rbc-month-row,
-.rbc-time-slot, .rbc-time-header-content, .rbc-time-column, 
-.rbc-events-container, .rbc-agenda-table {
-  border-color: #2f3339 !important;
-}
-
-.rbc-time-view,
-.rbc-time-content, .rbc-timeslot-group, .rbc-day-slot {
-  border-color: #989090 !important;
-}
-
-.rbc-month-view, .rbc-time-view {
-  border-radius: 15px;
-}
-
-.rbc-header {
-  padding: 20px 0 40px 10px !important;
-  height: 20px;
-}
-
-.rbc-btn-group button {
-  border-color: #2f3339 !important;
-  color: #ffffff;
-}
-
-.rbc-active {
-  border-color: #2f3339 !important;
-}
-
-
-/* Scrollbar Track */
-.scrollbar-custom::-webkit-scrollbar {
-  height: 8px; /* Horizontal scrollbar height */
-  background: transparent; /* Background of the entire scrollbar */
-}
-
-.scrollbar-custom::-webkit-scrollbar-thumb {
-  background-color: #8180808b; /* Adjust for light or dark mode */
-  border-radius: 8px; /* Rounded edges */
-}
-
-.scrollbar-custom::-webkit-scrollbar-thumb:hover {
-  background-color: #8180808b; /* Darker on hover */
-}
-
-.scrollbar-custom::-webkit-scrollbar-track {
-  background-color: inherit; /* Match the background of the table/page */
-}
-
-.calendar-container {  /* Or whatever class you use for the calendar's parent */
-  width: 100%; /* Occupy full width */
-  overflow-x: auto; /* Handle potential horizontal overflow */
-}
-
-/* Optional: Adjust margins/padding as needed for different screen sizes */
-@media (max-width: 768px) { /* Example breakpoint */
-  .calendar-container {
-    padding: 10px;
-  }
-}
 
 @layer base {
   :root {
@@ -139,7 +53,15 @@ input::-webkit-calendar-picker-indicator {
 
     --chart-5: 27 87% 67%;
 
-    --radius: 0.5rem}
+    --radius: 0.5rem;
+    
+    --border-color-light: #d2d2d2ea;
+    --border-color-dark: #3D3D3D;
+    /* #3D3D3D */
+
+    --color-light: #000;
+    --color-dark: #DFE0E2;
+  }
   .dark {
 
     --background: 240 10% 3.9%;
@@ -188,8 +110,137 @@ input::-webkit-calendar-picker-indicator {
 
     --chart-4: 280 65% 60%;
 
-    --chart-5: 340 75% 55%}
+    --chart-5: 340 75% 55%;
+    --border-color: var(--border-color-dark);
+  }
+  :not(.dark) {
+    --border-color: var(--border-color-light);
+  }
 }
+
+
+body {
+  font-family: 'Poppins', sans-serif;
+}
+
+input::-webkit-calendar-picker-indicator {
+  display: none;
+}
+
+.logo {
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #ccff00cf);
+  scale: 1.06;
+  transition: scale 300ms;
+}
+.fill-mental {
+  fill: #18E614;
+  /* filter: hue-rotate(231deg); */
+}
+
+.rbc-month-view,
+.rbc-day-bg,
+.rbc-header,
+.rbc-month-row,
+.rbc-time-slot,
+.rbc-time-header,
+.rbc-time-header-content,
+.rbc-time-column,
+.rbc-time-content,
+.rbc-events-container,
+.rbc-agenda-table,
+.rbc-btn-group button {
+  border-color: var(--border-color) !important;
+  color: var(--color-light) !important;
+  overflow: hidden;
+}
+
+.dark .rbc-month-view,
+.dark .rbc-day-bg,
+.dark .rbc-header,
+.dark .rbc-month-row,
+.dark .rbc-time-view,
+.dark .rbc-time-header,
+.dark .rbc-time-slot,
+.dark .rbc-time-header-content,
+.dark .rbc-time-column,
+.dark .rbc-time-content,
+.dark .rbc-timeslot-group,
+.dark .rbc-events-container,
+.dark .rbc-agenda-table,
+.dark .rbc-btn-group button,
+.dark .rbc-agenda-view table.rbc-agenda-table tbody > tr > td + td {
+  border-color: var(--border-color-dark) !important;
+  color: var(--color-dark) !important;
+  overflow: hidden;
+}
+.dark .rbc-time-content {
+  overflow: hidden;
+}
+
+.rbc-month-view, .rbc-time-view {
+  border-radius: 15px;
+}
+
+.rbc-header {
+  padding: 20px 0 40px 10px !important;
+  height: 20px;
+}
+
+.dark .rbc-toolbar .rbc-btn-group button:hover,
+.dark .rbc-btn-group button.rbc-active {
+  color: var(--color-light) !important;
+  background-color: var(--color-dark) !important;
+}
+
+.rbc-toolbar .rbc-btn-group button:hover,
+.rbc-btn-group button.rbc-active {
+  color: var(--color-dark) !important;
+  background-color: var(--color-light) !important;
+}
+
+.selected-slot, .selected-slot:hover {
+  background-color: rgba(128, 128, 128, 0.2); /* Light gray for light mode */
+}
+
+.dark .selected-slot, .dark .selected-slot:hover {
+  background-color: rgba(255, 255, 255, 0.2); /* Light gray for dark mode */
+}
+
+/* Scrollbar Track */
+.scrollbar-custom::-webkit-scrollbar {
+  height: 8px; /* Horizontal scrollbar height */
+  background: transparent; /* Background of the entire scrollbar */
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background-color: #8180808b; /* Adjust for light or dark mode */
+  border-radius: 8px; /* Rounded edges */
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb:hover {
+  background-color: #8180808b; /* Darker on hover */
+}
+
+.scrollbar-custom::-webkit-scrollbar-track {
+  background-color: inherit; /* Match the background of the table/page */
+}
+
+.calendar-container {  /* Or whatever class you use for the calendar's parent */
+  width: 100%; /* Occupy full width */
+  overflow-x: auto; /* Handle potential horizontal overflow */
+}
+
+/* Optional: Adjust margins/padding as needed for different screen sizes */
+@media (max-width: 768px) { /* Example breakpoint */
+  .calendar-container {
+    padding: 10px;
+  }
+}
+
 
 @layer base {
   * {

@@ -16,6 +16,10 @@ import {
   SidebarTrigger,
 } from "@/components/ui/Sidebar"
 import { Link, useLocation } from "react-router-dom"
+import { useTheme } from "@/components/theme-provider"
+import { cn } from "@/lib/utils"
+import { Separator } from "@radix-ui/react-separator"
+
 import mentalIcon from "@/assets/mental_Icon.svg"
 import mentalIconDark from "@/assets/mental_Icon_dark.svg"
 import mentalIconMobileLight from "@/assets/mental_Icon_mobile_light.svg"
@@ -27,9 +31,8 @@ import medicalIcon from '@/assets/medical.svg'
 import chats from '@/assets/Chats Icon.svg'
 import setttings from '@/assets/Settings Icon.svg'
 import logout from '@/assets/Logout Icon.svg'
-import { useTheme } from "@/components/theme-provider"
-import { cn } from "@/lib/utils"
-import { Separator } from "@radix-ui/react-separator"
+
+
 
 const mainNavItems = [
   {
@@ -109,8 +112,8 @@ export function AppSidebar({ className }: { className?: string }) {
       </SidebarHeader>
       <SidebarContent className="flex flex-col gap-2 md:gap-2 mt-1">
         <SidebarMenu className="flex gap-2 md:gap-3">
-          {mainNavItems.map((item) => (
-            <SidebarMenuItem key={item.href} className={cn("h-full w-full", theme === 'dark' ? 'hover:bg-white' : 'hover:bg-[#000]', location.pathname === item.href && (theme === 'dark' ? 'bg-white' : 'bg-[#000]'))}>
+          {mainNavItems.map((item: { title: string; icon: React.FC; href: string; badge?: string }) => (
+            <SidebarMenuItem key={item.href} className={cn("h-full w-full", theme === 'dark' ? 'hover:bg-[#DFE0E2]' : 'hover:bg-[#000]', location.pathname === item.href && (theme === 'dark' ? 'bg-[#DFE0E2]' : 'bg-[#000]'))}>
               <SidebarMenuButton
                 asChild
                 isActive={location.pathname === item.href}
@@ -140,8 +143,8 @@ export function AppSidebar({ className }: { className?: string }) {
 
         <SidebarMenu>
           {accountNavItems.map((item) => (
-            <SidebarMenuItem key={item.href} className={cn("h-full w-full", theme === 'dark' ? 'hover:bg-white' : 'hover:bg-[#000]', location.pathname === item.href && (theme === 'dark' ? 'bg-white' : 'bg-[#000]'))}>
-              {/* // <SidebarMenuItem key={item.href} className={cn(`h-full w-full ${theme === 'dark' ? 'hover:bg-white' : 'hover:bg-[#DFE0E2]'} ${location.pathname === item.href && (theme === 'dark' ? 'bg-white' : 'bg-[#DFE0E2]')}`)}> */}
+            <SidebarMenuItem key={item.href} className={cn("h-full w-full", theme === 'dark' ? 'hover:bg-[#DFE0E2]' : 'hover:bg-[#000]', location.pathname === item.href && (theme === 'dark' ? 'bg-[#DFE0E2]' : 'bg-[#000]'))}>
+              {/* // <SidebarMenuItem key={item.href} className={cn(`h-full w-full ${theme === 'dark' ? 'hover:bg-[#DFE0E2]' : 'hover:bg-[#DFE0E2]'} ${location.pathname === item.href && (theme === 'dark' ? 'bg-[#DFE0E2]' : 'bg-[#DFE0E2]')}`)}> */}
               <SidebarMenuButton
                 asChild
                 isActive={location.pathname === item.href}
