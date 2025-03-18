@@ -3,6 +3,12 @@
 @tailwind utilities;
 
 @layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
   :root {
 
     --background: 0 0% 100%;
@@ -55,8 +61,8 @@
 
     --radius: 0.5rem;
     
-    --border-color-light: #d2d2d2ea;
     --border-color-dark: #3D3D3D;
+    --border-color-light: #d2d2d2ea;
     /* #3D3D3D */
 
     --color-light: #000;
@@ -210,6 +216,28 @@ input::-webkit-calendar-picker-indicator {
   background-color: rgba(255, 255, 255, 0.2); /* Light gray for dark mode */
 }
 
+.rbc-overlay {
+  padding: 8px !important;
+  max-width: 200px !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1.4;
+  overflow-y: auto;
+  max-height: 200px;
+}
+
+.rbc-overlay .rbc-event {
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-bottom: 4px;
+}
+
+
+
+
+
+
 /* Scrollbar Track */
 .scrollbar-custom::-webkit-scrollbar {
   height: 8px; /* Horizontal scrollbar height */
@@ -242,11 +270,11 @@ input::-webkit-calendar-picker-indicator {
 }
 
 
-@layer base {
+/* @layer base {
   * {
     @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
   }
-}
+} */

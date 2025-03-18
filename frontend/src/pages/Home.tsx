@@ -1,12 +1,12 @@
-import AppointmentList from "@/components/AppointmentList";
-import { ChartDonut } from "@/components/Chart-pie-donut-text"
-import { ChartInteractive } from "@/components/Chart-pie-interactive"
-import { ChartRadar } from "@/components/Chart-radar-dots"
-import HistogramChart from "@/components/HistogramChart";
+import AppointmentList from "@/components/homeComp/AppointmentList";
+import { ChartDonut } from "@/components/homeComp/Chart-pie-donut-text"
+import { ChartInteractive } from "@/components/homeComp/Chart-pie-interactive"
+import { ChartRadar } from "@/components/homeComp/Chart-radar-dots"
+import HistogramChart from "@/components/homeComp/HistogramChart";
 import { useSidebar } from '@/components/ui/Sidebar';
-import { StackedBarLineChart } from "@/components/StackedBarLineChart";
-import MapComponent from "@/components/MapComponent";
-import DoctorList from "@/components/DoctorList";
+import { StackedBarLineChart } from "@/components/homeComp/StackedBarLineChart";
+import MapComponent from "@/components/homeComp/MapComponent";
+import DoctorList from "@/components/homeComp/DoctorList";
 
 export default function Home() {
 

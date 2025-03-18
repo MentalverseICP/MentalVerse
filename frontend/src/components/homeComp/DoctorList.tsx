@@ -2,8 +2,8 @@ import { Search } from 'lucide-react';
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import chats from '@/assets/Chats Icon.svg'
-import { useTheme } from './theme-provider';
-import doctorsData from '../data/DoctorsData';
+import { useTheme } from '../theme-provider';
+import doctorsData from '@/data/DoctorsData';
 
 interface prop {
   className: string;
