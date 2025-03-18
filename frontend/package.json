@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "vite",
     "start": "vite --open --port 3000",
-    "build": "browserify ./index.js -g [ envify --NODE_ENV production ] -g uglifyify | terser --compress --mangle > ./bundle.js",
+    "prebuild": "mkdir -p dist",
+    "build": "npx browserify ./index.js -g [ envify --NODE_ENV production ] -g uglifyify | terser --compress --mangle > ./dist/bundle.js",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -47,6 +48,7 @@
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
+    "browserify": "^17.0.1",
     "envify": "^4.1.0",
     "eslint": "^9.15.0",
     "eslint-plugin-react-hooks": "^5.0.0",
