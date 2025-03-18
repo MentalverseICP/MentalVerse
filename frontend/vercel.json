@@ -5,5 +5,8 @@
       "use": "@vercel/node"
     }
   ],
-  "outputDirectory": "dist"
+
+  "outputDirectory": "dist",
+  "public": "dist",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
