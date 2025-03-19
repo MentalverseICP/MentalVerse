@@ -3,12 +3,10 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "main": "src/index.tsx",
   "scripts": {
     "dev": "vite",
     "start": "vite --open --port 3000",
-    "prebuild": "mkdir dist -Force",
-    "build": "react-scripts build",
+    "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
