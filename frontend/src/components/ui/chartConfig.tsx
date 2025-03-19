@@ -9,6 +9,7 @@ import {
   Tooltip,
   Legend,
   Filler,
+  LineController
 } from 'chart.js';
 
 ChartJS.register(
@@ -20,7 +21,8 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
+  LineController
 );
 
 let width: number | undefined, height: number | undefined, gradient: CanvasGradient | null;
