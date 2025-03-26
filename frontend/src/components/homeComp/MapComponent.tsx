@@ -147,7 +147,7 @@ const MapComponent: React.FC<prop> = ({className}) => {
       <div className="w-fit lg:w-3/4 lg:mb-0 h-full border-r-2 dark:border-[#2f3339] max-sm:border-0 max-lg:pr-36 max-md:pr-6 bg-transparent relative">
       <h2 className=" absolute max-lg:relative uppercase font-bold text-xs max-lg:text-lg px-6 pt-4">covid 19 pandemic</h2>
         <ComposableMap
-          className=" w-full h-fit p-4 max-md:p-0 mb-4"
+          className=" w-full h-fit p-4 max-md:p-0 mb-10"
         >
           <Geographies geography={geoUrl}>
             {({ geographies }: { geographies: CustomGeography[] }) =>
@@ -181,12 +181,12 @@ const MapComponent: React.FC<prop> = ({className}) => {
           ))}
         </ComposableMap>
         <div className=" absolute max-lg:relative -bottom-2 flex flex-wrap gap-2 px-4 pb-6">
-          <button className="px-3 py-1 bg-green-600 text-white text-xs font-semibold rounded-full shadow">All</button>
-          <button className="px-3 py-1 bg-gray-200 text-gray-700 text-xs font-semibold rounded-full shadow">USA</button>
-          <button className="px-3 py-1 bg-gray-200 text-gray-700 text-xs font-semibold rounded-full shadow">China</button>
-          <button className="px-3 py-1 bg-gray-200 text-gray-700 text-xs font-semibold rounded-full shadow">Australia</button>
-          <button className="px-3 py-1 bg-gray-200 text-gray-700 text-xs font-semibold rounded-full shadow">UK</button>
-          <button className="px-3 py-1 bg-gray-200 text-gray-700 text-xs font-semibold rounded-full shadow">Botswana</button>
+          <button type="button" className="px-3 py-1 bg-green-600 text-white text-xs font-semibold rounded-full shadow">All</button>
+          <button type="button" className="px-3 py-1 bg-gray-200 text-gray-700 text-xs font-semibold rounded-full shadow">USA</button>
+          <button type="button" className="px-3 py-1 bg-gray-200 text-gray-700 text-xs font-semibold rounded-full shadow">China</button>
+          <button type="button" className="px-3 py-1 bg-gray-200 text-gray-700 text-xs font-semibold rounded-full shadow">Australia</button>
+          <button type="button" className="px-3 py-1 bg-gray-200 text-gray-700 text-xs font-semibold rounded-full shadow">UK</button>
+          <button type="button" className="px-3 py-1 bg-gray-200 text-gray-700 text-xs font-semibold rounded-full shadow">Botswana</button>
         </div>
       </div>
 

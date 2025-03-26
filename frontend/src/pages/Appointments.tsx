@@ -169,7 +169,7 @@ const CustomCalendar = () => {
       let left = mouseEvent.clientX - calendarRect.left + window.scrollX;
       let top = mouseEvent.clientY - calendarRect.top + window.scrollY;
 
-      const popoverWidth = 500;
+      const popoverWidth = isCollapsed ? 500 : 700;
       const popoverHeight = 400;
       const windowWidth = window.innerWidth;
       const windowHeight = window.innerHeight;
