@@ -20,7 +20,7 @@ function App() {
   return (
     <ThemeProvider defaultTheme='light' storageKey='vite-ui-theme'>
       <BrowserRouter>
-        <SidebarProvider defaultOpen={true}>
+        <SidebarProvider defaultOpen={false}>
           <div className="flex min-h-screen">
             <AppSidebar className={'z-20'} />
             <main className="flex-1 flex flex-col gap-32 overflow-hidden">
