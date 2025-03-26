@@ -187,8 +187,13 @@ input::-webkit-calendar-picker-indicator {
   overflow: hidden;
 }
 
-.rbc-month-view, .rbc-time-view {
+.rbc-month-view, .rbc-time-view, .rbc-agenda-view {
   border-radius: 15px;
+  border-width: 1px;
+}
+
+.rbc-agenda-view table.rbc-agenda-table {
+  border: none;
 }
 
 .rbc-header {
