@@ -75,15 +75,15 @@ export function ChartDonut({className}: {className? : string}) {
   // ] 
 
   return (
-    <Card className={`flex flex-col h-fit rounded-3xl shadow-md ${className}`}>
+    <Card className={`flex flex-col h-full rounded-3xl shadow-md ${className}`}>
       <CardHeader className="items-start pb-0 mb-0">
         <CardTitle className="uppercase font-bold text-xs max-lg:text-lg">Diagnostics</CardTitle>
         {/* <CardDescription>January - June 2024</CardDescription> */}
       </CardHeader>
-      <CardContent className="flex-1 pb-0">
+      <CardContent className="flex flex-1 justify-items-center justify-center pb-0">
         <ChartContainer
           config={chartConfig}
-          className="mx-auto aspect-square max-h-[200px]"
+          className="mx-auto aspect-square w-[200px]"
         >
           <PieChart>
             <ChartTooltip

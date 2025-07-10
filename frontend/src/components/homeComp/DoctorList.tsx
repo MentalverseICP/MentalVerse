@@ -1,35 +1,22 @@
-import { Search } from 'lucide-react';
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import chats from '@/assets/Chats Icon.svg'
+import { Search } from 'lucide-react';
+import chats from '@/images/Chats Icon.svg'
 import { useTheme } from '../theme-provider';
-import doctorsData from '@/data/DoctorsData';
+import doctorsData, { Doctor } from '@/data/DoctorsData';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 
 interface prop {
   className: string;
 }
 
-// interface Doctor {
-//   name: string;
-//   role: string;
-//   appointments: number;
-//   id: number;
-//   gender: 'Men' | 'Women';
-//   booked: boolean;
-// }
-
-// const doctorsData: Doctor[] = [
-//   { id: 1, name: 'Dr. Ibrahim Yekeni', role: 'Heart Surgeon', appointments: 0, gender: 'Men', booked: false },
-//   { id: 2, name: 'Dr. Ebuka Kelechi', role: 'Health Specialist', appointments: 10, gender: 'Men', booked: false },
-//   { id: 3, name: 'Dr. Bridget Olowojeje', role: 'Family Doctor', appointments: 66, gender: 'Women', booked: true },
-// ];
-
 const DoctorList: React.FC<prop> = ({className}) => {
-  const [doctors, setDoctors] = useState(doctorsData);
+  const [doctors, setDoctors] = useState<Doctor[]>(doctorsData);
   const [selectedGender, setSelectedGender] = useState<'All' | 'Men' | 'Women'>('All');
   const [searchTerm, setSearchTerm] = useState('');
-
-  const {theme} = useTheme()
+  const [page, setPage] = useState(1);
+  const doctorsPerPage = 3;
+  const {theme} = useTheme();
 
   const handleBookClick = (id: number) => {
     setDoctors((prevDoctors) =>
@@ -51,6 +38,9 @@ const DoctorList: React.FC<prop> = ({className}) => {
       (doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
       doctor.role.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  const totalPages = Math.ceil(filteredDoctors.length / doctorsPerPage);
+  const paginatedDoctors = filteredDoctors.slice((page - 1) * doctorsPerPage, page * doctorsPerPage);
 
   return (
     <div className={`bg-transparent p-6 rounded-3xl shadow-md border w-full ${className}`}>
@@ -97,7 +87,7 @@ const DoctorList: React.FC<prop> = ({className}) => {
             </tr>
           </thead>
           <tbody>
-            {filteredDoctors.map((doctor) => (
+            {paginatedDoctors.map((doctor) => (
               <tr
                 key={doctor.id}
                 className={`rounded-lg ${
@@ -105,14 +95,16 @@ const DoctorList: React.FC<prop> = ({className}) => {
                 }`}
               >
                 <td className="p-4 flex items-center gap-4">
-                  <div className="w-10 h-10 bg-gray-500 rounded-full" />
+                  <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-300 font-bold text-sm uppercase">
+                    {doctor.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                  </div>
                   {doctor.name}
                 </td>
                 <td className="p-4">{doctor.role}</td>
                 <td className="p-4 text-[#ff0000] font-bold">{doctor.appointments}</td>
                 <td className="p-4">
-                  <Link to={'/chats'}>
-                    <button className="text-red-500 hover:text-red-700">
+                  <Link to={`/chats/${doctor.id}`}>
+                    <button type='button' className="text-red-500 hover:text-red-700">
                       <img src={chats} alt="Chat" />
                     </button>
                   </Link>
@@ -140,6 +132,36 @@ const DoctorList: React.FC<prop> = ({className}) => {
         </table>
       </div>
 
+      {/* Pagination */}
+      <div className="mt-4 flex justify-end">
+        <Pagination>
+          <PaginationContent className='cursor-pointer'>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+              />
+            </PaginationItem>
+            {[...Array(totalPages)].map((_, i) => (
+              <PaginationItem key={i}>
+                <PaginationLink
+                  isActive={page === i + 1}
+                  onClick={() => setPage(i + 1)}
+                >
+                  {i + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
+
       <Link to={'/doctors'} className="mt-6 flex justify-center">
         <button
           type='button'
@@ -153,7 +175,6 @@ const DoctorList: React.FC<prop> = ({className}) => {
         </button>
       </Link>
     </div>
-
   );
 };
 

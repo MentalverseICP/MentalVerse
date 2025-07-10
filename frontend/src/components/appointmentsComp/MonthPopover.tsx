@@ -29,7 +29,7 @@ interface Event {
 
 const MonthPopover = ({ event, onClose, style = {}, onEdit }: MonthPopoverProps) => {
     return (
-        <div className="bg-white dark:bg-black shadow-xl rounded-xl p-4 w-96 absolute z-30 border border-[#DFE0E2] dark:border-[#3D3D3D]" style={style}>
+        <div className="bg-white dark:bg-black shadow-xl rounded-xl p-4 w-96 absolute z-50 border border-[#DFE0E2] dark:border-[#3D3D3D]" style={style}>
             <div className="flex items-center space-x-2 mb-3 justify-between border-b-2 border-[#DFE0E2] pb-3">
                 <div className="flex items-center gap-2">
                     <div className="w-10 h-10 bg-[#DFE0E2] dark:bg-[#3D3D3D] rounded-full"></div>
@@ -41,13 +41,14 @@ const MonthPopover = ({ event, onClose, style = {}, onEdit }: MonthPopoverProps)
 
                 <div className="ml-auto flex justify-between gap-3">
                     <button
+                        title="button"
                         type="button"
                         onClick={() => onEdit(event)} // Pass event to onEdit
                         className="p-2 rounded-full border border-[#DFE0E2] hover:bg-black hover:border-white transition-all hover:text-white text-black dark:hover:text-black dark:text-white dark:hover:bg-[#DFE0E2]"
                     >
                         <Pen size={14} fill="1" />
                     </button>
-                    <button type="button" onClick={onClose} className="p-2 rounded-full border border-[#DFE0E2] hover:bg-black hover:border-white transition-all hover:text-white text-black dark:hover:text-black dark:text-white dark:hover:bg-[#DFE0E2]">
+                    <button title="button" type="button" onClick={onClose} className="p-2 rounded-full border border-[#DFE0E2] hover:bg-black hover:border-white transition-all hover:text-white text-black dark:hover:text-black dark:text-white dark:hover:bg-[#DFE0E2]">
                         <ShoppingBasket size={16} fill="1" />
                     </button>
                 </div>

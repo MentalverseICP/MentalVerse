@@ -5,6 +5,7 @@
 @layer base {
   * {
     @apply border-border;
+    
   }
   body {
     @apply bg-background text-foreground;
@@ -67,6 +68,7 @@
 
     --color-light: #000;
     --color-dark: #DFE0E2;
+    --bgcolor-dark: #1f1f1f;
   }
   .dark {
 
@@ -124,6 +126,9 @@
   }
 }
 
+/* * {
+  border-color: !important;
+} */
 
 body {
   font-family: 'Poppins', sans-serif;
@@ -188,6 +193,7 @@ input::-webkit-calendar-picker-indicator {
 }
 
 .rbc-month-view, .rbc-time-view, .rbc-agenda-view {
+  border-color: var(--border-color-dark) !important;
   border-radius: 15px;
   border-width: 1px;
 }
@@ -203,8 +209,8 @@ input::-webkit-calendar-picker-indicator {
 
 .dark .rbc-toolbar .rbc-btn-group button:hover,
 .dark .rbc-btn-group button.rbc-active {
-  color: var(--color-light) !important;
-  background-color: var(--color-dark) !important;
+  color: var(--color-dark) !important;
+  background-color: var(--bgcolor-dark) !important;
 }
 
 .rbc-toolbar .rbc-btn-group button:hover,
@@ -238,41 +244,47 @@ input::-webkit-calendar-picker-indicator {
   margin-bottom: 4px;
 }
 
-
-
-
-
-
-/* Scrollbar Track */
-.scrollbar-custom::-webkit-scrollbar {
-  height: 8px; /* Horizontal scrollbar height */
-  background: transparent; /* Background of the entire scrollbar */
-}
-
-.scrollbar-custom::-webkit-scrollbar-thumb {
-  background-color: #8180808b; /* Adjust for light or dark mode */
-  border-radius: 8px; /* Rounded edges */
-}
-
-.scrollbar-custom::-webkit-scrollbar-thumb:hover {
-  background-color: #8180808b; /* Darker on hover */
-}
-
-.scrollbar-custom::-webkit-scrollbar-track {
-  background-color: inherit; /* Match the background of the table/page */
-}
-
-.calendar-container {  /* Or whatever class you use for the calendar's parent */
-  width: 100%; /* Occupy full width */
-  overflow-x: auto; /* Handle potential horizontal overflow */
-}
-
 /* Optional: Adjust margins/padding as needed for different screen sizes */
 @media (max-width: 768px) { /* Example breakpoint */
   .calendar-container {
     padding: 10px;
   }
 }
+
+/* Scrollbar Track */
+.scrollbar-custom::-webkit-scrollbar {
+  height: 6px; 
+  width: 3px;  
+  background: transparent; 
+  scrollbar-width: thin;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background-color: #8180808b; /* Adjust for light or dark mode */
+  border-radius: 8px; /* Rounded edges */
+  scrollbar-width: thin;
+
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb:hover {
+  background-color: #8180808b; /* Darker on hover */
+  scrollbar-width: thin;
+
+}
+
+.scrollbar-custom::-webkit-scrollbar-track {
+  background-color: inherit; /* Match the background of the table/page */
+  scrollbar-width: thin;
+
+}
+
+.calendar-container {  /* Or whatever class you use for the calendar's parent */
+  width: 100%; /* Occupy full width */
+  overflow-x: auto; /* Handle potential horizontal overflow */
+  scrollbar-width: thin;
+
+}
+
 
 
 /* @layer base {

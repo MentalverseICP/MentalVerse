@@ -142,7 +142,7 @@ const data: MapPoint[] = [
 
 const MapComponent: React.FC<prop> = ({className}) => {
   return (
-    <div className={`h-fit flex flex-row max-sm:flex-col justify-between bg-transparent rounded-3xl shadow-md border overflow-hidden ${className}`}>
+    <div className={`h-full flex flex-row max-sm:flex-col justify-between bg-transparent rounded-3xl shadow-md border overflow-hidden ${className}`}>
       {/* Map Container */}
       <div className="w-fit lg:w-3/4 lg:mb-0 h-full border-r-2 dark:border-[#2f3339] max-sm:border-0 max-lg:pr-36 max-md:pr-6 bg-transparent relative">
       <h2 className=" absolute max-lg:relative uppercase font-bold text-xs max-lg:text-lg px-6 pt-4">covid 19 pandemic</h2>

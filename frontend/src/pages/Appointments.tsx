@@ -6,6 +6,7 @@ import "tailwindcss/tailwind.css";
 import * as Popover from "@radix-ui/react-popover";
 
 import { useSidebar } from '@/components/ui/Sidebar';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 import MonthPopover from "@/components/appointmentsComp/MonthPopover";
 import Week$DayPopover from "@/components/appointmentsComp/Week$DayPopover";
@@ -59,13 +60,14 @@ const CustomCalendar = () => {
   const [eventTitle, setEventTitle] = useState("");
   const [eventType, setEventType] = useState("consultation");
 
-  const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 });
+  const [popoverPosition, setPopoverPosition] = useState({ top: 200, left: 50 });
   const calendarRef = useRef<HTMLDivElement>(null);
   const [currentView, setCurrentView] = useState("month");
 
   const [selectedDoctor, setSelectedDoctor] = useState(""); 
   const [showEditPopover, setShowEditPopover] = useState(false);
 
+  const isSmallScreen = useMediaQuery('(max-width: 640px)');
 
   useEffect(() => {
     localStorage.setItem("events", JSON.stringify(events));
@@ -276,7 +278,13 @@ const CustomCalendar = () => {
 };
 
   return (
-    <div ref={calendarRef} className={`p-5 relative h-full mt-36 max-sm:ml-[3rem] max-md:ml-16 max-md:mr-10 -ml-2  max-sm:mr-10 transition-all dark:bg-transparent grid ${isCollapsed ? 'w-screen md:w-[90vw] grid-cols-1 ' : 'w-screen md:w-[80vw] grid-cols-1'}`}>  
+    <div ref={calendarRef} className={`p-5 relative h-screen 
+    max-[640px]:ml-16 max-[640px]:w-[calc(100vw-5rem)] max-[500px]:overflow-x-auto
+    max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 
+    max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)] 
+    transition-all dark:bg-transparent 
+    max-[640px]:overflow-x-scroll scrollbar-custom grid 
+    ${isCollapsed ? 'grid-cols-1' : 'grid-cols-1'}`}>  
       <Calendar
         localizer={localizer}
         events={events}
@@ -286,7 +294,7 @@ const CustomCalendar = () => {
         onSelectSlot={handleSelect} 
         onSelectEvent={handleEventClick}
         style={{ height: "100%" }}
-        className={`md:w-full w-screen max-sm:-mr-5 overflow-hidden`}
+        className={`w-full max-[640px]:min-w-[600px] max-sm:w-screen max-sm:-mr-5`}
         eventPropGetter={(event) => eventStyleGetter(event)}
         dayPropGetter={dayPropGetter}
         slotPropGetter={slotPropGetter}
@@ -336,5 +344,5 @@ const CustomCalendar = () => {
   );
 };
 
-export default CustomCalendar;            
+export default CustomCalendar;
 

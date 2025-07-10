@@ -11,7 +11,7 @@ import { ChevronsLeftRightEllipsis } from "lucide-react"
 const SIDEBAR_COOKIE_NAME = "sidebar:state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 const SIDEBAR_WIDTH = "16rem"
-const SIDEBAR_WIDTH_ICON = "4rem"
+const SIDEBAR_WIDTH_ICON = "4.3rem"
 
 type SidebarContext = {
   state: "expanded" | "collapsed"
@@ -169,7 +169,13 @@ export const Sidebar = React.forwardRef<
           "md:flex flex-col fixed",
           "data-[state=expanded]:w-[var(--sidebar-width)]",
           "data-[state=collapsed]:w-[var(--sidebar-width-icon)]",
-          "transition-[width] duration-300",
+          // "h-[calc(100vh-4rem)]",
+          "sticky top-16",
+          "transition-[width] duration-300 ease-in-out",
+          // Mobile styles
+          "fixed lg:sticky",
+          isMobile && !open && "-translate-x-full md:translate-x-0",
+          "z-40",
           className
         )}
         data-state={state}
@@ -315,7 +321,7 @@ export const SidebarMenuButton = React.forwardRef<
       data-sidebar="menu-button"
       data-active={isActive}
       className={cn(
-        "flex w-full items-center gap-2 px-6 py-[18px] text-sm transition-all",
+        "flex w-full items-center gap-2 px-6 py-[18px] text-sm",
         "outline-none relative z-[1] md:tracking-wide font-semibold",
         "focus-visible:ring-2 focus-visible:ring-ring",
         className

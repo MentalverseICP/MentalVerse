@@ -80,7 +80,7 @@ export function ChartInteractive({ className }: { className?: string }) {
   const months = React.useMemo(() => desktopData.map((item) => item.month), [])
 
   return (
-    <Card data-chart={id} className={`flex flex-col h-fit rounded-3xl shadow-md ${className}`}>
+    <Card data-chart={id} className={`flex flex-col h-full rounded-3xl shadow-md ${className}`}>
       <ChartStyle id={id} config={chartConfig} />
       <CardHeader className="flex-row items-start space-y-0 pb-0">
         <div className="grid gap-1">
