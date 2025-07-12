@@ -8,12 +8,14 @@ import Text "mo:base/Text";
 import Blob "mo:base/Blob";
 import Nat8 "mo:base/Nat8";
 import Nat32 "mo:base/Nat32";
+import Nat64 "mo:base/Nat64";
 import Char "mo:base/Char";
+import Iter "mo:base/Iter";
 
-// Internet Identity Integration Module
-// This module handles authentication and identity management for the MentalVerse platform
+// Internet Identity Integration Actor
+// This actor handles authentication and identity management for the MentalVerse platform
 
-module {
+actor InternetIdentity {
   // Type definitions for Internet Identity integration
   public type UserId = Principal;
   public type SessionId = Text;
@@ -84,7 +86,7 @@ module {
     let hash = simpleSecureHash(entropy);
     
     // Return first 32 characters for session ID
-    Text.take(hash, 32)
+    takeChars(hash, 32)
   };
   
   // Simple but secure hash function using Motoko base libraries
@@ -99,6 +101,57 @@ module {
     
     // Convert to hex string
     Nat32.toText(hash) # Int.toText(Time.now())
+  };
+  
+  // Helper function to split text by character
+  private func splitText(text: Text, delimiter: Char) : [Text] {
+    let chars = Text.toIter(text);
+    var parts : [Text] = [];
+    var current = "";
+    
+    for (char in chars) {
+      if (char == delimiter) {
+        parts := Array.append(parts, [current]);
+        current := "";
+      } else {
+        current := current # Char.toText(char);
+      };
+    };
+    
+    if (current != "") {
+      parts := Array.append(parts, [current]);
+    };
+    
+    parts
+  };
+  
+  // Helper function to take first n characters
+  private func takeChars(text: Text, n: Nat) : Text {
+    let chars = Text.toIter(text);
+    var result = "";
+    var count = 0;
+    
+    for (char in chars) {
+      if (count >= n) {
+        return result;
+      };
+      result := result # Char.toText(char);
+      count += 1;
+    };
+    
+    result
+  };
+  
+  // Helper function to check if text starts with prefix
+  private func textStartsWith(text: Text, prefix: Text) : Bool {
+    let textSize = Text.size(text);
+    let prefixSize = Text.size(prefix);
+    
+    if (prefixSize > textSize) {
+      return false;
+    };
+    
+    takeChars(text, prefixSize) == prefix
   };
   
   public func isSessionValid(session: UserSession) : Bool {
@@ -158,8 +211,10 @@ module {
   
   public func validateAuthToken(token: AuthToken, expectedUserId: UserId, sessionId: SessionId) : Bool {
     // Production-ready token validation with cryptographic verification
-    switch (Text.split(token, #char '.')) {
-      case ([tokenHash, timestamp]) {
+    let parts = splitText(token, '.');
+    if (Array.size(parts) == 2) {
+      let tokenHash = parts[0];
+      let timestamp = parts[1];
         // Reconstruct the original payload
         let userIdText = Principal.toText(expectedUserId);
         let payload = userIdText # "|" # sessionId # "|" # timestamp;
@@ -179,9 +234,9 @@ module {
             tokenValid and (tokenAge <= maxAge)
           };
           case null { false };
-        }
-      };
-      case _ { false };
+        };
+    } else {
+      false
     }
   };
   
@@ -199,7 +254,7 @@ module {
     let userIdText = Principal.toText(userId);
     let entropy = userIdText # "|" # timestamp # "|" # "salt_generation";
     let hash = simpleSecureHash(entropy);
-    Text.take(hash, 16) // 16 character salt
+    takeChars(hash, 16) // 16 character salt
   };
   
   // Verify password against stored hash
@@ -219,7 +274,7 @@ module {
   
   // Validate API key format and integrity
   public func validateApiKey(apiKey: Text) : Bool {
-    Text.startsWith(apiKey, #text "mvapi_") and Text.size(apiKey) > 15 // mvapi_ + reasonable hash length
+    textStartsWith(apiKey, "mvapi_") and Text.size(apiKey) > 15 // mvapi_ + reasonable hash length
   };
   
   // Permission and role management
@@ -294,4 +349,4 @@ module {
       }
     }
   };
-};
+}
