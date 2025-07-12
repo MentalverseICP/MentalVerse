@@ -226,10 +226,10 @@ actor InternetIdentity {
         let tokenValid = (tokenHash == expectedHash);
         
         // Check token expiration (24 hours)
-        switch (Int.fromText(timestamp)) {
+        switch (Nat.fromText(timestamp)) {
           case (?ts) {
             let now = Time.now();
-            let tokenAge = now - ts;
+            let tokenAge = now - Int.abs(ts);
             let maxAge = 24 * 60 * 60 * 1_000_000_000; // 24 hours in nanoseconds
             tokenValid and (tokenAge <= maxAge)
           };
@@ -278,8 +278,9 @@ actor InternetIdentity {
   };
   
   // Permission and role management
-  public func hasPermission(userId: UserId, requiredRole: Text, userRoles: HashMap.HashMap<UserId, Text>) : async Bool {
-    switch (userRoles.get(userId)) {
+  // Note: This function should be called with role data from stable storage
+  public func hasPermission(userId: UserId, requiredRole: Text, userRole: ?Text) : async Bool {
+    switch (userRole) {
       case (?role) {
         role == requiredRole or role == "admin"
       };
