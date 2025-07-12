@@ -216,26 +216,26 @@ actor InternetIdentity {
     if (Array.size(parts) == 2) {
       let tokenHash = parts[0];
       let timestamp = parts[1];
-        // Reconstruct the original payload
-        let userIdText = Principal.toText(expectedUserId);
-        let payload = userIdText # "|" # sessionId # "|" # timestamp;
-        
-        // Hash the payload using the same secure hash function
-        let expectedHash = simpleSecureHash(payload);
-        
-        // Verify token integrity
-        let tokenValid = (tokenHash == expectedHash);
-        
-        // Check token expiration (24 hours)
-        switch (Nat.fromText(timestamp)) {
-          case (?ts) {
-            let now = Time.now();
-            let tokenAge = now - Int.abs(ts);
-            let maxAge = 24 * 60 * 60 * 1_000_000_000; // 24 hours in nanoseconds
-            tokenValid and (tokenAge <= maxAge)
-          };
-          case null { false };
+      // Reconstruct the original payload
+      let userIdText = Principal.toText(expectedUserId);
+      let payload = userIdText # "|" # sessionId # "|" # timestamp;
+      
+      // Hash the payload using the same secure hash function
+      let expectedHash = simpleSecureHash(payload);
+      
+      // Verify token integrity
+      let tokenValid = (tokenHash == expectedHash);
+      
+      // Check token expiration (24 hours)
+      switch (Nat.fromText(timestamp)) {
+        case (?ts) {
+          let now = Time.now();
+          let tokenAge = now - Int.abs(ts);
+          let maxAge = 24 * 60 * 60 * 1_000_000_000; // 24 hours in nanoseconds
+          tokenValid and (tokenAge <= maxAge)
         };
+        case null { false };
+      }
     } else {
       false
     }
