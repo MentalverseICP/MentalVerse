@@ -55,7 +55,7 @@ actor InternetIdentity {
   };
   
   // Session management functions with cryptographic security
-  public func createSession(userId: UserId, deviceInfo: Text) : UserSession {
+  public func createSession(userId: UserId, deviceInfo: Text) : async UserSession {
     let now = Time.now();
     
     // Generate cryptographically secure session ID
@@ -154,19 +154,19 @@ actor InternetIdentity {
     takeChars(text, prefixSize) == prefix
   };
   
-  public func isSessionValid(session: UserSession) : Bool {
+  public func isSessionValid(session: UserSession) : async Bool {
     let now = Time.now();
     session.isActive and session.expiresAt > now
   };
   
-  public func updateSessionActivity(session: UserSession) : UserSession {
+  public func updateSessionActivity(session: UserSession) : async UserSession {
     {
       session with
       lastActivity = Time.now();
     }
   };
   
-  public func invalidateSession(session: UserSession) : UserSession {
+  public func invalidateSession(session: UserSession) : async UserSession {
     {
       session with
       isActive = false;
@@ -174,7 +174,7 @@ actor InternetIdentity {
   };
   
   // Identity verification functions
-  public func createIdentityProfile(userId: UserId, anchor: Nat64) : IdentityProfile {
+  public func createIdentityProfile(userId: UserId, anchor: Nat64) : async IdentityProfile {
     let now = Time.now();
     {
       userId = userId;
@@ -187,7 +187,7 @@ actor InternetIdentity {
     }
   };
   
-  public func updateLoginInfo(profile: IdentityProfile) : IdentityProfile {
+  public func updateLoginInfo(profile: IdentityProfile) : async IdentityProfile {
     {
       profile with
       lastLogin = Time.now();
@@ -196,7 +196,7 @@ actor InternetIdentity {
   };
   
   // Security utilities - Production-ready cryptographic implementation
-  public func generateSessionToken(userId: UserId, sessionId: SessionId) : AuthToken {
+  public func generateSessionToken(userId: UserId, sessionId: SessionId) : async AuthToken {
     // Create a secure token using cryptographic hash
     let timestamp = Int.toText(Time.now());
     let userIdText = Principal.toText(userId);
@@ -209,7 +209,7 @@ actor InternetIdentity {
     tokenHash # "." # timestamp
   };
   
-  public func validateAuthToken(token: AuthToken, expectedUserId: UserId, sessionId: SessionId) : Bool {
+  public func validateAuthToken(token: AuthToken, expectedUserId: UserId, sessionId: SessionId) : async Bool {
     // Production-ready token validation with cryptographic verification
     let parts = splitText(token, '.');
     if (Array.size(parts) == 2) {
@@ -243,13 +243,13 @@ actor InternetIdentity {
   // Additional cryptographic security functions
   
   // Secure password hashing using secure hash with salt
-  public func hashPassword(password: Text, salt: Text) : Text {
+  public func hashPassword(password: Text, salt: Text) : async Text {
     let saltedPassword = password # "|" # salt;
     simpleSecureHash(saltedPassword)
   };
   
   // Generate cryptographically secure salt
-  public func generateSalt(userId: UserId) : Text {
+  public func generateSalt(userId: UserId) : async Text {
     let timestamp = Int.toText(Time.now());
     let userIdText = Principal.toText(userId);
     let entropy = userIdText # "|" # timestamp # "|" # "salt_generation";
@@ -258,13 +258,13 @@ actor InternetIdentity {
   };
   
   // Verify password against stored hash
-  public func verifyPassword(password: Text, storedHash: Text, salt: Text) : Bool {
-    let computedHash = hashPassword(password, salt);
+  public func verifyPassword(password: Text, storedHash: Text, salt: Text) : async Bool {
+    let computedHash = await hashPassword(password, salt);
     computedHash == storedHash
   };
   
   // Generate secure API key
-  public func generateApiKey(userId: UserId, purpose: Text) : Text {
+  public func generateApiKey(userId: UserId, purpose: Text) : async Text {
     let timestamp = Int.toText(Time.now());
     let userIdText = Principal.toText(userId);
     let entropy = userIdText # "|" # timestamp # "|" # purpose # "|" # "api_key";
@@ -273,12 +273,12 @@ actor InternetIdentity {
   };
   
   // Validate API key format and integrity
-  public func validateApiKey(apiKey: Text) : Bool {
+  public func validateApiKey(apiKey: Text) : async Bool {
     textStartsWith(apiKey, "mvapi_") and Text.size(apiKey) > 15 // mvapi_ + reasonable hash length
   };
   
   // Permission and role management
-  public func hasPermission(userId: UserId, requiredRole: Text, userRoles: HashMap.HashMap<UserId, Text>) : Bool {
+  public func hasPermission(userId: UserId, requiredRole: Text, userRoles: HashMap.HashMap<UserId, Text>) : async Bool {
     switch (userRoles.get(userId)) {
       case (?role) {
         role == requiredRole or role == "admin"
@@ -297,7 +297,7 @@ actor InternetIdentity {
     userAgent: ?Text;
   };
   
-  public func createAuditLog(userId: UserId, action: Text, details: Text) : AuditLog {
+  public func createAuditLog(userId: UserId, action: Text, details: Text) : async AuditLog {
     {
       userId = userId;
       action = action;
@@ -317,7 +317,7 @@ actor InternetIdentity {
     windowDuration: Int; // in nanoseconds
   };
   
-  public func checkRateLimit(rateLimit: RateLimit, maxRequests: Nat) : Bool {
+  public func checkRateLimit(rateLimit: RateLimit, maxRequests: Nat) : async Bool {
     let now = Time.now();
     let windowEnd = rateLimit.windowStart + rateLimit.windowDuration;
     
@@ -330,7 +330,7 @@ actor InternetIdentity {
     }
   };
   
-  public func updateRateLimit(rateLimit: RateLimit) : RateLimit {
+  public func updateRateLimit(rateLimit: RateLimit) : async RateLimit {
     let now = Time.now();
     let windowEnd = rateLimit.windowStart + rateLimit.windowDuration;
     
