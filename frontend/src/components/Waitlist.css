@@ -1,0 +1,206 @@
+/* Waitlist Component Styles */
+.waitlist-app {
+  min-height: 100vh;
+  background: #000;
+  background-image: 
+    radial-gradient(circle at 0% 50%, rgba(34, 197, 94, 0.4) 0%, transparent 60%),
+    radial-gradient(circle at 100% 50%, rgba(34, 197, 94, 0.4) 0%, transparent 60%),
+    radial-gradient(circle at 20% 20%, rgba(34, 197, 94, 0.2) 0%, transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(34, 197, 94, 0.2) 0%, transparent 40%);
+  color: white;
+  overflow-x: hidden;
+}
+
+.waitlist-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.waitlist-main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  padding: 40px 20px;
+}
+
+.waitlist-glassmorphism-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 60px 50px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+  max-width: 500px;
+  width: 100%;
+  position: relative;
+}
+
+.waitlist-logo {
+  width: 180px;
+  height: auto;
+  margin-bottom: 30px;
+  filter: brightness(1.1);
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.waitlist-brand-label {
+  background: #22c55e;
+  color: white;
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.waitlist-title {
+  font-size: 3rem;
+  font-weight: 400;
+  margin-bottom: 16px;
+  color: white;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.waitlist-subtitle {
+  font-size: 1rem;
+  color: #a0a0a0;
+  margin-bottom: 40px;
+  line-height: 1.4;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.waitlist-signup-form {
+  margin-bottom: 30px;
+}
+
+.waitlist-input-container {
+  margin-bottom: 20px;
+}
+
+.waitlist-email-input {
+  width: 400px;
+  padding: 16px 20px;
+  border: 1px solid #333;
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  font-size: 16px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.waitlist-email-input::placeholder {
+  color: #666;
+}
+
+.waitlist-email-input:focus {
+  outline: none;
+  border-color: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.25);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.waitlist-submit-button {
+  width: 400px;
+  padding: 16px 20px;
+  background: white;
+  color: #000;
+  border: none;
+  border-radius: 50px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.waitlist-submit-button:hover {
+  background: #f0f0f0;
+  transform: translateY(-2px);
+}
+
+.waitlist-x-logo-button {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+  margin-left: auto;
+  margin-right: auto;
+  font-family: 'Times New Roman', serif;
+}
+
+.waitlist-x-logo-button:hover {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: #22c55e;
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .waitlist-title {
+    font-size: 2.2rem;
+    white-space: normal;
+  }
+  
+  .waitlist-email-input,
+  .waitlist-submit-button {
+    width: 100%;
+    max-width: 350px;
+  }
+  
+  .waitlist-glassmorphism-card {
+    padding: 40px 30px;
+    margin: 0 20px;
+  }
+  
+  .waitlist-subtitle {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .waitlist-title {
+    font-size: 1.8rem;
+    white-space: normal;
+  }
+  
+  .waitlist-glassmorphism-card {
+    padding: 30px 20px;
+    margin: 0 10px;
+  }
+  
+  .waitlist-container {
+    padding: 0 15px;
+  }
+  
+  .waitlist-subtitle {
+    font-size: 0.85rem;
+  }
+}

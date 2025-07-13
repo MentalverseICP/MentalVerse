@@ -9,6 +9,7 @@ import Medical from '@/pages/Medical'
 import Doctors from '@/pages/Doctors'
 import Appointments from '@/pages/Appointments'
 import Claims from '@/pages/Claims'
+import Waitlist from '@/pages/Waitlist'
 import { cn } from './lib/utils';
 import { useSidebar } from './components/ui/Sidebar';
 import LandingPage  from '@/pages/LandingPage';
@@ -46,6 +47,7 @@ export const AppRoutes: React.FC<RouteProps> = () => {
           <Route path="/medical" element={<Medical />} />
           <Route path="/doctors" element={<Doctors />} />
           <Route path="/appointments" element={<Appointments />} />
+          <Route path="/waitlist" element={<Waitlist />} />
         </Routes>      
       </div>      
     </main>
