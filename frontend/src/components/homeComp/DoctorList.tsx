@@ -105,7 +105,7 @@ const DoctorList: React.FC<prop> = ({className}) => {
                 <td className="p-4">
                   <Link to={`/chats/${doctor.id}`}>
                     <button type='button' className="text-red-500 hover:text-red-700">
-                      <img src={chats} alt="Chat" />
+                      <img src={chats} alt="Chat" className='hover:w-5 hover:h-5 hover:transition-all' />
                     </button>
                   </Link>
                 </td>

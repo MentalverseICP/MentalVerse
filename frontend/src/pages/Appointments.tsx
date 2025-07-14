@@ -278,13 +278,17 @@ const CustomCalendar = () => {
 };
 
   return (
-    <div ref={calendarRef} className={`p-5 relative h-screen 
-    max-[640px]:ml-16 max-[640px]:w-[calc(100vw-5rem)] max-[500px]:overflow-x-auto
-    max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 
-    max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)] 
-    transition-all dark:bg-transparent 
-    max-[640px]:overflow-x-scroll scrollbar-custom grid 
-    ${isCollapsed ? 'grid-cols-1' : 'grid-cols-1'}`}>  
+    <div
+      ref={calendarRef}
+      className={`p-5 relative ${
+        (currentView === "month" || currentView === "agenda") ? "h-screen" : "h-full"
+      }
+      max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 
+      max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)] 
+      transition-all dark:bg-transparent 
+      scrollbar-custom grid 
+      ${isCollapsed ? 'grid-cols-1' : 'grid-cols-1'}`}
+    >
       <Calendar
         localizer={localizer}
         events={events}
@@ -294,7 +298,7 @@ const CustomCalendar = () => {
         onSelectSlot={handleSelect} 
         onSelectEvent={handleEventClick}
         style={{ height: "100%" }}
-        className={`w-full max-[640px]:min-w-[600px] max-sm:w-screen max-sm:-mr-5`}
+        className={`w-full max-[640px]:min-w-[600px] max-sm:w-screen  max-sm:-mr-5`}
         eventPropGetter={(event) => eventStyleGetter(event)}
         dayPropGetter={dayPropGetter}
         slotPropGetter={slotPropGetter}

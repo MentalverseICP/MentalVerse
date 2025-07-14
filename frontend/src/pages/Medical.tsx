@@ -62,12 +62,6 @@ const Medical: React.FC = () => {
   const totalPages = Math.ceil(filteredData.length / show);
   const paginatedData = filteredData.slice((page - 1) * show, page * show);
 
-  // Responsive table classes
-  const tableWrapperClass = "rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-black/80 p-2 md:p-6 shadow-md overflow-x-auto";
-  const thClass = "py-3 px-4 text-xs md:text-sm font-semibold " +
-    "text-gray-700 dark:text-gray-200";
-  const tdClass = "py-4 px-4 text-gray-900 dark:text-gray-100 text-xs md:text-sm";
-
   return (
     <div
       className={cn(
@@ -77,7 +71,7 @@ const Medical: React.FC = () => {
         "max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)]",
         "max-[640px]:overflow-x-scroll scrollbar-custom grid",
         isCollapsed ? "grid-cols-1" : "grid-cols-1",
-        theme === "dark" ? "bg-black dark:bg-transparent" : "bg-white"
+        theme === "dark" ? "bg-black dark:bg-transparent" : ""
       )}
     >
       {/* Filter Bar */}

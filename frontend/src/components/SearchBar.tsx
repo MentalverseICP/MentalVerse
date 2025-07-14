@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Bot, Search } from 'lucide-react'; 
 import notification from '@/images/Notification Icon.svg'
 import { useTheme } from "@/components/theme-provider"
@@ -30,7 +30,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const isSmallScreen = useMediaQuery('(min-width: 480px)')
 
   return (
-    <div className={`dark:border-[#2f3339] border-2 dark:bg-[#0B0B0C] bg-[#f7f7f7f5] rounded-b-3xl max-lg:rounded-bl-none h-24 mx-2 p-5 max-sm:p-3 grid lg:gap-20 sm:gap-5 gap-3 grid-flow-col grid-cols-12 items-center justify-between z-20 overflow-hidden ${className}`}>
+    <div className={`dark:border-[#2f3339] border-2 rounded-b-3xl max-lg:rounded-bl-none h-24 mx-2 p-5 max-sm:p-3 grid lg:gap-20 sm:gap-5 gap-3 grid-flow-col grid-cols-12 items-center justify-between z-20 overflow-hidden ${className}`}>
 
       <Link to={"/home"} className="sm:col-span-2 col-span-2 flex items-center justify-between px-1 relative z-[52]">
         <img
@@ -77,13 +77,20 @@ const SearchBar: React.FC<SearchBarProps> = ({
               <div className=' lg:w-12 lg:h-12 w-7 h-7 max-sm:w-10 max-sm:h-10 border border-[#18E614] rounded-full'>
                 <img src={userImg} alt="" className='rounded-full object-cover' />
               </div>
-              <div className="flex flex-col justify-items-center max-sm:hidden">
-                <span className='md:text-sm text-xs'>U~Iriamuzu</span>
-                <span className='text-[10px] tracking-wider text-[#18E614]'>PATIENT</span>
-              </div>
+              {/* {isConnected ?                 
+                <CustomConnectedButton
+                  connectedAccount={user?.address}
+                  onDisconnect={() => setIsConnected(false)}
+                  onClick={() => setIsConnected(true)}
+                /> : ( */}
+                <div className="flex flex-col justify-items-center max-sm:hidden">
+                  <span className='md:text-sm text-xs'>U~Iriamuzu</span>
+                  <span className='text-[10px] tracking-wider text-[#18E614]'>PATIENT</span>
+                </div>
+              {/* )} */}
             </div>
           ) : ( 
-            <button title='Profile' className='cursor-default'>
+            <button title='Profile' className='cursor-default' type='button'>
               <Bot  className='text-[#18E614]' />
             </button>
           )}

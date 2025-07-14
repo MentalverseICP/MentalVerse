@@ -13,8 +13,6 @@ import { cn } from './lib/utils';
 import { useSidebar } from './components/ui/Sidebar';
 import LandingPage  from '@/pages/LandingPage';
 
-// @nfid/identitykit/react
-
 interface RouteProps {
   // className?: string
 }
@@ -36,7 +34,7 @@ export const AppRoutes: React.FC<RouteProps> = () => {
       <div className='w-full max-w-full'>
         <Routes>
           {/* <Route path="/home" element={<LandingPage />} /> */}
-          {/* <Route index element={<Home />} /> */}
+          <Route index element={<Home />} />
           <Route path='/home' element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/logout" element={<Logout />} />

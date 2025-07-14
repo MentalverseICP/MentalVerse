@@ -64,7 +64,7 @@ const Doctors: React.FC<DoctorsProps> = ({ bookedDoctors: bookedDoctorsProp = []
       setBookedDoctors(prev => [...prev, doctor.id]);
       setTimeout(() => {
         toast.success(`You have successfully booked an appointment with ${doctor.name}.`);
-      }, 100); // Ensure toast shows after state update
+      }, 100);
     } else {
       setBookedDoctors(prev => prev.filter(id => id !== doctor.id));
       setTimeout(() => {
@@ -74,7 +74,7 @@ const Doctors: React.FC<DoctorsProps> = ({ bookedDoctors: bookedDoctorsProp = []
   };
 
   return (
-    <div className={`sm:p-4 md:p-8 w-full bg-white dark:bg-black p-5 relative 
+    <div className={`sm:p-4 md:p-8 w-full p-5 relative 
     max-[640px]:ml-16 max-[640px]:w-[calc(100vw-5rem)] max-[500px]:overflow-x-auto
     max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 
     max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)] 
@@ -142,7 +142,7 @@ const Doctors: React.FC<DoctorsProps> = ({ bookedDoctors: bookedDoctorsProp = []
           <div
             key={doc.id}
             className={cn(
-              "rounded-xl border bg-white dark:bg-transparent border-gray-200 dark:border-gray-700 p-4 sm:p-6 flex flex-col items-center shadow-md",
+              "rounded-xl border dark:bg-transparent border-gray-200 dark:border-[#2f3339] p-4 sm:p-6 flex flex-col items-center shadow-md",
               "hover:shadow-lg"
             )}
           >
@@ -186,7 +186,6 @@ const Doctors: React.FC<DoctorsProps> = ({ bookedDoctors: bookedDoctorsProp = []
               <button
                 type='button'
                 onClick={() => handleBook(doc)}
-                // No need to disable, allow toggle
                 className={`px-5 sm:px-6 py-2 rounded-full font-bold border hover:-translate-y-1 transition-all duration-300 hover:border-t hover:border-b text-xs ${
                   bookedDoctors.includes(doc.id)
                     ? theme === 'dark'
