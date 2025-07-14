@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
-import { Search, Send, Paperclip, Menu, X, MoreVertical, Phone, Video } from "lucide-react";
+import { Search, Send, Paperclip, Menu, X, MoreVertical, Phone, Video, ArrowLeft } from "lucide-react";
 
 const chatList = [
 	{
@@ -89,6 +89,24 @@ const Chats: React.FC = () => {
 	const [input, setInput] = useState("");
 	const [selectedChat, setSelectedChat] = useState(chatList[0].id);
 	const [sidebarOpen, setSidebarOpen] = useState(true);
+	const [isMobile, setIsMobile] = useState(false);
+
+	// Check screen size on mount and resize
+	useEffect(() => {
+		const checkScreenSize = () => {
+			const mobile = window.innerWidth < 768;
+			setIsMobile(mobile);
+			if (mobile) {
+				setSidebarOpen(false);
+			} else {
+				setSidebarOpen(true);
+			}
+		};
+
+		checkScreenSize();
+		window.addEventListener('resize', checkScreenSize);
+		return () => window.removeEventListener('resize', checkScreenSize);
+	}, []);
 
 	const selectedChatData = chatList.find(chat => chat.id === selectedChat);
 
@@ -106,13 +124,34 @@ const Chats: React.FC = () => {
 		}
 	};
 
+	const handleChatSelect = (chatId: number) => {
+		setSelectedChat(chatId);
+		if (isMobile) {
+			setSidebarOpen(false);
+		}
+	};
+
 	return (
-		<div className="h-screen w-full flex overflow-hidden sm:p-4 md:p-8 p-5 relative max-[640px]:ml-16 max-[640px]:w-[calc(100vw-5rem)] max-[500px]:overflow-x-auto max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)] dark:bg-transparent">
+		<div className="h-screen w-full flex overflow-hidden relative sm:p-4 md:p-8 p-5 max-[640px]:ml-16 max-[640px]:w-[calc(100vw-5rem)] max-[500px]:overflow-x-auto max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)]">
+			{/* Mobile Overlay */}
+			{isMobile && sidebarOpen && (
+				<div 
+					className="fixed inset-0 bg-black bg-opacity-50 z-40"
+					onClick={() => setSidebarOpen(false)}
+				/>
+			)}
+
 			{/* Sidebar */}
 			<div
 				className={cn(
-					"flex-shrink-0transition-all duration-300 ease-in-out",
-					sidebarOpen ? "w-80" : "w-0"
+					"flex-shrink-0 transition-all duration-300 ease-in-out border-r border-gray-200 dark:border-gray-700",
+					isMobile 
+						? sidebarOpen 
+							? "absolute inset-0 w-fit z-50 ml-2" 
+							: "w-0 overflow-hidden"
+						: sidebarOpen 
+							? "w-80" 
+							: "w-0 overflow-hidden"
 				)}
 			>
 				<div className={cn("h-full flex flex-col", sidebarOpen ? "opacity-100" : "opacity-0")}>
@@ -123,8 +162,8 @@ const Chats: React.FC = () => {
 								Messages
 							</h1>
 							<button 
-                title='button' 
-                type='button'
+								title="Close sidebar"
+								type="button"
 								onClick={() => setSidebarOpen(false)}
 								className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
 							>
@@ -161,11 +200,10 @@ const Chats: React.FC = () => {
 											? "bg-emerald-50 dark:bg-emerald-900/20 border-r-2 border-emerald-500"
 											: ""
 									)}
-									onClick={() => setSelectedChat(chat.id)}
+									onClick={() => handleChatSelect(chat.id)}
 								>
 									<div className="relative">
-										<div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#18E614a1] to-emerald-700
-hover:from-[#18E614a1] hover:to-emerald-800 flex items-center justify-center text-white font-semibold">
+										<div className="w-12 h-12 rounded-full bg-gradient-to-r from-[#18E614a1] to-emerald-700 hover:from-[#18E614a1] hover:to-emerald-800 flex items-center justify-center text-white font-semibold">
 											{chat.avatar}
 										</div>
 										{chat.active && (
@@ -199,52 +237,60 @@ hover:from-[#18E614a1] hover:to-emerald-800 flex items-center justify-center tex
 			</div>
 
 			{/* Main Chat Area */}
-			<div className="flex-1 flex flex-col border-l-2 dark:border-gray-700 border-emerald-500/30 z-10">
+			<div className={cn(
+				"flex-1 flex flex-col",
+				isMobile && sidebarOpen ? "hidden" : "flex"
+			)}>
 				{/* Chat Header */}
-				<div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+				<div className="px-4 md:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
 					<div className="flex items-center justify-between">
 						<div className="flex items-center gap-3">
-							{!sidebarOpen && (
+							<button 
+								title="Open sidebar"
+								type="button"
+								onClick={() => setSidebarOpen(true)}
+								className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors md:hidden"
+							>
+								{isMobile ? <ArrowLeft className="w-5 h-5 text-gray-500" /> : <Menu className="w-5 h-5 text-gray-500" />}
+							</button>
+							{!isMobile && !sidebarOpen && (
 								<button 
-                  title="button"
-                  type="button"
+									title="Open sidebar"
+									type="button"
 									onClick={() => setSidebarOpen(true)}
 									className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-									role="button"
-									tabIndex={0}
 								>
 									<Menu className="w-5 h-5 text-gray-500" />
 								</button>
 							)}
-							<div className="ml-10 w-10 h-10 rounded-full bg-gradient-to-r from-[#18E614a1] to-emerald-700
-hover:from-[#18E614a1] hover:to-emerald-800 flex items-center justify-center text-white font-semibold">
+							<div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#18E614a1] to-emerald-700 hover:from-[#18E614a1] hover:to-emerald-800 flex items-center justify-center text-white font-semibold">
 								{selectedChatData?.avatar}
 							</div>
 							<div>
-								<h2 className="font-semibold text-gray-900 dark:text-white">
+								<h2 className="font-semibold text-gray-900 dark:text-white text-sm md:text-base">
 									{selectedChatData?.name}
 								</h2>
-								<p className="text-sm text-gray-500">
+								<p className="text-xs md:text-sm text-gray-500">
 									{selectedChatData?.active ? "Active now" : "Active 50min ago"}
 								</p>
 							</div>
 						</div>
-						<div className="flex items-center gap-2">
-							<button title='button' type='button' className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-								<Phone className="w-5 h-5 text-gray-500" />
+						<div className="flex items-center gap-1 md:gap-2">
+							<button title="Call" type="button" className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+								<Phone className="w-4 h-4 md:w-5 md:h-5 text-gray-500" />
 							</button>
-							<button title='button' type='button' className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-								<Video className="w-5 h-5 text-gray-500" />
+							<button title="Video call" type="button" className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+								<Video className="w-4 h-4 md:w-5 md:h-5 text-gray-500" />
 							</button>
-							<button title='button' type='button' className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-								<MoreVertical className="w-5 h-5 text-gray-500" />
+							<button title="More options" type="button" className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+								<MoreVertical className="w-4 h-4 md:w-5 md:h-5 text-gray-500" />
 							</button>
 						</div>
 					</div>
 				</div>
 
 				{/* Messages Area */}
-				<div className="flex-1 overflow-y-auto p-6 space-y-6 overscroll-auto scrollbar-custom">
+				<div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-6 overscroll-auto scrollbar-custom">
 					{/* Date Separator */}
 					<div className="flex items-center justify-center">
 						<div className="bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">
@@ -253,13 +299,12 @@ hover:from-[#18E614a1] hover:to-emerald-800 flex items-center justify-center tex
 					</div>
 
 					{/* Doctor Message */}
-					<div className="flex items-start gap-3">
-						<div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#18E614a1] to-emerald-700
-hover:from-[#18E614a1] hover:to-emerald-800 flex items-center justify-center text-white text-sm font-semibold">
+					<div className="flex items-start gap-2 md:gap-3">
+						<div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-gradient-to-r from-[#18E614a1] to-emerald-700 hover:from-[#18E614a1] hover:to-emerald-800 flex items-center justify-center text-white text-xs md:text-sm font-semibold">
 							IY
 						</div>
-						<div className="bg-gray-100 dark:bg-gray-800 rounded-2xl rounded-tl-md px-4 py-3 max-w-md">
-							<p className="text-gray-900 dark:text-white">
+						<div className="bg-gray-100 dark:bg-gray-800 rounded-2xl rounded-tl-md px-3 md:px-4 py-2 md:py-3 max-w-[75%] md:max-w-md">
+							<p className="text-sm md:text-base text-gray-900 dark:text-white">
 								Hi Mrs Boluwatife,<br />
 								Please send the images as discussed on your last visit
 							</p>
@@ -274,65 +319,63 @@ hover:from-[#18E614a1] hover:to-emerald-800 flex items-center justify-center tex
 					</div>
 
 					{/* My Message */}
-					<div className="flex items-start gap-3 justify-end">
-						<div className="bg-gradient-to-r from-[#18E614a1] to-emerald-700
-hover:from-[#18E614a1] hover:to-emerald-800 text-white rounded-2xl rounded-tr-md px-4 py-3 max-w-md">
-							<p>Hi Doc. Here are the images. Sorry for coming late though</p>
+					<div className="flex items-start gap-2 md:gap-3 justify-end">
+						<div className="bg-gradient-to-r from-[#18E614a1] to-emerald-700 hover:from-[#18E614a1] hover:to-emerald-800 text-white rounded-2xl rounded-tr-md px-3 md:px-4 py-2 md:py-3 max-w-[75%] md:max-w-md">
+							<p className="text-sm md:text-base">Hi Doc. Here are the images. Sorry for coming late though</p>
 						</div>
-						<div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-gray-700 dark:text-gray-300 text-sm font-semibold">
+						<div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-gray-700 dark:text-gray-300 text-xs md:text-sm font-semibold">
 							BT
 						</div>
 					</div>
 
 					{/* Attachments */}
-					<div className="flex items-center gap-2 justify-end pr-11">
-						<div className="flex items-center gap-2">
-							<div className="w-12 h-12 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+					<div className="flex items-center gap-1 md:gap-2 justify-end pr-8 md:pr-11">
+						<div className="flex items-center gap-1 md:gap-2">
+							<div className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
 								<span className="text-xs">IMG</span>
 							</div>
-							<div className="w-12 h-12 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+							<div className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
 								<span className="text-xs">IMG</span>
 							</div>
-							<div className="w-12 h-12 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+							<div className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
 								<span className="text-xs">IMG</span>
 							</div>
-							<div className="w-12 h-12 rounded-lg bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center">
+							<div className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center">
 								<span className="text-xs text-emerald-700 dark:text-emerald-300">+5</span>
 							</div>
 						</div>
 					</div>
 
 					{/* Doctor Reply */}
-					<div className="flex items-start gap-3">
-						<div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#18E614a1] to-emerald-700 flex items-center justify-center text-white text-sm font-semibold">
+					<div className="flex items-start gap-2 md:gap-3">
+						<div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-gradient-to-r from-[#18E614a1] to-emerald-700 flex items-center justify-center text-white text-xs md:text-sm font-semibold">
 							IY
 						</div>
-						<div className="bg-gray-100 dark:bg-gray-800 rounded-2xl rounded-tl-md px-4 py-3 max-w-md">
-							<p className="text-gray-900 dark:text-white">
+						<div className="bg-gray-100 dark:bg-gray-800 rounded-2xl rounded-tl-md px-3 md:px-4 py-2 md:py-3 max-w-[75%] md:max-w-md">
+							<p className="text-sm md:text-base text-gray-900 dark:text-white">
 								THANKS! I'll review them and then get back to you ASAP!
 							</p>
 						</div>
 					</div>
 
 					{/* File Message */}
-					<div className="flex items-start gap-3">
-						<div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#18E614a1] to-emerald-700
-hover:from-[#18E614a1] hover:to-emerald-800 flex items-center justify-center text-white text-sm font-semibold">
+					<div className="flex items-start gap-2 md:gap-3">
+						<div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-gradient-to-r from-[#18E614a1] to-emerald-700 hover:from-[#18E614a1] hover:to-emerald-800 flex items-center justify-center text-white text-xs md:text-sm font-semibold">
 							IY
 						</div>
-						<div className="bg-gray-100 dark:bg-gray-800 rounded-2xl rounded-tl-md px-4 py-3 max-w-md">
-							<div className="flex items-center gap-3">
-								<div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center">
+						<div className="bg-gray-100 dark:bg-gray-800 rounded-2xl rounded-tl-md px-3 md:px-4 py-2 md:py-3 max-w-[75%] md:max-w-md">
+							<div className="flex items-center gap-2 md:gap-3">
+								<div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-blue-500 flex items-center justify-center">
 									<span className="text-xs text-white font-semibold">ZIP</span>
 								</div>
 								<div className="flex-1">
-									<p className="text-sm font-medium text-gray-900 dark:text-white">
+									<p className="text-xs md:text-sm font-medium text-gray-900 dark:text-white">
 										Transcend.zip
 									</p>
 									<p className="text-xs text-gray-500">1.2MB</p>
 								</div>
-								<button title='button' type='button' className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-									<Paperclip className="w-4 h-4 text-gray-500" />
+								<button title="Download" type="button" className="p-1 md:p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+									<Paperclip className="w-3 h-3 md:w-4 md:h-4 text-gray-500" />
 								</button>
 							</div>
 						</div>
@@ -340,14 +383,14 @@ hover:from-[#18E614a1] hover:to-emerald-800 flex items-center justify-center tex
 				</div>
 
 				{/* Message Input */}
-				<div className="p-4 border-t border-gray-200 dark:border-gray-700">
-					<div className="flex items-end gap-3">
-						<button title='button' type='button' className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-							<Paperclip className="w-5 h-5 text-gray-500" />
+				<div className="p-3 md:p-4 border-t border-gray-200 dark:border-gray-700">
+					<div className="flex items-end gap-2 md:gap-3">
+						<button title="Attach file" type="button" className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+							<Paperclip className="w-4 h-4 md:w-5 md:h-5 text-gray-500" />
 						</button>
 						<div className="flex-1">
 							<Input
-								className="rounded-lg border-gray-300 dark:border-gray-600 resize-none"
+								className="rounded-lg border-gray-300 dark:border-gray-600 text-sm md:text-base"
 								placeholder="Type a message..."
 								value={input}
 								onChange={(e) => setInput(e.target.value)}
@@ -356,10 +399,9 @@ hover:from-[#18E614a1] hover:to-emerald-800 flex items-center justify-center tex
 						</div>
 						<Button
 							onClick={handleSendMessage}
-							className="bg-gradient-to-r from-[#18E614a1] to-emerald-700
-hover:from-[#18E614a1] hover:to-emerald-800 text-white rounded-lg px-4 py-2"
+							className="bg-gradient-to-r from-[#18E614a1] to-emerald-700 hover:from-[#18E614a1] hover:to-emerald-800 text-white rounded-lg px-3 md:px-4 py-2"
 						>
-							<Send className="w-5 h-5" />
+							<Send className="w-4 h-4 md:w-5 md:h-5" />
 						</Button>
 					</div>
 				</div>
