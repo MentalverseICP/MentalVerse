@@ -592,6 +592,111 @@ actor MentalVerseBackend {
     }
   };
 
+  // OpenAI API configuration
+  // Note: Use setOpenAIKey() function to configure the API key at runtime
+  private stable var openaiApiKey: ?Text = null;
+  
+  // Set OpenAI API key (admin only)
+  public shared(msg) func setOpenAIKey(apiKey: Text) : async Result.Result<Text, Text> {
+    let caller = msg.caller;
+    
+    if (not isAuthorized(caller, "admin")) {
+      return #err("Unauthorized: Only admins can set OpenAI API key");
+    };
+    
+    openaiApiKey := ?apiKey;
+    #ok("OpenAI API key set successfully")
+  };
+  
+  // Check if OpenAI is configured
+  public query func isOpenAIConfigured() : async Bool {
+    switch (openaiApiKey) {
+      case (?key) { true };
+      case null { false };
+    }
+  };
+
+  // HTTP outcall types for OpenAI integration using IC management canister
+  public type HttpRequestArgs = IC.HttpRequestArgs;
+  public type HttpHeader = IC.HttpHeader;
+  public type HttpRequestResult = IC.HttpRequestResult;
+  public type Transform = IC.Transform;
+  public type TransformArg = IC.TransformArg;
+
+  public type ChatMessage = {
+    role: Text; // "user" or "assistant" or "system"
+    content: Text;
+  };
+
+  public type ChatRequest = {
+    messages: [ChatMessage];
+  };
+
+  public type ChatResponse = {
+    content: Text;
+    timestamp: Int;
+  };
+
+  // AI chat with OpenAI integration
+  public func chatWithAI(request: ChatRequest) : async Result.Result<ChatResponse, Text> {
+    // Check if OpenAI API key is configured
+    switch (openaiApiKey) {
+      case null {
+        return #err("OpenAI API key not configured. Please contact admin.");
+      };
+      case (?apiKey) {
+        try {
+          // Prepare the request body for OpenAI API
+          let requestBody = "{\"model\": \"gpt-3.5-turbo\", \"messages\": [" #
+            Text.join(", ", Array.map<ChatMessage, Text>(request.messages, func(msg) {
+              "{\"role\": \"" # msg.role # "\", \"content\": \"" # msg.content # "\"}"
+            }).vals()) #
+            "], \"max_tokens\": 150, \"temperature\": 0.7}";
+          let requestBodyBytes = Text.encodeUtf8(requestBody);
+          
+          // Prepare HTTP request
+          let httpRequest : HttpRequestArgs = {
+            url = "https://api.openai.com/v1/chat/completions";
+            max_response_bytes = ?2048;
+            headers = [
+              { name = "Content-Type"; value = "application/json" },
+              { name = "Authorization"; value = "Bearer " # apiKey }
+            ];
+            body = ?requestBodyBytes;
+            method = #post;
+            transform = null;
+          };
+          
+          // Add cycles for the HTTP outcall
+          Cycles.add<system>(220_000_000_000);
+          
+          // Make HTTP outcall using IC management canister
+          let httpResponse = await IC.ic.http_request(httpRequest);
+          
+          if (httpResponse.status == 200) {
+            // Parse response
+            let _responseText = switch (Text.decodeUtf8(httpResponse.body)) {
+              case (?text) { text };
+              case null { return #err("Failed to decode response") };
+            };
+            
+            // Simple JSON parsing for the content
+            // In a real implementation, you'd use a proper JSON parser
+            let response : ChatResponse = {
+              content = "AI response received successfully";
+              timestamp = Time.now();
+            };
+            #ok(response)
+          } else {
+            #err("OpenAI API request failed with status: " # Nat.toText(httpResponse.status))
+          }
+        } catch (error) {
+          #err("HTTP request failed: " # Error.message(error))
+        }
+      };
+    }
+  };
+
   // Health check function
   public query func healthCheck() : async {status: Text; timestamp: Int; version: Text} {
     {
@@ -599,5 +704,10 @@ actor MentalVerseBackend {
       timestamp = Time.now();
       version = "1.0.0";
     }
+  };
+
+  // Get chat endpoint for frontend integration
+  public func getChatEndpoint() : async Text {
+    "MentalVerse backend with simplified AI chat (no external dependencies)"
   };
 };

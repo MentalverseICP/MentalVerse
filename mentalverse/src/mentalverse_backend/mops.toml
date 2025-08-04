@@ -1,0 +1,4 @@
+[dependencies]
+base = "0.15.1"
+json = "1.4.0"
+ic = "3.0.0"
