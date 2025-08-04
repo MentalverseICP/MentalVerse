@@ -57,12 +57,8 @@ const Chatbot: React.FC<ChatbotProps> = ({ className = '' }) => {
     setIsLoading(true);
 
     try {
-      // Prepare messages for API call
+      // Prepare messages for API call to our backend
       const apiMessages = [
-        {
-          role: 'system',
-          content: "You are MindMate, an empathetic, non-judgmental AI mental health assistant designed to support users on the Mentalverse platform. Your tone must always be warm, compassionate, calm, and human-like. Detect the user's emotional state based on language cues (e.g., stressed, anxious, depressed, confused, joyful), and tailor your responses accordingly. \n\nYou are NOT a licensed therapist or doctor. Do NOT give medical diagnoses or prescriptions. If the situation sounds like an emergency (e.g., suicidal thoughts, physical harm), provide a calm and caring recommendation to speak to a licensed mental health professional or contact local emergency services.\n\nRespond in a conversational tone. Use reflective listening techniques, motivational interviewing, and evidence-based coping strategies. Keep answers short, helpful, and supportive unless more detail is requested. Offer grounding exercises, mindfulness prompts, or journaling tips when appropriate.\n\nAvoid generic chatbot behavior. Be mindful of mental health sensitivity. If the user shares trauma, express gentle support without probing too much."
-        },
         ...messages.slice(-5).map(msg => ({
           role: msg.role,
           content: msg.content
@@ -73,31 +69,28 @@ const Chatbot: React.FC<ChatbotProps> = ({ className = '' }) => {
         }
       ];
 
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      // Get backend URL from environment or use default
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+      
+      const response = await fetch(`${backendUrl}/api/chat`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.OPENAI_API_KEY}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'gpt-4o',
-          messages: apiMessages,
-          temperature: 0.7,
-          top_p: 1,
-          frequency_penalty: 0.3,
-          presence_penalty: 0.2,
-          max_tokens: 500
+          messages: apiMessages
         })
       });
 
       if (!response.ok) {
-        throw new Error('Failed to get response from AI');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to get response from AI');
       }
 
       const data = await response.json();
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: data.choices[0].message.content,
+        content: data.message.content,
         role: 'assistant',
         timestamp: new Date()
       };
@@ -105,9 +98,19 @@ const Chatbot: React.FC<ChatbotProps> = ({ className = '' }) => {
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
       console.error('Error sending message:', error);
+      let errorContent = "I'm sorry, I'm having trouble connecting right now. Please try again in a moment. If you're in crisis, please reach out to a mental health professional or emergency services.";
+      
+      // Handle specific error types
+      const errorText = error instanceof Error ? error.message : String(error);
+      if (errorText.includes('rate limit') || errorText.includes('429')) {
+        errorContent = "I'm receiving a lot of requests right now. Please wait a moment and try again.";
+      } else if (errorText.includes('quota') || errorText.includes('503')) {
+        errorContent = "The service is temporarily unavailable. Please try again later or contact support if this persists.";
+      }
+      
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment. If you're in crisis, please reach out to a mental health professional or emergency services.",
+        content: errorContent,
         role: 'assistant',
         timestamp: new Date()
       };

@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: mentalverse-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: OPENAI_API_KEY
+        sync: false  # This will be set manually in Render dashboard
+      - key: FRONTEND_URL
+        value: https://mental-verse-deploy.vercel.app
+    healthCheckPath: /health
+    autoDeploy: true
+    branch: main
+    rootDir: backend
