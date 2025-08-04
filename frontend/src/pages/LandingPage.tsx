@@ -12,6 +12,7 @@ import { TestimonialsSection } from '@/components/landing/TestimonialsSection'
 import { ResourcesSection } from '@/components/landing/ResourcesSection'
 import { ContactSection } from '@/components/landing/ContactSection'
 import { Footer } from '@/components/landing/Footer'
+import Chatbot from '@/components/Chatbot'
 
 interface LandingPageProps {
   onWalletDisconnect: () => void;
@@ -34,6 +35,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onWalletDisconnect }) => {
       <ResourcesSection />
       <ContactSection />
       <Footer />
+      <Chatbot />
     </div>
   )
 }
