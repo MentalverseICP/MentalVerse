@@ -16,8 +16,15 @@ export const Header: React.FC<{ onWalletDisconnect?: () => void }> = ({ onWallet
 };
 
   const useAuth = (): { user: User | null } => ({ user: null });
-  const { user } = useAuth();
+  // const { user } = useAuth();
   const navigate = useNavigate();
+  const ids = [
+    { label: 'About', id: 'about' },
+    // { label: 'Services', id: 'services' },
+    { label: 'Technology', id: 'technology' },
+    { label: 'Testimonials', id: 'testimonials' },
+    { label: 'Contact', id: 'contact' }
+  ]
 
   useEffect(() => {
     const handleScroll = () => {
@@ -48,14 +55,7 @@ export const Header: React.FC<{ onWalletDisconnect?: () => void }> = ({ onWallet
           </div>
           
           <nav className="hidden lg:flex items-center space-x-8">
-            {[
-              { label: 'About', id: 'about' },
-              { label: 'Services', id: 'services' },
-              // { label: 'Therapists', id: 'therapists' },
-              { label: 'Technology', id: 'technology' },
-              { label: 'Testimonials', id: 'testimonials' },
-              { label: 'Contact', id: 'contact' }
-            ].map((item) => (
+            {ids.map((item) => (
               <button
                 key={item.id}
                 className="text-gray-300 hover:text-green-400 transition-colors duration-300 relative group"
@@ -90,14 +90,7 @@ export const Header: React.FC<{ onWalletDisconnect?: () => void }> = ({ onWallet
         {isMenuOpen && (
           <div className="lg:hidden mt-4 pb-4 bg-black/95 backdrop-blur-lg rounded-lg shadow-lg transition-all duration-300 ease-in-out transform">
             <nav className="flex flex-col space-y-4 p-4">
-              {[
-                { label: 'About', id: 'about' },
-                { label: 'Services', id: 'services' },
-                // { label: 'Therapists', id: 'therapists' },
-                { label: 'Technology', id: 'technology' },
-                { label: 'Testimonials', id: 'testimonials' },
-                { label: 'Contact', id: 'contact' }
-              ].map((item) => (
+              {ids.map((item) => (
                 <button
                   key={item.id}
                   className="text-gray-300 hover:text-green-500 text-left transition-colors"

@@ -27,7 +27,7 @@ I've successfully integrated MindMate, an empathetic AI mental health chatbot, i
    ```
 3. Open `.env.local` and replace `your_openai_api_key_here` with your actual API key:
    ```
-   VITE_OPENAI_API_KEY=sk-your-actual-api-key-here
+   OPENAI_API_KEY=sk-your-actual-api-key-here
    ```
 
 ### 3. Start the Development Server
