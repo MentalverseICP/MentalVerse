@@ -140,7 +140,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ className = '' }) => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             transition={{ duration: 0.2 }}
-            className="mb-4 w-80 h-96 bg-white dark:bg-gray-900 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden"
+            className="mb-4 w-80 h-96 bg-black/50 backdrop-blur-xl border border-green-500/30 rounded-lg shadow-2xl flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-4 flex items-center justify-between">
@@ -154,6 +154,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ className = '' }) => {
                 </div>
               </div>
               <button
+                type='button'
                 onClick={() => setIsOpen(false)}
                 className="text-white/80 hover:text-white transition-colors"
                 aria-label="Close chat"
@@ -163,7 +164,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ className = '' }) => {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-custom">
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -205,14 +206,14 @@ const Chatbot: React.FC<ChatbotProps> = ({ className = '' }) => {
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Share what's on your mind..."
-                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-gray-800 dark:text-white text-sm"
+                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/50 dark:bg-gray-800 dark:text-white text-sm"
                   disabled={isLoading}
                 />
                 <button
                   type='button'
                   onClick={sendMessage}
                   disabled={!inputMessage.trim() || isLoading}
-                  className="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-green-500/50  text-md font-semibold hover:bg-green-600/80 transform hover:scale-105"
                   aria-label="Send message"
                 >
                   <Send size={16} />

@@ -286,7 +286,7 @@ const CustomCalendar = () => {
       max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 
       max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)] 
       transition-all dark:bg-transparent 
-      scrollbar-custom grid 
+      scrollbar-custom overflow-x-scroll grid 
       ${isCollapsed ? 'grid-cols-1' : 'grid-cols-1'}`}
     >
       <Calendar

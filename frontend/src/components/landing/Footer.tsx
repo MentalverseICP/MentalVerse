@@ -41,7 +41,7 @@ export const Footer: React.FC = () => {
             <h4 className="text-white font-semibold mb-4">Connect</h4>
             <ul className="space-y-2 text-gray-400">
               <li><a href="#" className="hover:text-green-400 transition-colors">Discord</a></li>
-              <li><a href="#" className="hover:text-green-400 transition-colors">Twitter</a></li>
+              <li><a href="https://x.com/mentalverse_ICP" className="hover:text-green-400 transition-colors">Twitter</a></li>
               <li><a href="#" className="hover:text-green-400 transition-colors">Telegram</a></li>
               <li><a href="#" className="hover:text-green-400 transition-colors">GitHub</a></li>
             </ul>

@@ -160,7 +160,7 @@ const Medical: React.FC = () => {
                 <td className="p-4 font-bold text-[#ff0000] border-r border-gray-200 dark:border-gray-700">{item.time}</td>
                 <td className="p-4">
                   <Button
-                    className={`px-4 sm:px-8 py-2 sm:py-3 rounded-full font-bold border hover:-translate-y-1 transition duration-300 hover:border-t hover:border-b sm:text-sm text-xs ${
+                    className={`px-4 sm:px-8 py-2 sm:py-3 rounded-full font-bold border dark:border-[#2f3339] hover:-translate-y-1 transition duration-300 hover:border-t hover:border-b sm:text-sm text-xs ${
                       theme === 'dark'
                         ? 'bg-background hover:bg-black hover:shadow-[0_2px_0_0_rgba(204,255,0,0.811)] hover:border-[#18E614]'
                         : 'hover:bg-zinc-100 bg-white hover:border-black hover:shadow-[0_2px_0_0_rgba(0,0,0,0.811)]'

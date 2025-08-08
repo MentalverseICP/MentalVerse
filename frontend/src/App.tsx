@@ -17,20 +17,6 @@ interface SubAppProps {
   onSearchChange: (value: string) => void;
 }
 
-function Loader() {
-  return(
-    <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
-      <div className="text-center">
-        <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center mx-auto mb-4 animate-spin">
-          <Brain className="text-white" size={32} />
-        </div>
-        <h2 className="text-white text-xl font-semibold mb-2">Loading MentalVerse</h2>
-        <p className="text-gray-400">Connecting to the blockchain...</p>
-      </div>
-    </div>
-  )
-}
-
 function App() {
   return (
     <ThemeProvider defaultTheme='dark' storageKey='vite-ui-theme'>
@@ -136,5 +122,20 @@ function SubApp({ searchTerm, onSearchChange }: SubAppProps) {
     </div>
   )
 }
+
+function Loader() {
+  return(
+    <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
+      <div className="text-center">
+        <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center mx-auto mb-4 animate-spin">
+          <Brain className="text-white" size={32} />
+        </div>
+        <h2 className="text-white text-xl font-semibold mb-2">Loading MentalVerse</h2>
+        <p className="text-gray-400">Connecting to the blockchain...</p>
+      </div>
+    </div>
+  )
+}
+
 
 export default App

@@ -105,10 +105,10 @@ const Doctors: React.FC<DoctorsProps> = ({ bookedDoctors: bookedDoctorsProp = []
               ))}
             </SelectContent>
           </Select>
-          <div className="relative w-full max-w-xs">
+          <div className="relative w-full max-w-xs ">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
             <Input
-              className="pl-8 w-full"
+              className="pl-8 w-full rounded-lg text-white"
               placeholder="Search doctors by name or role"
               value={search}
               onChange={e => { setSearch(e.target.value); setPage(1); }}
@@ -174,7 +174,7 @@ const Doctors: React.FC<DoctorsProps> = ({ bookedDoctors: bookedDoctorsProp = []
             </div>
             <div className="flex flex-col gap-2 mt-4 w-full">
               <Button
-                className={`px-6 sm:px-8 py-2 sm:py-3 rounded-full font-bold border hover:-translate-y-1 transition-all duration-300 hover:border-t hover:border-b text-sm ${
+                className={`px-6 sm:px-8 py-2 sm:py-3 rounded-full font-bold border dark:border-[#2f3339] hover:-translate-y-1 transition-all duration-300 hover:border-t hover:border-b text-sm ${
                   theme === 'dark'
                     ? 'bg-background hover:bg-black hover:shadow-[0_2px_0_0_rgba(204,255,0,0.811)] hover:border-[#18E614]'
                     : 'hover:bg-zinc-100 bg-white hover:border-black hover:shadow-[0_2px_0_0_rgba(0,0,0,0.811)]'
@@ -186,7 +186,7 @@ const Doctors: React.FC<DoctorsProps> = ({ bookedDoctors: bookedDoctorsProp = []
               <button
                 type='button'
                 onClick={() => handleBook(doc)}
-                className={`px-5 sm:px-6 py-2 rounded-full font-bold border hover:-translate-y-1 transition-all duration-300 hover:border-t hover:border-b text-xs ${
+                className={`px-5 sm:px-6 py-2 rounded-full font-bold border dark:border-[#2f3339] hover:-translate-y-1 transition-all duration-300 hover:border-t hover:border-b text-xs ${
                   bookedDoctors.includes(doc.id)
                     ? theme === 'dark'
                       ? 'bg-[#1d1b1b]'

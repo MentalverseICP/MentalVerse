@@ -77,7 +77,7 @@ export const ContactSection: React.FC = () => {
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105 font-semibold"
+                  className="w-full text-center py-3 rounded-lg hover:from-green-700 hover:to-emerald-700 duration-300 font-semibold border border-green-500/50 text-green-300 px-8 text-md  hover:bg-green-600/20 transition-all transform hover:scale-105"
                 >
                   Send Message
                 </button>

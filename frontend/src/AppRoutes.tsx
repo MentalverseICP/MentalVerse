@@ -11,7 +11,6 @@ import Appointments from '@/pages/Appointments'
 import Claims from '@/pages/Claims'
 import { cn } from './lib/utils';
 import { useSidebar } from './components/ui/Sidebar';
-import LandingPage  from '@/pages/LandingPage';
 
 interface RouteProps {
   // className?: string
@@ -44,7 +43,7 @@ export const AppRoutes: React.FC<RouteProps> = () => {
           <Route path="/medical" element={<Medical />} />
           <Route path="/doctors" element={<Doctors />} />
           <Route path="/appointments" element={<Appointments />} />
-        </Routes>      
+        </Routes>
       </div>      
     </main>
 

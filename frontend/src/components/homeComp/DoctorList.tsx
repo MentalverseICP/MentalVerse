@@ -95,7 +95,7 @@ const DoctorList: React.FC<prop> = ({className}) => {
                 }`}
               >
                 <td className="p-4 flex items-center gap-4">
-                  <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-300 font-bold text-sm uppercase">
+                  <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full lg:flex lg:items-center lg:justify-center text-gray-500 dark:text-gray-300 font-bold text-sm uppercase hidden">
                     {doctor.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
                   </div>
                   {doctor.name}
