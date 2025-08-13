@@ -1,7 +1,7 @@
 # MindMate Chatbot Setup Guide
 
 ## Overview
-I've successfully integrated MindMate, an empathetic AI mental health chatbot, into your MentalVerse landing page. The chatbot appears as a floating chat widget in the bottom-right corner of the homepage.
+We have successfully integrated MindMate, an empathetic AI mental health chatbot, into our MentalVerse landing page. The chatbot appears as a floating chat widget in the bottom-right corner of the homepage, buut we are looking to make changes on the ui placement later
 
 ## Features
 - **Empathetic AI**: Uses GPT-4o with a specialized mental health assistant personality
@@ -74,7 +74,7 @@ MindMate is configured with the following characteristics:
 
 ## Security Considerations
 - API key is stored in environment variables (not in code)
-- Client-side API calls (consider moving to backend for production)
+- Client-side API calls
 - Rate limiting should be implemented for production use
 
 ## Customization Options
@@ -96,7 +96,7 @@ For production deployment:
 4. Consider adding user authentication for personalized conversations
 
 ## Support
-The chatbot is now fully integrated and ready to use. Users can access mental health support directly from your landing page through the floating chat interface.
+The chatbot is now fully integrated and ready to use. Users can access mental health support directly from our landing page through the floating chat interface.
 
 ## Cost Considerations
 - OpenAI API usage is pay-per-token
