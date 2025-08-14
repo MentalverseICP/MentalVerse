@@ -25,8 +25,8 @@ export const StackedBarLineChart: React.FC<prop> = ({ className }) => {
           <ArrowUpFromDot className="text-[#F80D38] w-10 h-10 font-extrabold text-3xl" />
         </div>
         <div className='flex flex-col items-start mt-3'>
-          <span className={`text-[10px] max-lg:text-[18px] pb-0 ${theme === 'dark' ? 'text-white' : 'text-gray-600'}`}>Patience health rate</span>
-          <span className={`text-[10px] max-lg:text-[18px] ${theme === 'dark' ? 'text-white' : 'text-gray-600'}`}>from Jan to Dec.</span>
+          <span className={`text-[10px] max-lg:text-[18px] max-sm:text-[15px] pb-0 ${theme === 'dark' ? 'text-white' : 'text-gray-600'}`}>Patience health rate</span>
+          <span className={`text-[10px] max-lg:text-[18px]  max-sm:text-[15px] ${theme === 'dark' ? 'text-white' : 'text-gray-600'}`}>from Jan to Dec.</span>
         </div>
       </div>
       <div className={`max-lg:h-72 h-64 lg:mt-[24px] ${isCollapsed ? ' max-md:mt-32 mt-10' : 'lg:mt-20 md:-mt-28 mt-32  relative lg:-bottom-16'}`}>
