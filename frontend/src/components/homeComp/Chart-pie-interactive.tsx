@@ -84,7 +84,7 @@ export function ChartInteractive({ className }: { className?: string }) {
       <ChartStyle id={id} config={chartConfig} />
       <CardHeader className="flex-row items-start space-y-0 pb-0">
         <div className="grid gap-1">
-          <CardTitle className="uppercase font-bold text-xs max-lg:text-lg">Patients</CardTitle>
+          <CardTitle className="uppercase font-bold text-xs max-lg:text-md">Patients</CardTitle>
           {/* <CardDescription>January - June 2024</CardDescription> */}
         </div>
       </CardHeader>
@@ -93,7 +93,7 @@ export function ChartInteractive({ className }: { className?: string }) {
         <ChartContainer
           id={id}
           config={chartConfig}
-          className="mx-auto aspect-square w-[200px]"
+          className="mx-auto aspect-square w-[200px] max-sm:w-[160px] max-[400px]:w-[140px]"
         >
           <PieChart>
             <ChartTooltip
@@ -134,14 +134,14 @@ export function ChartInteractive({ className }: { className?: string }) {
                         <tspan
                           x={viewBox.cx}
                           y={viewBox.cy}
-                          className={`text-2xl font-bold ${theme === 'dark' ? 'fill-white' : 'fill-[#18E614]'}`}
+                          className={`text-2xl max-sm:text-xl max-[400px]:text-lg font-bold ${theme === 'dark' ? 'fill-white' : 'fill-[#18E614]'}`}
                         >
                           11M
                         </tspan>
                         <tspan
                           x={viewBox.cx}
                           y={(viewBox.cy || 0) + 24}
-                          className={`fill-[#18E614] text-[10px] font-bold uppercase tracking-wide ${theme === 'dark' ? 'fill-white' : 'fill-[#18E614]'}`}
+                          className={`fill-[#18E614] text-[10px] max-sm:text-[9px] max-[400px]:text-[8px] font-bold uppercase tracking-wide ${theme === 'dark' ? 'fill-white' : 'fill-[#18E614]'}`}
                         >
                           patients
                         </tspan>
@@ -155,15 +155,15 @@ export function ChartInteractive({ className }: { className?: string }) {
         </ChartContainer>
       </CardContent>
 
-      <div className="flex items-center">
+      <div className="flex items-center max-sm:flex max-sm:items-center max-sm:gap-20 max-sm:px-4 max-sm:pb-2">
         <Select value={activeMonth} onValueChange={setActiveMonth}>
           <SelectTrigger
-            className="ml-auto h-7 w-[130px] rounded-xl pl-2 m-2"
+            className="ml-auto max-sm:ml-0 max-sm:w-full h-7 w-[130px] max-sm:h-8 rounded-xl pl-2 m-2 max-sm:m-0 max-sm:text-xs"
             aria-label="Select a value"
           >
             <SelectValue placeholder="" />
           </SelectTrigger>
-          <SelectContent align="end" className="rounded-xl">
+          <SelectContent align="end" className="rounded-xl max-sm:w-full">
             {months.map((key) => {
               const config = chartConfig[key as keyof typeof chartConfig]
 
@@ -175,11 +175,11 @@ export function ChartInteractive({ className }: { className?: string }) {
                 <SelectItem
                   key={key}
                   value={key}
-                  className="rounded-lg [&_span]:flex"
+                  className="rounded-lg [&_span]:flex max-sm:text-xs"
                 >
-                  <div className="flex items-center gap-2 text-xs">
+                  <div className="flex items-center gap-2 text-xs max-sm:text-xs">
                     <span
-                      className="flex h-3 w-3 shrink-0 rounded-sm"
+                      className="flex h-3 w-3 max-sm:h-2.5 max-sm:w-2.5 shrink-0 rounded-sm"
                       style={{
                         backgroundColor: `var(--color-${key})`,
                       }}
@@ -191,10 +191,11 @@ export function ChartInteractive({ className }: { className?: string }) {
             })}
           </SelectContent>
         </Select>  
-        {desktopData[activeIndex].desktop.toLocaleString()}%
+        <span className="max-sm:text-sm max-sm:font-medium max-sm:ml-0 max-sm:px-0">
+          {desktopData[activeIndex].desktop.toLocaleString()}%
+        </span>
       </div>
 
     </Card>
   )
 }
-

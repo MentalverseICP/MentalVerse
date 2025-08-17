@@ -45,7 +45,7 @@ const DoctorList: React.FC<prop> = ({className}) => {
   return (
     <div className={`bg-transparent p-6 rounded-3xl shadow-md border w-full ${className}`}>
       <div className="flex flex-wrap items-center gap-4 mb-4">
-        <h1 className="uppercase font-bold text-xs max-sm:text-sm max-lg:text-lg mr-5 sm:mr-10 lg:mr-20">
+        <h1 className="uppercase font-bold text-xs max-lg:text-md mr-5 sm:mr-10 lg:mr-20">
           DOCTORS
         </h1>
         <div className="flex-grow flex items-center rounded-md p-1 bg-transparent shadow-sm overflow-hidden dark:border-[#2f3339] border-2">

@@ -49,7 +49,7 @@ const AppointmentList: React.FC<prop> = ({ className }) => {
     <div className={`w-full p-4 bg-transparent text-white mt-6 space-y-6 ${className}`}>
       {/* Upcoming Appointments */}
       <div>
-        <h2 className={`text-sm font-bold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Upcoming Appointments</h2>
+        <h2 className={`uppercase font-bold text-xs max-lg:text-md ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Upcoming Appointments</h2>
         <ul className="space-y-4 mt-4">
           {upcomingAppointments.map((appointment, index) => (
             <li
@@ -73,7 +73,7 @@ const AppointmentList: React.FC<prop> = ({ className }) => {
 
       {/* Previous Appointments */}
       <div>
-        <h2 className={`text-sm font-bold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Previous Appointments</h2>
+        <h2 className={`uppercase font-bold text-xs max-lg:text-md ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Previous Appointments</h2>
         <div className="flex justify-between mt-4 rounded-lg overflow-hidden dark:border-[#2f3339] border-2">
           <button
             type='button'

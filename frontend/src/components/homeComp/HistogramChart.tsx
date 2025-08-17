@@ -101,7 +101,7 @@ const chartData = {
 const HistogramChart: React.FC<prop> = ({ className }) => {
   return (
     <div className={`sm:w-full w-11/12 bg-transparent p-6 border-b xl:border-b-[#2f3339] ${className}`}>
-      <h2 className="dark:text-white text-sm font-bold mb-4">Overall Appointments</h2>
+      <h2 className="dark:text-white uppercase font-bold text-xs max-lg:text-md mb-4">Overall Appointments</h2>
       <div className="relative h-64">
         <Bar options={chartOptions} data={chartData} />
       </div>
