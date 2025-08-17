@@ -1,0 +1,84 @@
+{
+  "name": "mentalverse-docs",
+  "version": "1.0.0",
+  "description": "Comprehensive documentation for MentalVerse - Web3-Powered Mental Health Support Platform",
+  "private": true,
+  "scripts": {
+    "docusaurus": "docusaurus",
+    "start": "docusaurus start",
+    "build": "docusaurus build",
+    "swizzle": "docusaurus swizzle",
+    "deploy": "docusaurus deploy",
+    "clear": "docusaurus clear",
+    "serve": "docusaurus serve",
+    "write-translations": "docusaurus write-translations",
+    "write-heading-ids": "docusaurus write-heading-ids",
+    "typecheck": "tsc",
+    "lint": "eslint src --ext .ts,.tsx,.js,.jsx",
+    "lint:fix": "eslint src --ext .ts,.tsx,.js,.jsx --fix",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,md,mdx,json,css,scss}\"",
+    "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,md,mdx,json,css,scss}\""
+  },
+  "dependencies": {
+    "@docusaurus/core": "3.8.1",
+    "@docusaurus/preset-classic": "3.8.1",
+    "@docusaurus/plugin-content-docs": "3.8.1",
+    "@docusaurus/plugin-pwa": "3.8.1",
+    "@mdx-js/react": "^3.0.0",
+    "clsx": "^2.0.0",
+    "prism-react-renderer": "^2.3.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@docusaurus/module-type-aliases": "3.8.1",
+    "@docusaurus/types": "3.8.1",
+    "@types/react": "^18.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-react": "^7.33.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0"
+  },
+  "browserslist": {
+    "production": [
+      ">0.5%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 3 chrome version",
+      "last 3 firefox version",
+      "last 5 safari version"
+    ]
+  },
+  "engines": {
+    "node": ">=18.0"
+  },
+  "keywords": [
+    "mental-health",
+    "web3",
+    "blockchain",
+    "documentation",
+    "docusaurus",
+    "therapy",
+    "peer-support",
+    "ai-assistance",
+    "decentralized",
+    "privacy",
+    "community"
+  ],
+  "author": "MentalVerse Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mentalverse/mentalverse-docs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mentalverse/mentalverse-docs/issues"
+  },
+  "homepage": "https://docs.mentalverse.com"
+}

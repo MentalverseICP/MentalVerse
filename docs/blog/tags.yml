@@ -1,0 +1,49 @@
+mental-health:
+  label: Mental Health
+  permalink: /mental-health
+  description: Articles about mental health awareness, tips, and best practices
+
+web3:
+  label: Web3
+  permalink: /web3
+  description: Web3 technology, blockchain, and decentralized applications in mental health
+
+ai:
+  label: AI
+  permalink: /ai
+  description: Artificial Intelligence applications in mental health support
+
+therapy:
+  label: Therapy
+  permalink: /therapy
+  description: Professional therapy services, techniques, and insights
+
+community:
+  label: Community
+  permalink: /community
+  description: Community support, peer connections, and social wellness
+
+privacy:
+  label: Privacy
+  permalink: /privacy
+  description: Privacy protection, data security, and user confidentiality
+
+blockchain:
+  label: Blockchain
+  permalink: /blockchain
+  description: Blockchain technology and its applications in healthcare
+
+wellness:
+  label: Wellness
+  permalink: /wellness
+  description: General wellness tips, self-care, and mental health maintenance
+
+research:
+  label: Research
+  permalink: /research
+  description: Mental health research, studies, and scientific insights
+
+platform-updates:
+  label: Platform Updates
+  permalink: /platform-updates
+  description: MentalVerse platform updates, new features, and announcements
