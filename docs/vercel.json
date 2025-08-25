@@ -3,16 +3,6 @@
   "outputDirectory": "build",
   "trailingSlash": false,
   "cleanUrls": true,
-  "routes": [
-    {
-      "src": "/docs/(.*)",
-      "dest": "/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
-  ],
   "headers": [
     {
       "source": "/(.*)",
