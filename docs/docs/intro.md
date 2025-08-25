@@ -1,5 +1,6 @@
 ---
 sidebar_position: 1
+slug: /
 ---
 
 # Welcome to MentalVerse
@@ -24,39 +25,39 @@ MentalVerse is a decentralized platform that provides secure, anonymous, and acc
 Choose your path to get started with MentalVerse:
 
 ### For Users
-- [Platform Overview](/docs/platform-overview)
-- [API Documentation](/docs/api/introduction)
-- [Therapy Booking](/docs/api/therapy/booking)
+- [Platform Overview](/docs/platform-overview.md)
+- [API Documentation](/docs/api/introduction.md)
+- [Therapy Booking](/docs/api/therapy/booking.md)
 
 ### For Mental Health Professionals
-- [Professional Mentorship](/docs/mentorship/professional-mentorship)
-- [Specialized Mentorship](/docs/mentorship/specialized-mentorship)
-- [Platform Features](/docs/features/professional-therapy)
+- [Professional Mentorship](/docs/mentorship/professional-mentorship.md)
+- [Specialized Mentorship](/docs/mentorship/specialized-mentorship.md)
+- [Platform Features](/docs/features/professional-therapy.md)
 
 ### For Developers
-- [API Integration](/docs/api/introduction)
-- [Profile Management](/docs/api/users/profile-management)
-- [Token Economics](/docs/api/tokens/economics)
+- [API Integration](/docs/api/introduction.md)
+- [Profile Management](/docs/api/users/profile-management.md)
+- [Token Economics](/docs/api/tokens/economics.md)
 
 ## Core Features
 
 Explore our innovative features that make mental health support accessible, secure, and rewarding:
 
-- [Decentralized Anonymity](/docs/features/decentralized-anonymity)
-- [Tokenized Incentives](/docs/features/tokenized-incentives)
-- [Peer Support Groups](/docs/features/peer-support-groups)
-- [Professional Therapy Services](/docs/features/professional-therapy)
-- [AI Mental Health Bots](/docs/features/ai-mental-health-bots)
+- [Decentralized Anonymity](/docs/features/decentralized-anonymity.md)
+- [Tokenized Incentives](/docs/features/tokenized-incentives.md)
+- [Peer Support Groups](/docs/features/peer-support-groups.md)
+- [Professional Therapy Services](/docs/features/professional-therapy.md)
+- [AI Mental Health Bots](/docs/features/ai-mental-health-bots.md)
 
 ## Technology Stack
 
 Learn about the cutting-edge Web3 technologies powering MentalVerse:
 
-- [Internet Computer Integration](/docs/web3-technology/internet-computer)
-- [Smart Contracts](/docs/web3-technology/smart-contracts)
-- [Tokenomics](/docs/web3-technology/tokenomics)
-- [Web3 Technology Overview](/docs/web3-technology/)
+- [Internet Computer Integration](/docs/web3-technology/internet-computer.md)
+- [Smart Contracts](/docs/web3-technology/smart-contracts.md)
+- [Tokenomics](/docs/web3-technology/tokenomics.md)
+- [Web3 Technology Overview](/docs/web3-technology/index.md)
 
 ---
 
-*Ready to transform mental healthcare? Start exploring our documentation or join our community on [Discord](https://discord.gg/mentalverse) and [Telegram](https://t.me/mentalverse).*
+<!-- *Ready to transform mental healthcare? Start exploring our documentation or join our community on [Discord](https://discord.gg/mentalverse) and [Telegram](https://t.me/mentalverse).* -->
