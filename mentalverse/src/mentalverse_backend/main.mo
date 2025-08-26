@@ -4,8 +4,8 @@ import HashMap "mo:base/HashMap";
 import Array "mo:base/Array";
 import Result "mo:base/Result";
 import Text "mo:base/Text";
-import Option "mo:base/Option";
-import Debug "mo:base/Debug";
+import _Option "mo:base/Option";
+import _Debug "mo:base/Debug";
 import Int "mo:base/Int";
 import Iter "mo:base/Iter";
 import Nat "mo:base/Nat";
@@ -13,9 +13,9 @@ import Nat "mo:base/Nat";
 // Import MVT Token module
 import MVTToken "mvt_token";
 
-actor MentalVerseBackend {
+persistent actor MentalVerseBackend {
   // MVT Token Integration
-  private let MVT_TOKEN_CANISTER_ID = "rdmx6-jaaaa-aaaaa-aaadq-cai"; // Replace with actual canister ID
+  private let _MVT_TOKEN_CANISTER_ID = "rdmx6-jaaaa-aaaaa-aaadq-cai"; // Replace with actual canister ID
   
   // Token-related types
   type TokenBalance = Nat;
@@ -134,21 +134,21 @@ actor MentalVerseBackend {
   };
 
   // Storage using stable variables for persistence
-  private stable var patientsEntries : [(UserId, Patient)] = [];
-  private stable var doctorsEntries : [(DoctorId, Doctor)] = [];
-  private stable var appointmentsEntries : [(AppointmentId, Appointment)] = [];
-  private stable var medicalRecordsEntries : [(RecordId, MedicalRecord)] = [];
-  private stable var messagesEntries : [(Text, Message)] = [];
-  private stable var userRolesEntries : [(UserId, Text)] = []; // "patient", "doctor", "admin"
-  private stable var chatInteractionsEntries : [(Text, ChatInteraction)] = [];
+  private var patientsEntries : [(UserId, Patient)] = [];
+  private var doctorsEntries : [(DoctorId, Doctor)] = [];
+  private var appointmentsEntries : [(AppointmentId, Appointment)] = [];
+  private var medicalRecordsEntries : [(RecordId, MedicalRecord)] = [];
+  private var messagesEntries : [(Text, Message)] = [];
+  private var userRolesEntries : [(UserId, Text)] = []; // "patient", "doctor", "admin"
+  private var chatInteractionsEntries : [(Text, ChatInteraction)] = [];
 
   // Initialize HashMaps from stable storage
-  private var patients = HashMap.HashMap<UserId, Patient>(10, Principal.equal, Principal.hash);
-  private var doctors = HashMap.HashMap<DoctorId, Doctor>(10, Text.equal, Text.hash);
-  private var appointments = HashMap.HashMap<AppointmentId, Appointment>(10, Text.equal, Text.hash);
-  private var medicalRecords = HashMap.HashMap<RecordId, MedicalRecord>(10, Text.equal, Text.hash);
-  private var messages = HashMap.HashMap<Text, Message>(10, Text.equal, Text.hash);
-  private var userRoles = HashMap.HashMap<UserId, Text>(10, Principal.equal, Principal.hash);
+  private transient var patients = HashMap.HashMap<UserId, Patient>(10, Principal.equal, Principal.hash);
+  private transient var doctors = HashMap.HashMap<DoctorId, Doctor>(10, Text.equal, Text.hash);
+  private transient var appointments = HashMap.HashMap<AppointmentId, Appointment>(10, Text.equal, Text.hash);
+  private transient var medicalRecords = HashMap.HashMap<RecordId, MedicalRecord>(10, Text.equal, Text.hash);
+  private transient var messages = HashMap.HashMap<Text, Message>(10, Text.equal, Text.hash);
+  private transient var userRoles = HashMap.HashMap<UserId, Text>(10, Principal.equal, Principal.hash);
 
   // System upgrade hooks to maintain state
   system func preupgrade() {
@@ -621,8 +621,8 @@ actor MentalVerseBackend {
     sessionId: Text;
   };
 
-  private stable var chatInteractions: [(Text, ChatInteraction)] = [];
-  private var chatInteractionsMap = HashMap.fromIter<Text, ChatInteraction>(chatInteractions.vals(), chatInteractions.size(), Text.equal, Text.hash);
+  private var chatInteractions: [(Text, ChatInteraction)] = [];
+  private transient var chatInteractionsMap = HashMap.fromIter<Text, ChatInteraction>(chatInteractions.vals(), chatInteractions.size(), Text.equal, Text.hash);
 
   // Helper function to generate unique IDs
   private func generateId() : Text {
@@ -750,7 +750,7 @@ actor MentalVerseBackend {
   };
   
   // Award tokens for providing patient feedback
-  public shared(msg) func submitFeedbackWithTokens(appointmentId: AppointmentId, rating: Nat, feedback: Text) : async Result.Result<Text, Text> {
+  public shared(msg) func submitFeedbackWithTokens(appointmentId: AppointmentId, _rating: Nat, _feedback: Text) : async Result.Result<Text, Text> {
     let caller = msg.caller;
     
     switch (appointments.get(appointmentId)) {

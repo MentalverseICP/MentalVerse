@@ -17,7 +17,7 @@ import Buffer "mo:base/Buffer";
 
 import MVTToken "../mentalverse_backend/mvt_token";
 
-actor MVTTokenCanister {
+persistent actor MVTTokenCanister {
   // Import types from MVT Token module
   type Account = MVTToken.Account;
   type Balance = MVTToken.Balance;
@@ -45,11 +45,11 @@ actor MVTTokenCanister {
   private stable var minting_account : Account = { owner = Principal.fromText("aaaaa-aa"); subaccount = null };
 
   // Runtime storage
-  private var balances = HashMap.HashMap<Account, Balance>(100, MVTToken.account_eq, MVTToken.account_hash);
-  private var stakes = HashMap.HashMap<Principal, StakeInfo>(50, Principal.equal, Principal.hash);
-  private var transactions = HashMap.HashMap<TxIndex, Transaction>(1000, Nat.equal, func(n: Nat) : Nat32 { Nat32.fromNat(n % (2**32)) });
-  private var earningRecords = HashMap.HashMap<Text, EarningRecord>(500, Text.equal, Text.hash);
-  private var spendingRecords = HashMap.HashMap<Text, SpendingRecord>(500, Text.equal, Text.hash);
+  private transient var balances = HashMap.HashMap<Account, Balance>(100, MVTToken.account_eq, MVTToken.account_hash);
+  private transient var stakes = HashMap.HashMap<Principal, StakeInfo>(50, Principal.equal, Principal.hash);
+  private transient var transactions = HashMap.HashMap<TxIndex, Transaction>(1000, Nat.equal, func(n: Nat) : Nat32 { Nat32.fromNat(n % (2**32)) });
+  private transient var earningRecords = HashMap.HashMap<Text, EarningRecord>(500, Text.equal, Text.hash);
+  private transient var spendingRecords = HashMap.HashMap<Text, SpendingRecord>(500, Text.equal, Text.hash);
 
   // Initialize minting account to canister principal
   private func init() {
