@@ -239,7 +239,7 @@ export default function TokenTransfer() {
     }
   };
 
-  if (isAuthenticated) {
+  if (!isAuthenticated) {
     return (
       <div className="flex items-center justify-center h-64">
         <p className="text-muted-foreground">Please log in to access transfer features.</p>
@@ -247,13 +247,13 @@ export default function TokenTransfer() {
     );
   }
 
-  // if (loading) {
-  //   return (
-  //     <div className="flex items-center justify-center h-64">
-  //       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#18E614]"></div>
-  //     </div>
-  //   );
-  // }
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#18E614]"></div>
+      </div>
+    );
+  }
 
   return (
     <div className={cn("space-y-6 min-h-screen w-full transition-colors duration-500 px-2 py-8 sm:p-4 md:p-8 p-5 relative max-[640px]:ml-16 max-[640px]:w-[calc(100vw-5rem)] max-[500px]:overflow-x-auto max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)] dark:bg-transparent", isCollapsed ? "md:w-[90vw]" : "md:w-[80vw]"
