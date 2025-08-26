@@ -245,7 +245,20 @@ Comprehensive documentation is available at [docs.mentalverse.com](https://docs.
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🆘 Support
+## 🚀 Live Deployment
+
+MentalVerse is deployed on the Internet Computer mainnet:
+
+- **Frontend Application**: [https://cnuty-qiaaa-aaaac-a4anq-cai.icp0.io/](https://cnuty-qiaaa-aaaac-a4anq-cai.icp0.io/)
+- **Backend Canister**: [https://a4gq6-oaaaa-aaaab-qaa4q-cai.raw.icp0.io/?id=cytcv-raaaa-aaaac-a4aoa-cai](https://a4gq6-oaaaa-aaaab-qaa4q-cai.raw.icp0.io/?id=cytcv-raaaa-aaaac-a4aoa-cai)
+- **MVT Token Canister**: [https://a4gq6-oaaaa-aaaab-qaa4q-cai.raw.icp0.io/?id=c7seb-4yaaa-aaaac-a4aoq-cai](https://a4gq6-oaaaa-aaaab-qaa4q-cai.raw.icp0.io/?id=c7seb-4yaaa-aaaac-a4aoq-cai)
+
+### Canister IDs
+- **Frontend**: `cnuty-qiaaa-aaaac-a4anq-cai`
+- **Backend**: `cytcv-raaaa-aaaac-a4aoa-cai`
+- **MVT Token**: `c7seb-4yaaa-aaaac-a4aoq-cai`
+
+## 📞 Support & Community
 
 - **Documentation**: [docs.mentalverse.com](https://docs.mentalverse.com)
 - **Discord**: [Join our community](https://discord.gg/mentalverse)

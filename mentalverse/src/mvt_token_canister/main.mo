@@ -42,7 +42,7 @@ persistent actor MVTTokenCanister {
   private var spendingRecordsEntries : [(Text, SpendingRecord)] = [];
   private var totalSupply : Nat = 0;
   private var nextTxIndex : TxIndex = 0;
-  private var minting_account : Account = { owner = Principal.fromText("aaaaa-aa"); subaccount = null };
+  private var minting_account : Account = { owner = Principal.fromText("2vxsx-fae"); subaccount = null };
 
   // Runtime storage
   private transient var balances = HashMap.HashMap<Account, Balance>(100, MVTToken.account_eq, MVTToken.account_hash);
@@ -54,7 +54,7 @@ persistent actor MVTTokenCanister {
   // Initialize minting account to canister principal
   private func init() {
     // Use a placeholder principal for now - will be set properly in postupgrade
-    minting_account := { owner = Principal.fromText("rdmx6-jaaaa-aaaah-qcaiq-cai"); subaccount = null };
+    minting_account := { owner = Principal.fromText("2vxsx-fae"); subaccount = null };
   };
 
   // System upgrade hooks

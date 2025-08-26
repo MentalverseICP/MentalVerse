@@ -60,8 +60,8 @@ export const Enhanced3DBackground: React.FC = () => {
         if (particle.y > canvas.height) particle.y = 0;
         
         // Calculate size based on z-position
-        const scale = (1000 - particle.z) / 1000;
-        const size = particle.size * scale;
+        const scale = Math.max(0.01, (1000 - particle.z) / 1000);
+        const size = Math.max(0.1, particle.size * scale);
         const opacity = scale * 0.8;
         
         ctx.save();
@@ -73,7 +73,8 @@ export const Enhanced3DBackground: React.FC = () => {
           ctx.fillRect(particle.x - size/2, particle.y - size/2, size, size);
         } else if (particle.type === 'node') {
           ctx.beginPath();
-          ctx.arc(particle.x, particle.y, size/2, 0, Math.PI * 2);
+          const radius = Math.max(0.1, size/2);
+          ctx.arc(particle.x, particle.y, radius, 0, Math.PI * 2);
           ctx.fill();
         } else {
           // Draw connection lines

@@ -321,6 +321,32 @@ For IC mainnet deployment:
 - [Internet Identity Integration](https://internetcomputer.org/docs/current/developer-docs/integrations/internet-identity/)
 - [DFX SDK Reference](https://internetcomputer.org/docs/current/developer-docs/setup/install)
 
+## 🚀 Live Deployment
+
+MentalVerse is successfully deployed on the Internet Computer mainnet:
+
+### Live URLs
+- **Frontend Application**: [https://cnuty-qiaaa-aaaac-a4anq-cai.icp0.io/](https://cnuty-qiaaa-aaaac-a4anq-cai.icp0.io/)
+- **Backend Canister (Candid UI)**: [https://a4gq6-oaaaa-aaaab-qaa4q-cai.raw.icp0.io/?id=cytcv-raaaa-aaaac-a4aoa-cai](https://a4gq6-oaaaa-aaaab-qaa4q-cai.raw.icp0.io/?id=cytcv-raaaa-aaaac-a4aoa-cai)
+- **MVT Token Canister (Candid UI)**: [https://a4gq6-oaaaa-aaaab-qaa4q-cai.raw.icp0.io/?id=c7seb-4yaaa-aaaac-a4aoq-cai](https://a4gq6-oaaaa-aaaab-qaa4q-cai.raw.icp0.io/?id=c7seb-4yaaa-aaaac-a4aoq-cai)
+
+### Canister Information
+| Component | Canister ID | Status |
+|-----------|-------------|--------|
+| Frontend | `cnuty-qiaaa-aaaac-a4anq-cai` | ✅ Running |
+| Backend | `cytcv-raaaa-aaaac-a4aoa-cai` | ✅ Running |
+| MVT Token | `c7seb-4yaaa-aaaac-a4aoq-cai` | ✅ Running |
+| Internet Identity | Remote IC Service | ✅ Active |
+
+### Deployment Commands
+```bash
+# Deploy to IC mainnet
+dfx deploy --network ic --identity secure_identity
+
+# Check canister status
+dfx canister status --network ic --identity secure_identity --all
+```
+
 ## 🤝 Contributing
 
 1. Follow the existing code style and patterns

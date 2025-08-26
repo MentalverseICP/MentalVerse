@@ -32,7 +32,7 @@
         "internet_identity"
       ],
       "source": [
-        "../frontend/dist/"
+        "./frontend_dist/"
       ],
       "type": "assets"
     }
