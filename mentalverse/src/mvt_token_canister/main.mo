@@ -11,9 +11,9 @@ import Nat32 "mo:base/Nat32";
 import Nat8 "mo:base/Nat8";
 import Option "mo:base/Option";
 import Iter "mo:base/Iter";
-import Debug "mo:base/Debug";
+import _Debug "mo:base/Debug";
 import Float "mo:base/Float";
-import Buffer "mo:base/Buffer";
+import _Buffer "mo:base/Buffer";
 
 import MVTToken "../mentalverse_backend/mvt_token";
 
@@ -35,14 +35,14 @@ persistent actor MVTTokenCanister {
   type Duration = MVTToken.Duration;
 
   // Stable storage for upgrades
-  private stable var balancesEntries : [(Account, Balance)] = [];
-  private stable var stakesEntries : [(Principal, StakeInfo)] = [];
-  private stable var transactionsEntries : [(TxIndex, Transaction)] = [];
-  private stable var earningRecordsEntries : [(Text, EarningRecord)] = [];
-  private stable var spendingRecordsEntries : [(Text, SpendingRecord)] = [];
-  private stable var totalSupply : Nat = 0;
-  private stable var nextTxIndex : TxIndex = 0;
-  private stable var minting_account : Account = { owner = Principal.fromText("aaaaa-aa"); subaccount = null };
+  private var balancesEntries : [(Account, Balance)] = [];
+  private var stakesEntries : [(Principal, StakeInfo)] = [];
+  private var transactionsEntries : [(TxIndex, Transaction)] = [];
+  private var earningRecordsEntries : [(Text, EarningRecord)] = [];
+  private var spendingRecordsEntries : [(Text, SpendingRecord)] = [];
+  private var totalSupply : Nat = 0;
+  private var nextTxIndex : TxIndex = 0;
+  private var minting_account : Account = { owner = Principal.fromText("aaaaa-aa"); subaccount = null };
 
   // Runtime storage
   private transient var balances = HashMap.HashMap<Account, Balance>(100, MVTToken.account_eq, MVTToken.account_hash);
@@ -125,8 +125,8 @@ persistent actor MVTTokenCanister {
     Option.get(balances.get(account), 0)
   };
 
-  public func icrc1_transfer(args : TransferArgs) : async TransferResult {
-    let caller = Principal.fromText("rdmx6-jaaaa-aaaah-qcaiq-cai"); // In real implementation, use msg.caller
+  public shared(msg) func icrc1_transfer(args : TransferArgs) : async TransferResult {
+    let caller = msg.caller;
     let from_account = { owner = caller; subaccount = args.from_subaccount };
     let current_time = Nat64.fromNat(Int.abs(Time.now()));
     
@@ -144,8 +144,11 @@ persistent actor MVTTokenCanister {
       return #err(#InsufficientFunds({ balance = from_balance }));
     };
     
-    // Perform transfer
-    let new_from_balance = from_balance - total_amount;
+    // Perform transfer with safe arithmetic
+    let new_from_balance = switch (from_balance >= total_amount) {
+      case (true) Nat.sub(from_balance, total_amount);
+      case (false) return #err(#InsufficientFunds({ balance = from_balance }));
+    };
     let to_balance = Option.get(balances.get(args.to), 0);
     let new_to_balance = to_balance + args.amount;
     
@@ -173,8 +176,8 @@ persistent actor MVTTokenCanister {
 
   // MVT Specific Functions
   
-  public func mint_tokens(to : Account, amount : Nat) : async Result.Result<TxIndex, Text> {
-    let caller = Principal.fromText("rdmx6-jaaaa-aaaah-qcaiq-cai"); // In real implementation, use msg.caller
+  public shared(msg) func mint_tokens(to : Account, amount : Nat) : async Result.Result<TxIndex, Text> {
+    let caller = msg.caller;
     
     // Only minting account can mint
     if (not MVTToken.account_eq({ owner = caller; subaccount = null }, minting_account)) {
@@ -212,8 +215,8 @@ persistent actor MVTTokenCanister {
     #ok(result_index)
   };
 
-  public func burn_tokens(from : Account, amount : Nat) : async Result.Result<TxIndex, Text> {
-    let caller = Principal.fromText("rdmx6-jaaaa-aaaah-qcaiq-cai"); // In real implementation, use msg.caller
+  public shared(msg) func burn_tokens(from : Account, amount : Nat) : async Result.Result<TxIndex, Text> {
+    let caller = msg.caller;
     
     // Only account owner can burn their tokens
     if (from.owner != caller) {
@@ -235,8 +238,8 @@ persistent actor MVTTokenCanister {
       case null {};
     };
     
-    balances.put(from, current_balance - amount);
-    totalSupply -= amount;
+    balances.put(from, Nat.sub(current_balance, amount));
+     totalSupply := Nat.sub(totalSupply, amount);
     
     // Record transaction
     let tx : Transaction = {
@@ -256,7 +259,9 @@ persistent actor MVTTokenCanister {
   };
 
   // Earning System
-  public func earn_tokens(user : Principal, earning_type : EarningType, custom_amount : ?Nat) : async Result.Result<TxIndex, Text> {
+  public shared(msg) func earn_tokens(user : Principal, earning_type : EarningType, custom_amount : ?Nat) : async Result.Result<TxIndex, Text> {
+    // Only authorized canisters can call this function
+    let _caller = msg.caller;
     let amount = switch (custom_amount) {
       case (?amt) amt;
       case null {
@@ -310,7 +315,9 @@ persistent actor MVTTokenCanister {
   };
 
   // Spending System
-  public func spend_tokens(user : Principal, spending_type : SpendingType, custom_amount : ?Nat) : async Result.Result<TxIndex, Text> {
+  public shared(msg) func spend_tokens(user : Principal, spending_type : SpendingType, custom_amount : ?Nat) : async Result.Result<TxIndex, Text> {
+    // Only authorized canisters can call this function
+    let _caller = msg.caller;
     let amount = switch (custom_amount) {
       case (?amt) amt;
       case null {
@@ -363,7 +370,9 @@ persistent actor MVTTokenCanister {
   };
 
   // Staking System
-  public func stake_tokens(user : Principal, amount : Nat, lock_period : Duration) : async Result.Result<(), Text> {
+  public shared(msg) func stake_tokens(user : Principal, amount : Nat, lock_period : Duration) : async Result.Result<(), Text> {
+    // Only authorized canisters can call this function
+    let _caller = msg.caller;
     if (amount < MVTToken.STAKING_CONFIG.min_stake_amount) {
       return #err("Amount below minimum stake requirement");
     };
@@ -382,14 +391,14 @@ persistent actor MVTTokenCanister {
     
     // Check if user already has an active stake
     switch (stakes.get(user)) {
-      case (?existing_stake) {
+      case (?_existing_stake) {
         return #err("User already has an active stake");
       };
       case null {};
     };
     
     // Deduct tokens from balance
-    balances.put(from_account, current_balance - amount);
+     balances.put(from_account, Nat.sub(current_balance, amount));
     
     // Create stake record
     let stake_info : StakeInfo = {
@@ -419,7 +428,9 @@ persistent actor MVTTokenCanister {
     #ok(())
   };
 
-  public func unstake_tokens(user : Principal) : async Result.Result<Nat, Text> {
+  public shared(msg) func unstake_tokens(user : Principal) : async Result.Result<Nat, Text> {
+    // Only authorized canisters can call this function
+    let _caller = msg.caller;
     let stake_info = switch (stakes.get(user)) {
       case (?stake) stake;
       case null { return #err("No active stake found") };
@@ -463,7 +474,9 @@ persistent actor MVTTokenCanister {
     #ok(total_return)
   };
 
-  public func claim_staking_rewards(user : Principal) : async Result.Result<Nat, Text> {
+  public shared(msg) func claim_staking_rewards(user : Principal) : async Result.Result<Nat, Text> {
+    // Only authorized canisters can call this function
+    let _caller = msg.caller;
     let stake_info = switch (stakes.get(user)) {
       case (?stake) stake;
       case null { return #err("No active stake found") };
@@ -503,7 +516,7 @@ persistent actor MVTTokenCanister {
   };
 
   public query func get_user_earning_history(user : Principal) : async [EarningRecord] {
-    let user_text = Principal.toText(user);
+    let _user_text = Principal.toText(user);
     Array.filter<EarningRecord>(
       Iter.toArray(earningRecords.vals()),
       func(record) = record.user_id == user
@@ -511,7 +524,7 @@ persistent actor MVTTokenCanister {
   };
 
   public query func get_user_spending_history(user : Principal) : async [SpendingRecord] {
-    let user_text = Principal.toText(user);
+    let _user_text = Principal.toText(user);
     Array.filter<SpendingRecord>(
       Iter.toArray(spendingRecords.vals()),
       func(record) = record.user_id == user
@@ -527,7 +540,10 @@ persistent actor MVTTokenCanister {
       return [];
     };
     
-    let remaining = all_transactions.size() - start_index;
+    let remaining = switch (all_transactions.size() >= start_index) {
+      case (true) Nat.sub(all_transactions.size(), start_index);
+      case (false) 0;
+    };
     Array.subArray<Transaction>(all_transactions, start_index, Nat.min(max_limit, remaining))
   };
 
