@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import "tailwindcss/tailwind.css";
+// import "tailwindcss/tailwind.css";
 import * as Popover from "@radix-ui/react-popover";
 
 import { useSidebar } from '@/components/ui/Sidebar';
