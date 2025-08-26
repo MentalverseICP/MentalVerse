@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { authService, TokenBalance, Transaction, EarningRecord, SpendingRecord } from '@/services/backend';
+import { useSidebar } from './ui/Sidebar';
 
 export default function TokenWallet() {
   const { userPrincipal, isAuthenticated } = useAuth();
@@ -26,6 +27,9 @@ export default function TokenWallet() {
   const [spendings, setSpendings] = useState<SpendingRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { state } = useSidebar();
+  const isCollapsed = state === "collapsed";
+
 
   useEffect(() => {
     if (isAuthenticated && userPrincipal) {
@@ -111,7 +115,7 @@ export default function TokenWallet() {
     );
   };
 
-  if (!isAuthenticated) {
+  if (isAuthenticated) {
     return (
       <div className="flex items-center justify-center h-64">
         <p className="text-muted-foreground">Please log in to view your token wallet.</p>
@@ -119,13 +123,13 @@ export default function TokenWallet() {
     );
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#18E614]"></div>
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="flex items-center justify-center h-64">
+  //       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#18E614]"></div>
+  //     </div>
+  //   );
+  // }
 
   if (error) {
     return (
@@ -139,7 +143,8 @@ export default function TokenWallet() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className={cn("space-y-6 min-h-screen w-full transition-colors duration-500 px-2 py-8 sm:p-4 md:p-8 p-5 relative max-[640px]:ml-16 max-[640px]:w-[calc(100vw-5rem)] max-[500px]:overflow-x-auto max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)] dark:bg-transparent", isCollapsed ? "md:w-[90vw]" : "md:w-[80vw]"
+)}>
       {/* Balance Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className={cn('border-2', theme === 'dark' ? 'bg-[#0B0B0C] border-[#2f3339]' : 'bg-white border-gray-200')}>

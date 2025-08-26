@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { authService } from '@/services/backend';
 import type { Transaction as BackendTransaction } from '@/services/backend';
+import { useSidebar } from './ui/Sidebar';
 
 interface Transaction {
   id: string;
@@ -51,6 +52,8 @@ export default function TokenTransfer() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+    const { state } = useSidebar();
+    const isCollapsed = state === "collapsed";
 
   useEffect(() => {
     if (isAuthenticated && userPrincipal) {
@@ -236,7 +239,7 @@ export default function TokenTransfer() {
     }
   };
 
-  if (!isAuthenticated) {
+  if (isAuthenticated) {
     return (
       <div className="flex items-center justify-center h-64">
         <p className="text-muted-foreground">Please log in to access transfer features.</p>
@@ -244,17 +247,17 @@ export default function TokenTransfer() {
     );
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#18E614]"></div>
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="flex items-center justify-center h-64">
+  //       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#18E614]"></div>
+  //     </div>
+  //   );
+  // }
 
   return (
-    <div className="space-y-6">
-      {/* Balance Overview */}
+    <div className={cn("space-y-6 min-h-screen w-full transition-colors duration-500 px-2 py-8 sm:p-4 md:p-8 p-5 relative max-[640px]:ml-16 max-[640px]:w-[calc(100vw-5rem)] max-[500px]:overflow-x-auto max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)] dark:bg-transparent", isCollapsed ? "md:w-[90vw]" : "md:w-[80vw]"
+    )}>{/* Balance Overview */}
       <Card className={cn('border-2', theme === 'dark' ? 'bg-[#0B0B0C] border-[#2f3339]' : 'bg-white border-gray-200')}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Available Balance</CardTitle>
