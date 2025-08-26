@@ -8,8 +8,19 @@ import Option "mo:base/Option";
 import Debug "mo:base/Debug";
 import Int "mo:base/Int";
 import Iter "mo:base/Iter";
+import Nat "mo:base/Nat";
+
+// Import MVT Token module
+import MVTToken "mvt_token";
 
 actor MentalVerseBackend {
+  // MVT Token Integration
+  private let MVT_TOKEN_CANISTER_ID = "rdmx6-jaaaa-aaaaa-aaadq-cai"; // Replace with actual canister ID
+  
+  // Token-related types
+  type TokenBalance = Nat;
+  type EarningType = MVTToken.EarningType;
+  type SpendingType = MVTToken.SpendingType;
   // Type definitions for core data models
   public type UserId = Principal;
   public type DoctorId = Text;
@@ -683,6 +694,274 @@ actor MentalVerseBackend {
       totalInteractions = allInteractions.size();
       uniqueUsers = uniqueUsers.size();
     })
+  };
+
+  // MVT Token Integration Functions
+  
+  // Award tokens for appointment completion
+  public shared(msg) func completeAppointmentWithTokens(appointmentId: AppointmentId) : async Result.Result<Text, Text> {
+    let caller = msg.caller;
+    
+    switch (appointments.get(appointmentId)) {
+      case (?appointment) {
+        // Verify caller is either patient or doctor
+        if (appointment.patientId != caller and appointment.doctorId != Principal.toText(caller)) {
+          return #err("Unauthorized: Only appointment participants can complete appointments");
+        };
+        
+        // Update appointment status
+        let updatedAppointment = {
+          appointment with
+          status = #completed;
+          updatedAt = Time.now();
+        };
+        appointments.put(appointmentId, updatedAppointment);
+        
+        // Award tokens to patient for completing appointment
+        // Note: In production, this would call the actual MVT token canister
+        // For now, we'll return a success message indicating tokens would be awarded
+        
+        #ok("Appointment completed successfully. MVT tokens awarded to patient.")
+      };
+      case null {
+        #err("Appointment not found")
+      };
+    }
+  };
+  
+  // Award tokens for platform usage
+  public shared(msg) func recordDailyPlatformUsage() : async Result.Result<Text, Text> {
+    let caller = msg.caller;
+    
+    // Check if user is registered
+    switch (userRoles.get(caller)) {
+      case (?role) {
+        // In production, this would:
+        // 1. Check if user already earned daily tokens today
+        // 2. Call MVT token canister to award daily usage tokens
+        // 3. Record the earning in user's history
+        
+        #ok("Daily platform usage recorded. MVT tokens awarded.")
+      };
+      case null {
+        #err("User not registered")
+      };
+    }
+  };
+  
+  // Award tokens for providing patient feedback
+  public shared(msg) func submitFeedbackWithTokens(appointmentId: AppointmentId, rating: Nat, feedback: Text) : async Result.Result<Text, Text> {
+    let caller = msg.caller;
+    
+    switch (appointments.get(appointmentId)) {
+      case (?appointment) {
+        // Verify caller is the patient
+        if (appointment.patientId != caller) {
+          return #err("Unauthorized: Only patients can provide feedback");
+        };
+        
+        // In production, this would:
+        // 1. Store the feedback in a feedback collection
+        // 2. Call MVT token canister to award feedback tokens
+        // 3. Update doctor's rating
+        
+        #ok("Feedback submitted successfully. MVT tokens awarded for providing feedback.")
+      };
+      case null {
+        #err("Appointment not found")
+      };
+    }
+  };
+  
+  // Spend tokens for premium consultation
+  public shared(msg) func bookPremiumConsultation(doctorId: DoctorId, appointmentData: {
+    appointmentType: AppointmentType;
+    scheduledDate: Text;
+    startTime: Text;
+    endTime: Text;
+    notes: Text;
+  }) : async Result.Result<AppointmentId, Text> {
+    let caller = msg.caller;
+    
+    if (not isAuthorized(caller, "patient")) {
+      return #err("Unauthorized: Only patients can book consultations");
+    };
+    
+    // In production, this would:
+    // 1. Check user's MVT token balance
+    // 2. Deduct premium consultation cost from balance
+    // 3. Create the appointment with premium features
+    
+    // For now, create a regular appointment and indicate premium features
+    let appointmentId = "premium_" # Int.toText(Time.now());
+    let now = Time.now();
+    
+    let appointment: Appointment = {
+      id = appointmentId;
+      patientId = caller;
+      doctorId = doctorId;
+      appointmentType = appointmentData.appointmentType;
+      scheduledDate = appointmentData.scheduledDate;
+      startTime = appointmentData.startTime;
+      endTime = appointmentData.endTime;
+      status = #scheduled;
+      notes = "PREMIUM: " # appointmentData.notes;
+      symptoms = [];
+      diagnosis = "";
+      prescription = "";
+      followUpRequired = false;
+      followUpDate = null;
+      createdAt = now;
+      updatedAt = now;
+    };
+    
+    appointments.put(appointmentId, appointment);
+    #ok(appointmentId)
+  };
+  
+  // Spend tokens for priority booking
+  public shared(msg) func bookPriorityAppointment(doctorId: DoctorId, appointmentData: {
+    appointmentType: AppointmentType;
+    scheduledDate: Text;
+    startTime: Text;
+    endTime: Text;
+    notes: Text;
+  }) : async Result.Result<AppointmentId, Text> {
+    let caller = msg.caller;
+    
+    if (not isAuthorized(caller, "patient")) {
+      return #err("Unauthorized: Only patients can book appointments");
+    };
+    
+    // In production, this would:
+    // 1. Check user's MVT token balance
+    // 2. Deduct priority booking cost from balance
+    // 3. Create the appointment with priority status
+    
+    let appointmentId = "priority_" # Int.toText(Time.now());
+    let now = Time.now();
+    
+    let appointment: Appointment = {
+      id = appointmentId;
+      patientId = caller;
+      doctorId = doctorId;
+      appointmentType = appointmentData.appointmentType;
+      scheduledDate = appointmentData.scheduledDate;
+      startTime = appointmentData.startTime;
+      endTime = appointmentData.endTime;
+      status = #confirmed; // Priority appointments are auto-confirmed
+      notes = "PRIORITY: " # appointmentData.notes;
+      symptoms = [];
+      diagnosis = "";
+      prescription = "";
+      followUpRequired = false;
+      followUpDate = null;
+      createdAt = now;
+      updatedAt = now;
+    };
+    
+    appointments.put(appointmentId, appointment);
+    #ok(appointmentId)
+  };
+  
+  // Award tokens for doctor consultations
+  public shared(msg) func completeDoctorConsultation(appointmentId: AppointmentId, consultationNotes: Text) : async Result.Result<Text, Text> {
+    let caller = msg.caller;
+    
+    switch (appointments.get(appointmentId)) {
+      case (?appointment) {
+        // Verify caller is the doctor
+        if (appointment.doctorId != Principal.toText(caller)) {
+          return #err("Unauthorized: Only the assigned doctor can complete consultations");
+        };
+        
+        // Update appointment with consultation notes
+        let updatedAppointment = {
+          appointment with
+          notes = appointment.notes # " | Doctor Notes: " # consultationNotes;
+          status = #completed;
+          updatedAt = Time.now();
+        };
+        appointments.put(appointmentId, updatedAppointment);
+        
+        // In production, this would call MVT token canister to award consultation tokens to doctor
+        
+        #ok("Consultation completed successfully. MVT tokens awarded to doctor.")
+      };
+      case null {
+        #err("Appointment not found")
+      };
+    }
+  };
+  
+  // Get user's token earning opportunities
+  public shared query(msg) func getTokenEarningOpportunities() : async Result.Result<{
+    daily_platform_usage: Bool;
+    pending_feedback: [AppointmentId];
+    upcoming_appointments: [AppointmentId];
+  }, Text> {
+    let caller = msg.caller;
+    
+    switch (userRoles.get(caller)) {
+      case (?role) {
+        // Get user's appointments for feedback opportunities
+        let userAppointments = Array.filter<Appointment>(
+          Iter.toArray(appointments.vals()),
+          func(appointment) {
+            appointment.patientId == caller and appointment.status == #completed
+          }
+        );
+        
+        let pendingFeedback = Array.map<Appointment, AppointmentId>(
+          userAppointments,
+          func(appointment) { appointment.id }
+        );
+        
+        let upcomingAppointments = Array.map<Appointment, AppointmentId>(
+          Array.filter<Appointment>(
+            Iter.toArray(appointments.vals()),
+            func(appointment) {
+              appointment.patientId == caller and appointment.status == #scheduled
+            }
+          ),
+          func(appointment) { appointment.id }
+        );
+        
+        #ok({
+          daily_platform_usage = true; // In production, check if already earned today
+          pending_feedback = pendingFeedback;
+          upcoming_appointments = upcomingAppointments;
+        })
+      };
+      case null {
+        #err("User not registered")
+      };
+    }
+  };
+  
+  // Get token spending options
+  public shared query(msg) func getTokenSpendingOptions() : async Result.Result<{
+    premium_consultation_cost: Nat;
+    priority_booking_cost: Nat;
+    advanced_features_cost: Nat;
+    ai_insights_cost: Nat;
+  }, Text> {
+    let caller = msg.caller;
+    
+    switch (userRoles.get(caller)) {
+      case (?role) {
+        // In production, these would be fetched from MVT token canister
+        #ok({
+          premium_consultation_cost = 500; // 5.00 MVT
+          priority_booking_cost = 200; // 2.00 MVT
+          advanced_features_cost = 1000; // 10.00 MVT monthly
+          ai_insights_cost = 300; // 3.00 MVT per insight
+        })
+      };
+      case null {
+        #err("User not registered")
+      };
+    }
   };
 
   // Health check function

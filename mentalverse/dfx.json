@@ -18,9 +18,17 @@
         "internet_identity"
       ]
     },
-    "mentalverse_frontend": {
+    "mvt_token_canister": {
+      "main": "src/mvt_token_canister/main.mo",
+      "type": "motoko",
+      "dependencies": [
+        "internet_identity"
+      ]
+    },
+    "frontend": {
       "dependencies": [
         "mentalverse_backend",
+        "mvt_token_canister",
         "internet_identity"
       ],
       "source": [

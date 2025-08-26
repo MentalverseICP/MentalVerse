@@ -11,6 +11,19 @@ export interface BackendService {
   registerUser: (role: string) => Promise<{ Ok?: string; Err?: string }>;
   getCurrentUser: () => Promise<{ Ok?: { id: Principal; role: string }; Err?: string }>;
   
+  // Token operations
+  getTokenBalance: () => Promise<{ Ok?: TokenBalance; Err?: string }>;
+  transferTokens: (to: Principal, amount: number) => Promise<{ Ok?: string; Err?: string }>;
+  stakeTokens: (amount: number, lockPeriod: number) => Promise<{ Ok?: string; Err?: string }>;
+  unstakeTokens: (amount: number) => Promise<{ Ok?: string; Err?: string }>;
+  claimStakingRewards: () => Promise<{ Ok?: number; Err?: string }>;
+  getUserStake: () => Promise<{ Ok?: StakeInfo; Err?: string }>;
+  getTransactionHistory: (startIndex: number, limit: number) => Promise<Transaction[]>;
+  getUserEarningHistory: () => Promise<EarningRecord[]>;
+  getUserSpendingHistory: () => Promise<SpendingRecord[]>;
+  earnTokens: (amount: number, reason: string) => Promise<{ Ok?: string; Err?: string }>;
+  spendTokens: (amount: number, reason: string) => Promise<{ Ok?: string; Err?: string }>;
+  
   // Patient management
   createPatientProfile: (patientData: PatientData) => Promise<{ Ok?: Patient; Err?: string }>;
   getPatientProfile: () => Promise<{ Ok?: Patient; Err?: string }>;
@@ -39,6 +52,54 @@ export interface BackendService {
   // System
   healthCheck: () => Promise<{ status: string; timestamp: bigint; version: string }>;
   getSystemStats: () => Promise<SystemStats>;
+}
+
+// Token-related type definitions
+export interface TokenBalance {
+  total: number;
+  available: number;
+  staked: number;
+  pending: number;
+  balance: number; // Add balance property
+}
+
+export interface StakeInfo {
+  amount: number;
+  lockPeriod: number;
+  startTime: number;
+  endTime: number;
+  unlockTime: number; // Add unlockTime property
+  stakeTime: number; // Add stakeTime property
+  rewardRate: number;
+  accumulatedRewards: number;
+  rewards: number; // Add rewards property
+}
+
+export interface Transaction {
+  id: string;
+  type: 'transfer' | 'earn' | 'spend' | 'stake' | 'unstake';
+  amount: number;
+  timestamp: number;
+  description: string;
+  status: 'completed' | 'pending' | 'failed';
+  from?: string;
+  to?: string;
+}
+
+export interface EarningRecord {
+  id: string;
+  type: 'appointment_completion' | 'platform_usage' | 'patient_feedback' | 'doctor_consultation';
+  amount: number;
+  timestamp: number;
+  description: string;
+}
+
+export interface SpendingRecord {
+  id: string;
+  type: 'premium_consultation' | 'priority_booking' | 'advanced_features';
+  amount: number;
+  timestamp: number;
+  description: string;
 }
 
 // Type definitions matching the Motoko backend
@@ -285,6 +346,83 @@ export class AuthService {
           role: this.userRole || 'patient' 
         } 
       }),
+      
+      // Token operations mock implementations
+      getTokenBalance: async () => ({
+        Ok: {
+          total: 1250.75,
+          available: 850.25,
+          staked: 400.50,
+          pending: 0
+        }
+      }),
+      transferTokens: async (_to: Principal, amount: number) => ({ Ok: `Transferred ${amount} MVT tokens` }),
+      stakeTokens: async (amount: number, lockPeriod: number) => ({ Ok: `Staked ${amount} MVT tokens for ${lockPeriod} days` }),
+      unstakeTokens: async (amount: number) => ({ Ok: `Unstaked ${amount} MVT tokens` }),
+      claimStakingRewards: async () => ({ Ok: 25.5 }),
+      getUserStake: async () => ({
+        Ok: {
+          amount: 400.50,
+          lockPeriod: 90,
+          startTime: Date.now() - 259200000,
+          endTime: Date.now() + 7516800000,
+          rewardRate: 0.12,
+          accumulatedRewards: 25.5
+        }
+      }),
+      getTransactionHistory: async (_startIndex: number, _limit: number) => [
+        {
+          id: '1',
+          type: 'earn' as const,
+          amount: 50,
+          timestamp: Date.now() - 86400000,
+          description: 'Appointment completion reward',
+          status: 'completed' as const
+        },
+        {
+          id: '2',
+          type: 'spend' as const,
+          amount: -200,
+          timestamp: Date.now() - 172800000,
+          description: 'Premium consultation booking',
+          status: 'completed' as const
+        },
+        {
+          id: '3',
+          type: 'stake' as const,
+          amount: -400.50,
+          timestamp: Date.now() - 259200000,
+          description: 'Staked for 90 days',
+          status: 'completed' as const
+        }
+      ],
+      getUserEarningHistory: async () => [
+        {
+          id: '1',
+          type: 'appointment_completion' as const,
+          amount: 50,
+          timestamp: Date.now() - 86400000,
+          description: 'Completed therapy session'
+        },
+        {
+          id: '2',
+          type: 'platform_usage' as const,
+          amount: 10,
+          timestamp: Date.now() - 172800000,
+          description: 'Daily platform engagement'
+        }
+      ],
+      getUserSpendingHistory: async () => [
+        {
+          id: '1',
+          type: 'premium_consultation' as const,
+          amount: 200,
+          timestamp: Date.now() - 172800000,
+          description: 'Premium consultation with Dr. Smith'
+        }
+      ],
+      earnTokens: async (amount: number, reason: string) => ({ Ok: `Earned ${amount} MVT tokens for ${reason}` }),
+      spendTokens: async (amount: number, reason: string) => ({ Ok: `Spent ${amount} MVT tokens for ${reason}` }),
       createPatientProfile: async (data: PatientData) => ({ Ok: { ...data, id: this.userPrincipal!, medicalHistory: [], allergies: [], currentMedications: [], createdAt: BigInt(Date.now()), updatedAt: BigInt(Date.now()) } }),
       getPatientProfile: async () => ({ Err: 'Not implemented' }),
       createDoctorProfile: async (_data: DoctorData) => ({ Err: 'Not implemented' }),
@@ -338,6 +476,104 @@ export class AuthService {
     } catch (error) {
       console.error('Registration error:', error);
       return { success: false, message: 'Registration failed' };
+    }
+  }
+
+  async getTokenBalance(): Promise<TokenBalance> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+
+    try {
+      const result = await this.actor.getTokenBalance();
+      if ('Ok' in result && result.Ok) {
+        return result.Ok;
+      } else {
+        throw new Error('Failed to get token balance');
+      }
+    } catch (error) {
+      console.error('Get token balance error:', error);
+      throw error;
+    }
+  }
+
+  async getTransactionHistory(): Promise<Transaction[]> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+
+    try {
+      return await this.actor.getTransactionHistory(0, 50);
+    } catch (error) {
+      console.error('Get transaction history error:', error);
+      throw error;
+    }
+  }
+
+  async getUserStake(): Promise<StakeInfo> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+
+    try {
+      const result = await this.actor.getUserStake();
+      if ('Ok' in result && result.Ok) {
+        return result.Ok;
+      } else {
+        throw new Error('Failed to get user stake');
+      }
+    } catch (error) {
+      console.error('Get user stake error:', error);
+      throw error;
+    }
+  }
+
+  async stakeTokens(amount: number, lockPeriod: number): Promise<void> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+
+    try {
+      const result = await this.actor.stakeTokens(amount, lockPeriod);
+      if ('Err' in result && result.Err) {
+        throw new Error(result.Err);
+      }
+    } catch (error) {
+      console.error('Stake tokens error:', error);
+      throw error;
+    }
+  }
+
+  async unstakeTokens(amount: number): Promise<void> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+
+    try {
+      const result = await this.actor.unstakeTokens(amount);
+      if ('Err' in result && result.Err) {
+        throw new Error(result.Err);
+      }
+    } catch (error) {
+      console.error('Unstake tokens error:', error);
+      throw error;
+    }
+  }
+
+  async transferTokens(to: string, amount: number): Promise<void> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+
+    try {
+      const toPrincipal = Principal.fromText(to);
+      const result = await this.actor.transferTokens(toPrincipal, amount);
+      if ('Err' in result && result.Err) {
+        throw new Error(result.Err);
+      }
+    } catch (error) {
+      console.error('Transfer tokens error:', error);
+      throw error;
     }
   }
 }

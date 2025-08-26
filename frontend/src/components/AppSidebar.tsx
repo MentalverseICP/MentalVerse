@@ -3,6 +3,9 @@
 import {
   Vibrate,
   Gift,
+  Wallet,
+  Send,
+  TrendingUp,
 } from "lucide-react"
 import {
   Sidebar,
@@ -66,6 +69,21 @@ export function AppSidebar({ className }: { className?: string }) {
       title: "Claims",
       icon: Gift,
       href: "/claims",
+    },
+    {
+      title: "Token Wallet",
+      icon: Wallet,
+      href: "/token-wallet",
+    },
+    {
+      title: "Token Transfer",
+      icon: Send,
+      href: "/token-transfer",
+    },
+    {
+      title: "Token Staking",
+      icon: TrendingUp,
+      href: "/token-staking",
     },
   ]
   
