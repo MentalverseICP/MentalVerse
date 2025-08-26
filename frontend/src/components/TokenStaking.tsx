@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/input';
@@ -6,16 +6,12 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/Separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Award, TrendingUp, Clock, Lock, Unlock, Calculator, Info } from 'lucide-react';
+import { Award, TrendingUp, Lock, Unlock, Calculator, Info } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { authService } from '@/services/backend';
-import type { StakeInfo } from '@/services/backend';
 
 interface StakePosition {
   id: string;

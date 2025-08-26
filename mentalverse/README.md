@@ -1,6 +1,29 @@
-# MentalVerse - Mental Health Platform
+# MentalVerse - Web3 Mental Health Platform
 
-MentalVerse is a comprehensive mental health platform built on the Internet Computer Protocol (ICP) using Motoko for the backend and React/TypeScript for the frontend. The platform provides secure, decentralized mental health services including patient management, doctor consultations, appointment scheduling, and medical record management.
+MentalVerse is the world's first Web3-powered mental health platform built on the Internet Computer Protocol (ICP) using Motoko for smart contracts and React/TypeScript for the frontend. The platform combines blockchain technology, AI assistance, and community-driven care to provide secure, decentralized mental health services including peer support, professional therapy, token-based incentives, and comprehensive medical record management.
+
+## 🪙 MVT Token Integration
+
+The **MentalVerse Token (MVT)** is the native utility token that powers the entire ecosystem, enabling:
+
+### Token Utilities
+- **Service Payments**: Pay for therapy sessions, premium AI features, and specialized consultations
+- **Rewards System**: Earn tokens for peer support participation, mentorship, and community contributions
+- **Governance Rights**: Vote on platform improvements and community guidelines
+- **Staking Rewards**: Stake MVT tokens to earn passive income and access premium features
+- **Referral Bonuses**: Receive token rewards for successful platform referrals
+
+### Token Economics
+- **Total Supply**: 1,000,000,000 MVT
+- **Blockchain**: Internet Computer Protocol (ICP)
+- **Token Standard**: ICRC-1 compatible
+- **Smart Contract**: Implemented in Motoko with secure transfer mechanisms
+
+### Staking System
+- **Lock Periods**: 30, 90, 180, or 365 days
+- **APY Rewards**: 5% to 15% based on lock duration
+- **Enhanced Governance**: Increased voting power for staked tokens
+- **Premium Access**: Exclusive features for staking participants
 
 ## 🏗️ Architecture
 
@@ -70,6 +93,32 @@ MentalVerse is a comprehensive mental health platform built on the Internet Comp
    - Modern, responsive design
    - Accessibility compliance
    - Cross-browser compatibility
+
+4. **MVT Token Features**
+   - Token transfer and transaction history
+   - Staking interface with lock period selection
+   - Real-time balance tracking
+   - Reward distribution dashboard
+   - Governance voting interface
+
+#### Smart Contract (Motoko)
+1. **MVT Token Contract**
+   - ICRC-1 compliant token implementation
+   - Secure transfer mechanisms with fee calculation
+   - Multi-signature support for large transactions
+   - Burn and mint functionality for supply management
+
+2. **Staking Contract**
+   - Time-locked staking with variable APY
+   - Automatic reward distribution
+   - Early withdrawal penalties
+   - Compound staking options
+
+3. **Governance Contract**
+   - Proposal creation and voting
+   - Weighted voting based on staked tokens
+   - Execution of approved proposals
+   - Transparent decision tracking
 
 ## 🚀 Deployment Information
 

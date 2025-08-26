@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/Separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Send, ArrowUpRight, ArrowDownLeft, Clock, CheckCircle, XCircle, Copy, ExternalLink, Info } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
@@ -25,7 +24,7 @@ interface Transaction {
   timestamp: number;
   status: 'pending' | 'completed' | 'failed';
   memo?: string;
-  fee: number;
+  fee?: number;
   blockHeight?: number;
   txHash?: string;
 }
@@ -54,10 +53,10 @@ export default function TokenTransfer() {
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
 
   useEffect(() => {
-    if (isAuthenticated && user) {
+    if (isAuthenticated && userPrincipal) {
       fetchTransferData();
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, userPrincipal]);
 
   const fetchTransferData = async () => {
     try {
@@ -75,16 +74,16 @@ export default function TokenTransfer() {
       // Convert backend transactions to component format
       const formattedTransactions: Transaction[] = transactionHistory.map((tx: BackendTransaction) => ({
         id: tx.id,
-        type: tx.from === (user?.principal || '') ? 'sent' : 'received',
+        type: tx.from === (userPrincipal?.toString() || '') ? 'sent' : 'received',
         amount: tx.amount,
-        from: tx.from,
-        to: tx.to,
+        from: tx.from || '',
+        to: tx.to || '',
         timestamp: tx.timestamp,
         status: tx.status,
-        memo: tx.memo,
-        fee: tx.fee || 0.01,
-        blockHeight: tx.blockHeight,
-        txHash: tx.txHash
+        memo: (tx as any).memo,
+        fee: (tx as any).fee || 0.01,
+        blockHeight: (tx as any).blockHeight,
+        txHash: (tx as any).txHash
       }));
       
       setTransactions(formattedTransactions);
@@ -153,7 +152,7 @@ export default function TokenTransfer() {
       setSuccess(null);
       
       // Call actual transfer API
-      await authService.transferTokens(recipient, transferAmount, memo);
+      await authService.transferTokens(recipient, transferAmount);
       
       // Add to contacts if not already there
       if (!contacts.find(c => c.address === recipient)) {
@@ -499,7 +498,7 @@ export default function TokenTransfer() {
                       </div>
                       <div>
                         <p>Fee</p>
-                        <p className="font-medium text-foreground">{formatAmount(tx.fee)} MVT</p>
+                        <p className="font-medium text-foreground">{formatAmount(tx.fee || 0.01)} MVT</p>
                       </div>
                     </div>
                     
