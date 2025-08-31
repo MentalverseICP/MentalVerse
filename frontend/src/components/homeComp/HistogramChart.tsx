@@ -21,7 +21,7 @@ const chartOptions = {
   plugins: {
     legend: {
       display: true,
-      position: 'bottom',
+      position: 'bottom' as const,
       labels: {
         // color: '#fff',
         font: {
@@ -67,27 +67,27 @@ const chartData = {
   labels: ['April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
   datasets: [
     {
-      label: 'Emergency',
+      label: 'Crisis Intervention',
       data: [5, 10, 15, 20, 25, 30, 35, 15, 5],
       backgroundColor: '#0b6b00',
     },
     {
-      label: 'Examination',
+      label: 'Therapy Sessions',
       data: [8, 15, 12, 22, 18, 20, 25, 10, 5],
       backgroundColor: '#ffc107',
     },
     {
-      label: 'Routine Checkup',
+      label: 'Wellness Checkup',
       data: [2, 3, 4, 6, 5, 10, 12, 3, 1],
       backgroundColor: '#ff0000',
     },
     {
-      label: 'Consultation', 
+      label: 'Mental Health Consultation', 
       data: [3, 7, 8, 10, 15, 10, 18, 5, 5],
       backgroundColor: '#00ff11',
     },
     {
-      label: 'Sick Visit',
+      label: 'Support Group',
       data: [1, 2, 3, 5, 7, 8, 10, 2, 1],
       backgroundColor: '#17a2b8',
       borderRadius: {
@@ -101,7 +101,7 @@ const chartData = {
 const HistogramChart: React.FC<prop> = ({ className }) => {
   return (
     <div className={`sm:w-full w-11/12 bg-transparent p-6 border-b xl:border-b-[#2f3339] ${className}`}>
-      <h2 className="dark:text-white uppercase font-bold text-xs max-lg:text-md mb-4">Overall Appointments</h2>
+      <h2 className="dark:text-white uppercase font-bold text-xs max-lg:text-md mb-4">Mental Health Appointments</h2>
       <div className="relative h-64">
         <Bar options={chartOptions} data={chartData} />
       </div>

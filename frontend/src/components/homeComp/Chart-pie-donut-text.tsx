@@ -19,16 +19,16 @@ const chartConfig = {
   visitors: {
     label: "Visitors",
   },
-  typhoid: {
-    label: "Typhoid",
+  anxiety: {
+    label: "Anxiety",
     color: "#0DB16A",
   },
-  cold: {
-    label: "Cold",
+  depression: {
+    label: "Depression",
     color: "#FECA57",
   },
-  malaria: {
-    label: "Malaria",
+  stress: {
+    label: "Stress",
     color: "#18E614",
   },
   other: {
@@ -225,7 +225,7 @@ export default function ChartDonut({ className = "" }) {
         <div className="flex flex-wrap items-center gap-4 max-sm:grid max-sm:grid-cols-4 max-sm:gap-2">
           {chartData.map((item, index) => {
             const colors = ['#0DB16A', '#FECA57', '#18E614', '#F80D38']
-            const labels = ['Typhoid', 'Cold', 'Malaria', 'Other']
+            const labels = ['Anxiety', 'Depression', 'Stress', 'Other']
             return (
               <div key={`${labels[index]}-${index}`} className="flex items-center gap-1 min-w-0">
                 <div 
