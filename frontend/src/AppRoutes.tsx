@@ -12,6 +12,7 @@ import Claims from '@/pages/Claims'
 import TokenWallet from '@/components/TokenWallet'
 import TokenTransfer from '@/components/TokenTransfer'
 import TokenStaking from '@/components/TokenStaking'
+import TestnetFaucet from '@/components/TestnetFaucet'
 import { cn } from './lib/utils';
 import { useSidebar } from './components/ui/Sidebar';
 
@@ -49,6 +50,7 @@ export const AppRoutes: React.FC<RouteProps> = () => {
           <Route path="/token-wallet" element={<TokenWallet />} />
           <Route path="/token-transfer" element={<TokenTransfer />} />
           <Route path="/token-staking" element={<TokenStaking />} />
+          <Route path="/testnet-faucet" element={<TestnetFaucet />} />
         </Routes>
       </div>      
     </main>

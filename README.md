@@ -44,12 +44,30 @@ The **MVT (MentalVerse Token)** is the native utility token that powers the Ment
 
 Users can earn MVT tokens through various platform activities:
 
-1. **Peer Support Participation** - Earn tokens for active participation in support groups
-2. **Mentorship Programs** - Receive rewards for providing guidance to community members
-3. **Content Creation** - Get compensated for creating helpful mental health resources
-4. **Platform Feedback** - Earn tokens for providing valuable feedback and bug reports
-5. **Referral Program** - Receive bonus tokens for successful referrals
-6. **Staking Rewards** - Earn passive income by staking tokens
+1. **Testnet Faucet** - Claim free MVT tokens daily for testing and platform exploration
+2. **Peer Support Participation** - Earn tokens for active participation in support groups
+3. **Mentorship Programs** - Receive rewards for providing guidance to community members
+4. **Content Creation** - Get compensated for creating helpful mental health resources
+5. **Platform Feedback** - Earn tokens for providing valuable feedback and bug reports
+6. **Referral Program** - Receive bonus tokens for successful referrals
+7. **Staking Rewards** - Earn passive income by staking tokens
+
+### Testnet Faucet
+
+The MentalVerse platform includes a **Testnet Faucet** that allows users to claim free MVT tokens for testing purposes:
+
+- **Daily Claims**: Users can claim up to 1,000 MVT tokens per day
+- **Claim History**: Track all previous token claims with timestamps
+- **Eligibility Check**: Automatic verification of claim eligibility based on daily limits
+- **Real-time Updates**: Live statistics showing remaining daily allowance
+- **User-Friendly Interface**: Intuitive design with clear claim status and countdown timers
+
+#### Faucet Features:
+- 🎯 **Daily Limit**: 1,000 MVT tokens per user per day
+- ⏰ **Reset Timer**: Claims reset every 24 hours
+- 📊 **Statistics**: Real-time display of claimed amounts and remaining allowance
+- 🔒 **Authentication Required**: Must be logged in with Internet Identity
+- 📱 **Responsive Design**: Works seamlessly on desktop and mobile devices
 
 ### Token Staking
 

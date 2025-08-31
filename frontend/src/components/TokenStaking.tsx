@@ -36,7 +36,7 @@ interface StakingPool {
 export default function TokenStaking() {
   const { userPrincipal, isAuthenticated } = useAuth();
   const { theme } = useTheme();
-  const [balance, setBalance] = useState(850.25);
+  const [balance, setBalance] = useState(0);
   const [stakeAmount, setStakeAmount] = useState('');
   const [selectedPool, setSelectedPool] = useState<string>('');
   const [positions, setPositions] = useState<StakePosition[]>([]);

@@ -1,11 +1,12 @@
 "use client"
 
 import {
-  Vibrate,
+  Smartphone,
   Gift,
   Wallet,
   Send,
   TrendingUp,
+  Droplets,
 } from "lucide-react"
 import {
   Sidebar,
@@ -85,6 +86,11 @@ export function AppSidebar({ className }: { className?: string }) {
       icon: TrendingUp,
       href: "/token-staking",
     },
+    {
+      title: "Testnet Faucet",
+      icon: Droplets,
+      href: "/testnet-faucet",
+    },
   ]
   
   const accountNavItems = [
@@ -115,7 +121,7 @@ export function AppSidebar({ className }: { className?: string }) {
       <SidebarContent className="flex flex-col items-center gap-2 md:gap-2 mt-1 scrollbar-custom h-full">
         <SidebarTrigger className={cn("relative h-8 w-8 md:h-10 md:w-10 flex items-center justify-center hover:scale-90 rounded-lg transition-[width] duration-75", theme === 'dark' ? 'bg-[#000] hover:bg-[#1f1f1f]' : 'bg-white hover:border-black hover:shadow-[0_2px_0_0_rgba(0,0,0,0.811)]')} />
         <SidebarMenu className="flex gap-2 md:gap-3">
-          {mainNavItems.map((item: { title: string; icon: React.FC; href: string; badge?: string }) => (
+          {mainNavItems.map((item: { title: string; icon: React.ComponentType | (() => JSX.Element); href: string; badge?: string }) => (
             <SidebarMenuItem key={item.href} className={cn("h-full w-full", theme === 'dark' ? 'hover:bg-[#1f1f1f]' : 'hover:bg-[#DFE0E2]', location.pathname === item.href && (theme === 'dark' ? 'bg-[#1f1f1f]' : 'bg-[#DFE0E2]'))}>
               <SidebarMenuButton
                 asChild
@@ -166,7 +172,7 @@ export function AppSidebar({ className }: { className?: string }) {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="border-t dark:border-[#2f3339] p-4 pl-5 tracking-wide flex flex-row gap-5 h-fit">
-        <Vibrate className="self-center text-[#18E614]" />
+        <Smartphone className="self-center text-[#18E614]" />
         {!isCollapsed && (
           <div className="flex flex-col gap-2 justify-items-end">
             <div className="text-sm font-semibold text-[#F80D38]">Emergency Hotlines:</div>
