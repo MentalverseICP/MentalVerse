@@ -16,6 +16,7 @@ import Onboarding from '@/pages/Onboarding'
 import DoctorHome from '@/pages/Doctors/Home'
 import DoctorPatients from '@/pages/Doctors/Patients'
 import DoctorAppointments from '@/pages/Doctors/Appointments'
+import TestnetFaucet from '@/components/TestnetFaucet'
 import { cn } from './lib/utils';
 import { useSidebar } from './components/ui/Sidebar';
 
@@ -63,6 +64,9 @@ export const AppRoutes: React.FC<RouteProps> = () => {
           <Route path="/settings" element={<Settings />} />
           <Route path="/chats" element={<Chats />} />
           <Route path="/appointments" element={<Appointments />} />
+          <Route path="/token-wallet" element={<TokenWallet />} />
+          <Route path="/token-transfer" element={<TokenTransfer />} />
+          <Route path="/token-staking" element={<TokenStaking />} />
         </Routes>
       </div>      
     </main>

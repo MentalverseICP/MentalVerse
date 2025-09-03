@@ -21,6 +21,23 @@ persistent actor MentalVerseBackend {
   type TokenBalance = Nat;
   type EarningType = MVTToken.EarningType;
   type SpendingType = MVTToken.SpendingType;
+  
+  // Faucet-related types
+  public type FaucetClaim = {
+    id: Text;
+    user_id: Principal;
+    amount: Nat;
+    timestamp: Int;
+    status: Text; // "pending", "completed", "failed"
+  };
+  
+  public type FaucetStats = {
+    dailyLimit: Nat;
+    claimedToday: Nat;
+    totalClaimed: Nat;
+    nextClaimTime: Int;
+    isEligible: Bool;
+  };
   // Type definitions for core data models
   public type UserId = Principal;
   public type DoctorId = Text;
@@ -141,6 +158,8 @@ persistent actor MentalVerseBackend {
   private var messagesEntries : [(Text, Message)] = [];
   private var userRolesEntries : [(UserId, Text)] = []; // "patient", "doctor", "admin"
   private var chatInteractionsEntries : [(Text, ChatInteraction)] = [];
+  private var faucetClaimsEntries : [(Text, FaucetClaim)] = [];
+  private var lastClaimTimesEntries : [(UserId, Int)] = [];
 
   // Initialize HashMaps from stable storage
   private transient var patients = HashMap.HashMap<UserId, Patient>(10, Principal.equal, Principal.hash);
@@ -149,6 +168,8 @@ persistent actor MentalVerseBackend {
   private transient var medicalRecords = HashMap.HashMap<RecordId, MedicalRecord>(10, Text.equal, Text.hash);
   private transient var messages = HashMap.HashMap<Text, Message>(10, Text.equal, Text.hash);
   private transient var userRoles = HashMap.HashMap<UserId, Text>(10, Principal.equal, Principal.hash);
+  private transient var faucetClaims = HashMap.HashMap<Text, FaucetClaim>(10, Text.equal, Text.hash);
+  private transient var lastClaimTimes = HashMap.HashMap<UserId, Int>(10, Principal.equal, Principal.hash);
 
   // System upgrade hooks to maintain state
   system func preupgrade() {
@@ -159,6 +180,8 @@ persistent actor MentalVerseBackend {
     messagesEntries := Iter.toArray(messages.entries());
     userRolesEntries := Iter.toArray(userRoles.entries());
     chatInteractionsEntries := Iter.toArray(chatInteractionsMap.entries());
+    faucetClaimsEntries := Iter.toArray(faucetClaims.entries());
+    lastClaimTimesEntries := Iter.toArray(lastClaimTimes.entries());
   };
 
   system func postupgrade() {
@@ -184,6 +207,12 @@ persistent actor MentalVerseBackend {
     for ((id, interaction) in chatInteractionsEntries.vals()) {
       chatInteractionsMap.put(id, interaction);
     };
+    for ((id, claim) in faucetClaimsEntries.vals()) {
+      faucetClaims.put(id, claim);
+    };
+    for ((id, time) in lastClaimTimesEntries.vals()) {
+      lastClaimTimes.put(id, time);
+    };
     
     // Clear stable storage
     patientsEntries := [];
@@ -193,6 +222,8 @@ persistent actor MentalVerseBackend {
     messagesEntries := [];
     userRolesEntries := [];
     chatInteractionsEntries := [];
+    faucetClaimsEntries := [];
+    lastClaimTimesEntries := [];
   };
 
   // Authentication and authorization functions
@@ -962,6 +993,150 @@ persistent actor MentalVerseBackend {
         #err("User not registered")
       };
     }
+  };
+
+  // Faucet Configuration
+  private let FAUCET_DAILY_LIMIT : Nat = 10000000000; // 100 MVT with 8 decimals
+  private let FAUCET_COOLDOWN_PERIOD : Int = 86400000000000; // 24 hours in nanoseconds
+
+  // Generate unique claim ID
+  private func generateClaimId(userId: Principal, timestamp: Int) : Text {
+    Principal.toText(userId) # "-" # Int.toText(timestamp)
+  };
+
+  // Check if user is eligible for faucet claim
+  private func isEligibleForClaim(userId: Principal, currentTime: Int) : Bool {
+    switch (lastClaimTimes.get(userId)) {
+      case (?lastClaim) {
+        currentTime >= (lastClaim + FAUCET_COOLDOWN_PERIOD)
+      };
+      case null { true };
+    }
+  };
+
+  // Get faucet statistics for a user
+  public shared query(msg) func getFaucetStats() : async FaucetStats {
+    let caller = msg.caller;
+    let currentTime = Time.now();
+    let isEligible = isEligibleForClaim(caller, currentTime);
+    
+    let nextClaimTime = switch (lastClaimTimes.get(caller)) {
+      case (?lastClaim) { lastClaim + FAUCET_COOLDOWN_PERIOD };
+      case null { 0 };
+    };
+    
+    // Count today's claims
+    let todayStart = currentTime - (currentTime % 86400000000000); // Start of today
+    let todayClaims = Array.filter<FaucetClaim>(
+      Iter.toArray(faucetClaims.vals()),
+      func(claim) {
+        claim.user_id == caller and claim.timestamp >= todayStart and claim.status == "completed"
+      }
+    );
+    
+    let claimedToday = Array.foldLeft<FaucetClaim, Nat>(
+      todayClaims,
+      0,
+      func(acc, claim) { acc + claim.amount }
+    );
+    
+    // Count total claims
+    let allUserClaims = Array.filter<FaucetClaim>(
+      Iter.toArray(faucetClaims.vals()),
+      func(claim) {
+        claim.user_id == caller and claim.status == "completed"
+      }
+    );
+    
+    let totalClaimed = Array.foldLeft<FaucetClaim, Nat>(
+      allUserClaims,
+      0,
+      func(acc, claim) { acc + claim.amount }
+    );
+    
+    {
+      dailyLimit = FAUCET_DAILY_LIMIT;
+      claimedToday = claimedToday;
+      totalClaimed = totalClaimed;
+      nextClaimTime = nextClaimTime;
+      isEligible = isEligible and claimedToday < FAUCET_DAILY_LIMIT;
+    }
+  };
+
+  // Claim faucet tokens
+  public shared(msg) func claimFaucetTokens() : async Result.Result<Text, Text> {
+    let caller = msg.caller;
+    let currentTime = Time.now();
+    
+    // Check if user is registered
+    switch (userRoles.get(caller)) {
+      case null {
+        return #err("User not registered. Please register first.");
+      };
+      case (?role) {};
+    };
+    
+    // Check eligibility
+    if (not isEligibleForClaim(caller, currentTime)) {
+      return #err("You must wait 24 hours between claims.");
+    };
+    
+    // Check daily limit
+    let todayStart = currentTime - (currentTime % 86400000000000);
+    let todayClaims = Array.filter<FaucetClaim>(
+      Iter.toArray(faucetClaims.vals()),
+      func(claim) {
+        claim.user_id == caller and claim.timestamp >= todayStart and claim.status == "completed"
+      }
+    );
+    
+    let claimedToday = Array.foldLeft<FaucetClaim, Nat>(
+      todayClaims,
+      0,
+      func(acc, claim) { acc + claim.amount }
+    );
+    
+    if (claimedToday >= FAUCET_DAILY_LIMIT) {
+      return #err("Daily claim limit reached. Try again tomorrow.");
+    };
+    
+    // Create claim record
+    let claimId = generateClaimId(caller, currentTime);
+    let claim : FaucetClaim = {
+      id = claimId;
+      user_id = caller;
+      amount = FAUCET_DAILY_LIMIT;
+      timestamp = currentTime;
+      status = "completed"; // In production, this might be "pending" initially
+    };
+    
+    // Store claim and update last claim time
+    faucetClaims.put(claimId, claim);
+    lastClaimTimes.put(caller, currentTime);
+    
+    // In production, this would mint tokens to the user's account
+    // For now, we just return success
+    #ok("Successfully claimed " # Nat.toText(FAUCET_DAILY_LIMIT) # " MVT tokens!")
+  };
+
+  // Get faucet claim history for a user
+  public shared query(msg) func getFaucetClaimHistory() : async [FaucetClaim] {
+    let caller = msg.caller;
+    
+    let userClaims = Array.filter<FaucetClaim>(
+      Iter.toArray(faucetClaims.vals()),
+      func(claim) { claim.user_id == caller }
+    );
+    
+    // Sort by timestamp (newest first)
+    Array.sort<FaucetClaim>(
+      userClaims,
+      func(a, b) {
+        if (a.timestamp > b.timestamp) { #less }
+        else if (a.timestamp < b.timestamp) { #greater }
+        else { #equal }
+      }
+    )
   };
 
   // Health check function

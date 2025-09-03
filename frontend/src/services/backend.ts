@@ -24,6 +24,11 @@ export interface BackendService {
   earnTokens: (amount: number, reason: string) => Promise<{ Ok?: string; Err?: string }>;
   spendTokens: (amount: number, reason: string) => Promise<{ Ok?: string; Err?: string }>;
   
+  // Faucet operations
+  getFaucetStats: () => Promise<{ Ok?: FaucetStats; Err?: string }>;
+  getFaucetClaimHistory: () => Promise<FaucetClaim[]>;
+  claimFaucetTokens: () => Promise<{ Ok?: string; Err?: string }>;
+  
   // Patient management
   createPatientProfile: (patientData: PatientData) => Promise<{ Ok?: Patient; Err?: string }>;
   getPatientProfile: () => Promise<{ Ok?: Patient; Err?: string }>;
@@ -252,6 +257,20 @@ export interface SystemStats {
   totalMessages: number;
 }
 
+export interface FaucetStats {
+  dailyLimit: number;
+  claimedToday: number;
+  totalClaimed: number;
+  nextClaimTime: number;
+}
+
+export interface FaucetClaim {
+  id: string;
+  amount: number;
+  timestamp: number;
+  status: 'completed' | 'pending' | 'failed';
+}
+
 // Authentication service using Internet Identity
 export class AuthService {
   private authClient: AuthClient | null = null;
@@ -353,7 +372,8 @@ export class AuthService {
           total: 1250.75,
           available: 850.25,
           staked: 400.50,
-          pending: 0
+          pending: 0,
+          balance: 850.25
         }
       }),
       transferTokens: async (_to: Principal, amount: number) => ({ Ok: `Transferred ${amount} MVT tokens` }),
@@ -366,8 +386,11 @@ export class AuthService {
           lockPeriod: 90,
           startTime: Date.now() - 259200000,
           endTime: Date.now() + 7516800000,
+          unlockTime: Date.now() + 7516800000,
+          stakeTime: Date.now() - 259200000,
           rewardRate: 0.12,
-          accumulatedRewards: 25.5
+          accumulatedRewards: 25.5,
+          rewards: 25.5
         }
       }),
       getTransactionHistory: async (_startIndex: number, _limit: number) => [
@@ -423,6 +446,37 @@ export class AuthService {
       ],
       earnTokens: async (amount: number, reason: string) => ({ Ok: `Earned ${amount} MVT tokens for ${reason}` }),
       spendTokens: async (amount: number, reason: string) => ({ Ok: `Spent ${amount} MVT tokens for ${reason}` }),
+      
+      // Faucet operations mock implementations
+      getFaucetStats: async () => ({
+        Ok: {
+          dailyLimit: 100,
+          claimedToday: 25,
+          totalClaimed: 1250,
+          nextClaimTime: Date.now() + 3600000 // 1 hour from now
+        }
+      }),
+      getFaucetClaimHistory: async () => [
+        {
+          id: '1',
+          amount: 25,
+          timestamp: Date.now() - 3600000,
+          status: 'completed' as const
+        },
+        {
+          id: '2',
+          amount: 25,
+          timestamp: Date.now() - 7200000,
+          status: 'completed' as const
+        },
+        {
+          id: '3',
+          amount: 25,
+          timestamp: Date.now() - 10800000,
+          status: 'pending' as const
+        }
+      ],
+      claimFaucetTokens: async () => ({ Ok: 'Successfully claimed 25 MVT tokens from faucet' }),
       createPatientProfile: async (data: PatientData) => ({ Ok: { ...data, id: this.userPrincipal!, medicalHistory: [], allergies: [], currentMedications: [], createdAt: BigInt(Date.now()), updatedAt: BigInt(Date.now()) } }),
       getPatientProfile: async () => ({ Err: 'Not implemented' }),
       createDoctorProfile: async (_data: DoctorData) => ({ Err: 'Not implemented' }),

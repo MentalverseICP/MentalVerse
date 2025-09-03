@@ -36,10 +36,10 @@ const MapComponent: React.FC<prop> = ({ className }) => {
   // Calculate statistics for filtered data
   const getStats = () => {
     const stats = {
-      recovery: 0,
-      neutral: 0,
-      affected: 0,
-      safe: 0,
+      wellness: 0,
+      support: 0,
+      crisis: 0,
+      therapy: 0
     };
 
     filteredData.forEach((point) => {
@@ -58,7 +58,7 @@ const MapComponent: React.FC<prop> = ({ className }) => {
       {/* Map Container */}
       <div className="w-fit lg:w-3/4 lg:mb-0 h-full border-r-2 dark:border-[#2f3339] max-sm:border-0 max-lg:pr-36 max-md:pr-6 bg-transparent relative">
         <h2 className=" absolute max-lg:relative uppercase font-bold text-xs max-lg:text-md px-6 pt-4">
-          covid 19 pandemic - {selectedCountry}
+          Mental Health Support Network - {selectedCountry}
         </h2>
         <ComposableMap className=" w-full h-fit p-4 max-md:p-0 mb-10">
           <Geographies geography={geoUrl}>
@@ -77,11 +77,11 @@ const MapComponent: React.FC<prop> = ({ className }) => {
               <circle
                 r={selectedCountry === point.country ? 5 : 5.5}
                 fill={
-                  point.type === "recovery"
+                  point.type === "wellness"
                     ? "#127804"
-                    : point.type === "neutral"
+                    : point.type === "support"
                     ? "#fbd205"
-                    : point.type === "affected"
+                    : point.type === "crisis"
                     ? "#ff0000"
                     : "#021bff"
                 }
@@ -119,39 +119,23 @@ const MapComponent: React.FC<prop> = ({ className }) => {
       {/* Sidebar for Info and Buttons */}
       <ul className="w-fit p-4 max-sm:p-3 max-[400px]:p-2 space-y-2 max-sm:space-y-1 text-sm grid items-center max-lg:pr-16 max-md:pr-10 max-sm:pr-0 max-sm:flex max-sm:flex-wrap max-sm:justify-between max-sm:gap-3 max-[400px]:gap-2">
         <li className="flex flex-col justify-between max-sm:min-w-[120px] max-[400px]:min-w-[100px]">
-          <span className="font-bold uppercase text-sm max-sm:text-xs max-[400px]:text-[10px]">
-            Recovery Zones
-          </span>
-          <span className="text-green-600 font-semibold max-sm:text-sm max-[400px]:text-xs">
-            {stats.recovery}
-          </span>
+          <span className="font-bold uppercase text-sm max-sm:text-xs max-[400px]:text-[10px]">Wellness Centers</span>
+          <span className="text-green-600 font-semibold max-sm:text-sm max-[400px]:text-xs">{stats.wellness}</span>
           <span className="rounded-md h-1 w-20 max-sm:w-16 max-[400px]:w-12 max-sm:h-0.5 bg-green-600" />
         </li>
         <li className="flex flex-col justify-between max-sm:min-w-[120px] max-[400px]:min-w-[100px]">
-          <span className="font-bold uppercase text-sm max-sm:text-xs max-[400px]:text-[10px]">
-            Neutral Zones
-          </span>
-          <span className="text-yellow-600 font-semibold max-sm:text-sm max-[400px]:text-xs">
-            {stats.neutral}
-          </span>
+          <span className="font-bold uppercase text-sm max-sm:text-xs max-[400px]:text-[10px]">Support Groups</span>
+          <span className="text-yellow-600 font-semibold max-sm:text-sm max-[400px]:text-xs">{stats.support}</span>
           <span className="rounded-md h-1 w-20 max-sm:w-16 max-[400px]:w-12 max-sm:h-0.5 bg-yellow-600" />
         </li>
         <li className="flex flex-col justify-between max-sm:min-w-[120px] max-[400px]:min-w-[100px]">
-          <span className="font-bold uppercase text-sm max-sm:text-xs max-[400px]:text-[10px]">
-            Affected Zones
-          </span>
-          <span className="text-[#ff0000] font-semibold max-sm:text-sm max-[400px]:text-xs">
-            {stats.affected}
-          </span>
+          <span className="font-bold uppercase text-sm max-sm:text-xs max-[400px]:text-[10px]">Crisis Centers</span>
+          <span className="text-[#ff0000] font-semibold max-sm:text-sm max-[400px]:text-xs">{stats.crisis}</span>
           <span className="rounded-md h-1 w-20 max-sm:w-16 max-[400px]:w-12 max-sm:h-0.5 bg-[#ff0000]" />
         </li>
         <li className="flex flex-col justify-between max-sm:min-w-[120px] max-[400px]:min-w-[100px]">
-          <span className="font-bold uppercase text-sm max-sm:text-xs max-[400px]:text-[10px]">
-            Safe Zones
-          </span>
-          <span className="text-blue-600 font-semibold max-sm:text-sm max-[400px]:text-xs">
-            {stats.safe}
-          </span>
+          <span className="font-bold uppercase text-sm max-sm:text-xs max-[400px]:text-[10px]">Therapy Clinics</span>
+          <span className="text-blue-600 font-semibold max-sm:text-sm max-[400px]:text-xs">{stats.therapy}</span>
           <span className="rounded-md h-1 w-20 max-sm:w-16 max-[400px]:w-12 max-sm:h-0.5 bg-blue-600" />
         </li>
       </ul>

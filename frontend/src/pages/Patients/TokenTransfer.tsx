@@ -41,7 +41,7 @@ interface Contact {
 export default function TokenTransfer() {
   const { userPrincipal, isAuthenticated } = useAuth();
   const { theme } = useTheme();
-  const [balance, setBalance] = useState(850.25);
+  const [balance, setBalance] = useState(0);
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
   const [memo, setMemo] = useState('');

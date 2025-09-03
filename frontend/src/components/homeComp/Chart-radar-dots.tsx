@@ -15,19 +15,19 @@ import {
 
 // Define colors in one place for consistency
 const colors = {
-  "SEVERE HEADACHE": "#F80D38",
-  "TYPHOID": "#0DB16A", 
-  "COLD": "#FECA57",
-  "MALARIA": "#57dafe",
-  "COUGH": "#b10d8d"
+  "ANXIETY LEVELS": "#F80D38",
+  "DEPRESSION SCORE": "#0DB16A", 
+  "STRESS FACTORS": "#FECA57",
+  "MOOD STABILITY": "#57dafe",
+  "SLEEP QUALITY": "#b10d8d"
 };
 
 const chartData = [
-  { month: "SEVERE HEADACHE", desktop: 186, fill: colors["SEVERE HEADACHE"] },
-  { month: "TYPHOID", desktop: 305, fill: colors["TYPHOID"] },
-  { month: "COLD", desktop: 237, fill: colors["COLD"] },
-  { month: "MALARIA", desktop: 273, fill: colors["MALARIA"] },
-  { month: "COUGH", desktop: 209, fill: colors["COUGH"] },
+  { month: "ANXIETY LEVELS", desktop: 186, fill: colors["ANXIETY LEVELS"] },
+  { month: "DEPRESSION SCORE", desktop: 305, fill: colors["DEPRESSION SCORE"] },
+  { month: "STRESS FACTORS", desktop: 237, fill: colors["STRESS FACTORS"] },
+  { month: "MOOD STABILITY", desktop: 273, fill: colors["MOOD STABILITY"] },
+  { month: "SLEEP QUALITY", desktop: 209, fill: colors["SLEEP QUALITY"] },
 ]
 
 const chartConfig = {
@@ -35,34 +35,34 @@ const chartConfig = {
     label: "Range",
     color: "hsl(var(--chart-1))",
   },
-  headache: {
-    label: "SEVERE HEADACHE",
-    color: colors["SEVERE HEADACHE"],
+  anxiety: {
+    label: "ANXIETY LEVELS",
+    color: colors["ANXIETY LEVELS"],
   },
-  typhoid: {
-    label: "TYPHOID",
-    color: colors["TYPHOID"],
+  depression: {
+    label: "DEPRESSION SCORE",
+    color: colors["DEPRESSION SCORE"],
   },
-  cold: {
-    label: "COLD",
-    color: colors["COLD"],
+  stress: {
+    label: "STRESS FACTORS",
+    color: colors["STRESS FACTORS"],
   },
-  malaria: {
-    label: "MALARIA",
-    color: colors["MALARIA"],
+  mood: {
+    label: "MOOD STABILITY",
+    color: colors["MOOD STABILITY"],
   },
-  cough: {
-    label: "COUGH",
-    color: colors["COUGH"],
+  sleep: {
+    label: "SLEEP QUALITY",
+    color: colors["SLEEP QUALITY"],
   },
 } satisfies ChartConfig
 
 const legendItems = [
-  { name: "MALARIA", color: colors["MALARIA"] },
-  { name: "COLD", color: colors["COLD"] },
-  { name: "TYPHOID", color: colors["TYPHOID"] },
-  { name: "COUGH", color: colors["COUGH"] },
-  { name: "SEVERE HEADACHE", color: colors["SEVERE HEADACHE"] },
+  { name: "MOOD STABILITY", color: colors["MOOD STABILITY"] },
+  { name: "STRESS FACTORS", color: colors["STRESS FACTORS"] },
+  { name: "DEPRESSION SCORE", color: colors["DEPRESSION SCORE"] },
+  { name: "SLEEP QUALITY", color: colors["SLEEP QUALITY"] },
+  { name: "ANXIETY LEVELS", color: colors["ANXIETY LEVELS"] },
 ]
 
 export function ChartRadar({ className }: { className?: string }) {

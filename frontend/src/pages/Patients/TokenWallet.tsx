@@ -35,6 +35,17 @@ export default function TokenWallet() {
     if (isAuthenticated && userPrincipal) {
       fetchTokenData();
     }
+    
+    // Listen for balance refresh events from faucet
+    const handleRefreshBalance = () => {
+      fetchTokenData();
+    };
+    
+    window.addEventListener('refreshTokenBalance', handleRefreshBalance);
+    
+    return () => {
+      window.removeEventListener('refreshTokenBalance', handleRefreshBalance);
+    };
   }, [isAuthenticated, userPrincipal]);
 
   const fetchTokenData = async () => {
