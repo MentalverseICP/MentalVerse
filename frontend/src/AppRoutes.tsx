@@ -1,17 +1,21 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import Home from '@/pages/Home';
+import Home from '@/pages/Patients/Home';
 import Login from '@/pages/Login'
 import Logout from '@/pages/Logout'
 import Settings from '@/pages/Settings'
 import Chats from '@/pages/Chats'
-import Medical from '@/pages/Medical'
-import Doctors from '@/pages/Doctors'
+import Medical from '@/pages/Patients/Medical'
+import Doctors from '@/pages/Patients/Doctors'
 import Appointments from '@/pages/Appointments'
-import Claims from '@/pages/Claims'
-import TokenWallet from '@/components/TokenWallet'
-import TokenTransfer from '@/components/TokenTransfer'
-import TokenStaking from '@/components/TokenStaking'
+import Claims from '@/pages/Patients/Claims'
+import TokenWallet from '@/pages/Patients/TokenWallet'
+import TokenTransfer from '@/pages/Patients/TokenTransfer'
+import TokenStaking from '@/pages/Patients/TokenStaking'
+import Onboarding from '@/pages/Onboarding'
+import DoctorHome from '@/pages/Doctors/Home'
+import DoctorPatients from '@/pages/Doctors/Patients'
+import DoctorAppointments from '@/pages/Doctors/Appointments'
 import { cn } from './lib/utils';
 import { useSidebar } from './components/ui/Sidebar';
 
@@ -35,24 +39,32 @@ export const AppRoutes: React.FC<RouteProps> = () => {
     )}>
       <div className='w-full max-w-full'>
         <Routes>
-          {/* <Route path="/home" element={<LandingPage />} /> */}
+          {/* Onboarding Route */}
+          <Route path="/onboarding" element={<Onboarding />} />
+          
+          {/* Patient Routes */}
           <Route index element={<Home />} />
-          <Route path='/home' element={<Home />} />
+          <Route path='/patients/home' element={<Home />} />
+          <Route path='/patients/claims' element={<Claims />} />
+          <Route path="/patients/medical" element={<Medical />} />
+          <Route path="/patients/doctors" element={<Doctors />} />
+          <Route path="/patients/token-wallet" element={<TokenWallet />} />
+          <Route path="/patients/token-transfer" element={<TokenTransfer />} />
+          <Route path="/patients/token-staking" element={<TokenStaking />} />
+          
+          {/* Doctor Routes */}
+          <Route path="/doctor/home" element={<DoctorHome />} />
+          <Route path="/doctor/patients" element={<DoctorPatients />} />
+          <Route path="/doctor/appointments" element={<DoctorAppointments />} />
+          
+          {/* Shared Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/logout" element={<Logout />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/chats" element={<Chats />} />
-          <Route path='/claims' element={<Claims />} />
-          <Route path="/medical" element={<Medical />} />
-          <Route path="/doctors" element={<Doctors />} />
           <Route path="/appointments" element={<Appointments />} />
-          <Route path="/token-wallet" element={<TokenWallet />} />
-          <Route path="/token-transfer" element={<TokenTransfer />} />
-          <Route path="/token-staking" element={<TokenStaking />} />
         </Routes>
       </div>      
     </main>
-
-
   );
 };

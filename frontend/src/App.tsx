@@ -1,16 +1,18 @@
-import './App.css'
 import { useState, useEffect, useRef } from 'react'
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
 import { SidebarProvider } from "@/components/ui/Sidebar"
 import { ThemeProvider } from './components/theme-provider'
 import { AppSidebar } from './components/AppSidebar'
+import { DoctorSidebar } from './components/DoctorSidebar'
 import { AppRoutes } from './AppRoutes'
 import SearchBar from './components/SearchBar'
 import LandingPage from '@/pages/LandingPage'
+import Onboarding from '@/pages/Onboarding'
 import "@nfid/identitykit/react/styles.css"
 import { IdentityKitProvider, useIdentityKit } from "@nfid/identitykit/react"
 import { NFIDW, InternetIdentity, Stoic, OISY } from "@nfid/identitykit"
 import Loader from './components/Loader'
+
 interface SubAppProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
@@ -20,7 +22,7 @@ function App() {
   return (
     <ThemeProvider defaultTheme='dark' storageKey='vite-ui-theme'>
       <IdentityKitProvider
-        signers={[NFIDW, InternetIdentity, Stoic, OISY]}
+        signers={[ InternetIdentity, NFIDW]}
         authType="ACCOUNTS"
         windowOpenerFeatures="top=250rem,left=300px,width=280rem,height=500rem"
       >
@@ -79,7 +81,17 @@ function AppRouter() {
           !authenticated ? (
             <LandingPage onWalletDisconnect={handleWalletDisconnect} />
           ) : (
-            <Navigate to="/home" replace />
+            <Navigate to="/onboarding" replace />
+          )
+        }
+      />
+      <Route
+        path="/onboarding"
+        element={
+          authenticated ? (
+            <Onboarding />
+          ) : (
+            <Navigate to="/" replace />
           )
         }
       />
@@ -101,6 +113,18 @@ function AppRouter() {
 }
 
 function SubApp({ searchTerm, onSearchChange }: SubAppProps) {
+  // Check if user has completed onboarding
+  const userRole = localStorage.getItem('userRole');
+  const hasCompletedOnboarding = !!userRole;
+
+  // If user hasn't completed onboarding, redirect to onboarding
+  if (!hasCompletedOnboarding) {
+    return <Navigate to="/onboarding" replace />;
+  }
+
+  // Determine which sidebar to show based on user role
+  const isDoctor = userRole === 'doctor';
+
   return (
     <div className="min-h-screen">
       <div className="fixed top-0 left-0 right-0 z-40 h-16">
@@ -113,7 +137,11 @@ function SubApp({ searchTerm, onSearchChange }: SubAppProps) {
       <div className="">
         <SidebarProvider defaultOpen={false}>
           <div className="grid grid-cols-[auto,1fr] w-full overflow-hidden">
-            <AppSidebar className={'z-20 fixed lg:mt-12 lg:mb-20 max-lg:mt-8'} />
+            {isDoctor ? (
+              <DoctorSidebar className={'z-20 fixed lg:mt-12 lg:mb-20 max-lg:mt-8'} />
+            ) : (
+              <AppSidebar className={'z-20 fixed lg:mt-12 lg:mb-20 max-lg:mt-8'} />
+            )}
             <AppRoutes />
           </div>
         </SidebarProvider>
