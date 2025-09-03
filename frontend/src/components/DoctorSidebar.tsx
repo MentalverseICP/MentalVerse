@@ -92,8 +92,15 @@ export function DoctorSidebar({ className }: { className?: string }) {
       <SidebarContent className="flex flex-col items-center gap-2 md:gap-2 mt-1 scrollbar-custom h-full">
         <SidebarTrigger className={cn("relative h-8 w-8 md:h-10 md:w-10 flex items-center justify-center hover:scale-90 rounded-lg transition-[width] duration-75", theme === 'dark' ? 'bg-[#000] hover:bg-[#1f1f1f]' : 'bg-white hover:border-black hover:shadow-[0_2px_0_0_rgba(0,0,0,0.811)]')} />
         <SidebarMenu className="flex gap-2 md:gap-3">
-          {mainNavItems.map((item: { title: string; icon: React.FC; href: string; badge?: string }) => (
-            <SidebarMenuItem key={item.href} className={cn("h-full w-full", theme === 'dark' ? 'hover:bg-[#1f1f1f]' : 'hover:bg-[#DFE0E2]', location.pathname === item.href && (theme === 'dark' ? 'bg-[#1f1f1f]' : 'bg-[#DFE0E2]'))}>
+          {mainNavItems.map((item) => (
+            <SidebarMenuItem
+              key={item.href}
+              className={cn(
+                "h-full w-full",
+                theme === 'dark' ? 'hover:bg-[#1f1f1f]' : 'hover:bg-[#DFE0E2]',
+                location.pathname === item.href && (theme === 'dark' ? 'bg-[#1f1f1f]' : 'bg-[#DFE0E2]')
+              )}
+            >
               <SidebarMenuButton
                 asChild
                 isActive={location.pathname === item.href}
@@ -104,9 +111,11 @@ export function DoctorSidebar({ className }: { className?: string }) {
                   to={item.href}
                   className={`flex items-center md:gap-6 ${location.pathname === item.href ? 'text-[#18E614] font-medium' : (theme === 'dark' ? 'text-white' : 'text-black')}`}
                 >
-                  <item.icon />
+                  {item.icon && typeof item.icon === "function" ? (
+                    <item.icon />
+                  ) : null}
                   {!isCollapsed && <span>{item.title}</span>}
-                  {item.badge && ( 
+                  {item.badge && (
                     <span className={`ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-[#F80D38] text-xs text-white ${isCollapsed ? 'hidden' : 'flex'}`}>
                       {item.badge}
                     </span>

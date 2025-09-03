@@ -10,7 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/theme-provider';
 import { authService, TokenBalance, Transaction, EarningRecord, SpendingRecord } from '@/services/backend';
-// import { useSidebar } from './ui/Sidebar';
+import { useSidebar } from '@/components/ui/Sidebar';
 
 export default function TokenWallet() {
   const { userPrincipal, isAuthenticated } = useAuth();
@@ -126,7 +126,7 @@ export default function TokenWallet() {
     );
   };
 
-  if (isAuthenticated) {
+  if (!isAuthenticated) {
     return (
       <div className="flex items-center justify-center h-64">
         <p className="text-muted-foreground">Please log in to view your token wallet.</p>
@@ -134,13 +134,13 @@ export default function TokenWallet() {
     );
   }
 
-  // if (loading) {
-  //   return (
-  //     <div className="flex items-center justify-center h-64">
-  //       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#18E614]"></div>
-  //     </div>
-  //   );
-  // }
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#18E614]"></div>
+      </div>
+    );
+  }
 
   if (error) {
     return (

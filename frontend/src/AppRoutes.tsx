@@ -12,11 +12,11 @@ import Claims from '@/pages/Patients/Claims'
 import TokenWallet from '@/pages/Patients/TokenWallet'
 import TokenTransfer from '@/pages/Patients/TokenTransfer'
 import TokenStaking from '@/pages/Patients/TokenStaking'
+import TestnetFaucet from '@/pages/Patients/TestnetFaucet'
 import Onboarding from '@/pages/Onboarding'
 import DoctorHome from '@/pages/Doctors/Home'
 import DoctorPatients from '@/pages/Doctors/Patients'
 import DoctorAppointments from '@/pages/Doctors/Appointments'
-import TestnetFaucet from '@/components/TestnetFaucet'
 import { cn } from './lib/utils';
 import { useSidebar } from './components/ui/Sidebar';
 
@@ -52,6 +52,10 @@ export const AppRoutes: React.FC<RouteProps> = () => {
           <Route path="/patients/token-wallet" element={<TokenWallet />} />
           <Route path="/patients/token-transfer" element={<TokenTransfer />} />
           <Route path="/patients/token-staking" element={<TokenStaking />} />
+          <Route path="/patients/testnet-faucet" element={<TestnetFaucet />} />
+          <Route path="/patients/token-wallet" element={<TokenWallet />} />
+          <Route path="/patients/token-transfer" element={<TokenTransfer />} />
+          <Route path="/patients/token-staking" element={<TokenStaking />} />
           
           {/* Doctor Routes */}
           <Route path="/doctor/home" element={<DoctorHome />} />
@@ -64,9 +68,7 @@ export const AppRoutes: React.FC<RouteProps> = () => {
           <Route path="/settings" element={<Settings />} />
           <Route path="/chats" element={<Chats />} />
           <Route path="/appointments" element={<Appointments />} />
-          <Route path="/token-wallet" element={<TokenWallet />} />
-          <Route path="/token-transfer" element={<TokenTransfer />} />
-          <Route path="/token-staking" element={<TokenStaking />} />
+
         </Routes>
       </div>      
     </main>

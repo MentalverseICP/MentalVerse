@@ -43,7 +43,7 @@ export function AppSidebar({ className }: { className?: string }) {
     {
       title: "Overview",
       icon: () => (<img src={overview} alt="Overview Icon" className={`${isCollapsed ? "h-7 w-7" : "h-4 w-4"}`} />),
-      href: "/home",
+      href: "/patients/home",
     },
     {
       title: "Appointments",
@@ -53,12 +53,12 @@ export function AppSidebar({ className }: { className?: string }) {
     {
       title: "Doctors",
       icon: () => (<img src={doctors} alt="Doctors Icon" className={`${isCollapsed ? "h-7 w-7" : "h-4 w-4"}`} />),
-      href: "/doctors",
+      href: "/patients/doctors",
     },
     {
       title: "Medical",
       icon: () => (<img src={medicalIcon} alt="Medical Icon" className={`${isCollapsed ? "h-7 w-7" : "h-4 w-4"}`} />),
-      href: "/medical",
+      href: "/patients/medical",
     },
     {
       title: "Chats",
@@ -69,27 +69,27 @@ export function AppSidebar({ className }: { className?: string }) {
     {
       title: "Claims",
       icon: Gift,
-      href: "/claims",
+      href: "/patients/claims",
     },
     {
       title: "Token Wallet",
       icon: Wallet,
-      href: "/token-wallet",
+      href: "/patients/token-wallet",
     },
     {
       title: "Token Transfer",
       icon: Send,
-      href: "/token-transfer",
+      href: "/patients/token-transfer",
     },
     {
       title: "Token Staking",
       icon: TrendingUp,
-      href: "/token-staking",
+      href: "/patients/token-staking",
     },
     {
       title: "Testnet Faucet",
       icon: Droplets,
-      href: "/testnet-faucet",
+      href: "/patients/testnet-faucet",
     },
   ]
   

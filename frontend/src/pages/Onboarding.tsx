@@ -54,7 +54,7 @@ const Onboarding: React.FC = () => {
       if (formData.role === 'doctor') {
         navigate('/doctor/home');
       } else {
-        navigate('/home');
+        navigate('/patients/home');
       }
     } catch (error) {
       console.error('Onboarding failed:', error);
