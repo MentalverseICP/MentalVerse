@@ -1,6 +1,8 @@
+/// <reference types="vite/client" />
 import { HttpAgent } from '@dfinity/agent';
 import { AuthClient } from '@dfinity/auth-client';
 import { Principal } from '@dfinity/principal';
+import { secureMessagingService, SecureMessagingService } from './secureMessaging';
 
 // Import the generated declarations (these will be created after deployment)
 // import { mentalverse_backend } from '../../../declarations/mentalverse_backend';
@@ -48,11 +50,28 @@ export interface BackendService {
   createMedicalRecord: (recordData: MedicalRecordData) => Promise<{ Ok?: MedicalRecord; Err?: string }>;
   getPatientMedicalRecords: () => Promise<MedicalRecord[]>;
   getMedicalRecordById: (recordId: string) => Promise<{ Ok?: MedicalRecord; Err?: string }>;
+  createSessionNote: (patientId: Principal, content: string, sessionId?: string) => Promise<{ Ok?: string; Err?: string }>;
+  getSessionNotes: (patientId?: Principal) => Promise<SessionNote[]>;
+  createPrescription: (patientId: Principal, medication: string, dosage: string, instructions: string, duration: string) => Promise<{ Ok?: string; Err?: string }>;
+  getPrescriptions: (patientId?: Principal) => Promise<Prescription[]>;
+  createTreatmentSummary: (patientId: Principal, summary: string, recommendations: string[], nextAppointment?: string) => Promise<{ Ok?: string; Err?: string }>;
+  getTreatmentSummaries: (patientId?: Principal) => Promise<TreatmentSummary[]>;
+  grantMedicalRecordAccess: (recordId: string, userId: Principal, accessLevel: string) => Promise<{ Ok?: string; Err?: string }>;
+  revokeMedicalRecordAccess: (recordId: string, userId: Principal) => Promise<{ Ok?: string; Err?: string }>;
+  getAuditLogs: (recordTypeOpt?: { [key: string]: null }[], recordIdOpt?: string[], limitOpt?: bigint[]) => Promise<{ ok?: AuditLog[]; err?: string }>;
   
   // Messaging
   sendMessage: (receiverId: Principal, content: string, messageType: string) => Promise<{ Ok?: Message; Err?: string }>;
   getMessages: (otherUserId: Principal) => Promise<Message[]>;
   markMessageAsRead: (messageId: string) => Promise<{ Ok?: string; Err?: string }>;
+  
+  // Secure messaging
+  createTherapyConversation: (therapistId: Principal, sessionId: string) => Promise<{ ok?: string; err?: string }>;
+  sendSecureMessage: (conversationId: string, recipientId: Principal, content: string, messageType: { [key: string]: null }) => Promise<{ ok?: string; err?: string }>;
+  getUserSecureConversations: () => Promise<{ ok?: SecureConversation[]; err?: string }>;
+  getSecureConversationMessages: (conversationId: string, limit?: bigint[], offset?: bigint[]) => Promise<{ ok?: SecureMessage[]; err?: string }>;
+  registerUserEncryptionKey: (publicKey: string, keyType: { RSA2048?: null; ECDSA?: null; Ed25519?: null }) => Promise<{ ok?: string; err?: string }>;
+  getSecureMessagingHealth: () => Promise<{ status: string; timestamp: bigint }>;
   
   // System
   healthCheck: () => Promise<{ status: string; timestamp: bigint; version: string }>;
@@ -257,6 +276,69 @@ export interface SystemStats {
   totalMessages: number;
 }
 
+export interface SessionNote {
+  id: string;
+  patientId: Principal;
+  doctorId: Principal;
+  content: string;
+  sessionId?: string;
+  createdAt: bigint;
+  updatedAt: bigint;
+}
+
+export interface Prescription {
+  id: string;
+  patientId: Principal;
+  doctorId: Principal;
+  medication: string;
+  dosage: string;
+  instructions: string;
+  duration: string;
+  isActive: boolean;
+  createdAt: bigint;
+  updatedAt: bigint;
+}
+
+export interface TreatmentSummary {
+  id: string;
+  patientId: Principal;
+  doctorId: Principal;
+  summary: string;
+  recommendations: string[];
+  nextAppointment?: string;
+  createdAt: bigint;
+  updatedAt: bigint;
+}
+
+export interface AuditLog {
+  id: string;
+  userId: Principal;
+  action: string;
+  resourceId: string;
+  resourceType: string;
+  details: string;
+  timestamp: bigint;
+}
+
+export interface SecureConversation {
+  id: string;
+  participants: Principal[];
+  sessionId?: string;
+  isActive: boolean;
+  createdAt: bigint;
+  updatedAt: bigint;
+}
+
+export interface SecureMessage {
+  id: string;
+  conversationId: string;
+  senderId: Principal;
+  content: string;
+  messageType: string;
+  isEncrypted: boolean;
+  timestamp: bigint;
+}
+
 export interface FaucetStats {
   dailyLimit: number;
   claimedToday: number;
@@ -275,6 +357,7 @@ export interface FaucetClaim {
 export class AuthService {
   private authClient: AuthClient | null = null;
   private actor: BackendService | null = null;
+  private secureMessaging: SecureMessagingService | null = null;
   private isAuthenticated = false;
   private userPrincipal: Principal | null = null;
   private userRole: string | null = null;
@@ -294,7 +377,7 @@ export class AuthService {
 
     return new Promise((resolve) => {
       this.authClient!.login({
-        identityProvider: process.env.REACT_APP_INTERNET_IDENTITY_URL || 'http://localhost:4943/?canisterId=uxrrr-q7777-77774-qaaaq-cai',
+        identityProvider: import.meta.env.VITE_INTERNET_IDENTITY_URL || 'http://localhost:4943/?canisterId=uxrrr-q7777-77774-qaaaq-cai',
         onSuccess: async () => {
           await this.handleAuthenticated();
           resolve(true);
@@ -314,6 +397,7 @@ export class AuthService {
       this.userPrincipal = null;
       this.userRole = null;
       this.actor = null;
+      this.secureMessaging = null;
     }
   }
 
@@ -327,22 +411,30 @@ export class AuthService {
     // Create actor with authenticated identity
     const agent = new HttpAgent({
       identity,
-      host: process.env.REACT_APP_IC_HOST || 'http://localhost:4943',
+      host: import.meta.env.VITE_IC_HOST || 'http://localhost:4943',
     });
 
     // In development, fetch root key
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       await agent.fetchRootKey();
     }
 
     // Create actor with deployed canister ID
-    const canisterId = process.env.REACT_APP_BACKEND_CANISTER_ID || 'u6s2n-gx777-77774-qaaba-cai';
+    const canisterId = import.meta.env.VITE_BACKEND_CANISTER_ID || 'u6s2n-gx777-77774-qaaba-cai';
     
     // This would use the generated declarations in a real implementation
     // this.actor = Actor.createActor(idlFactory, { agent, canisterId });
     
     // For now, we'll create a mock actor
     this.actor = this.createMockActor(agent, canisterId);
+
+    // Initialize secure messaging service
+    try {
+      await secureMessagingService.init(this.authClient!);
+      this.secureMessaging = secureMessagingService;
+    } catch (error) {
+      console.error('Failed to initialize secure messaging:', error);
+    }
 
     // Get user role
     try {
@@ -489,9 +581,24 @@ export class AuthService {
       createMedicalRecord: async (_data: MedicalRecordData) => ({ Err: 'Not implemented' }),
       getPatientMedicalRecords: async () => [],
       getMedicalRecordById: async (_id: string) => ({ Err: 'Not implemented' }),
+      createSessionNote: async (_patientId: Principal, _content: string, _sessionId?: string) => ({ Ok: 'Session note created' }),
+      getSessionNotes: async (_patientId?: Principal) => [],
+      createPrescription: async (_patientId: Principal, _medication: string, _dosage: string, _instructions: string, _duration: string) => ({ Ok: 'Prescription created' }),
+      getPrescriptions: async (_patientId?: Principal) => [],
+      createTreatmentSummary: async (_patientId: Principal, _summary: string, _recommendations: string[], _nextAppointment?: string) => ({ Ok: 'Treatment summary created' }),
+      getTreatmentSummaries: async (_patientId?: Principal) => [],
+      grantMedicalRecordAccess: async (_recordId: string, _userId: Principal, _accessLevel: string) => ({ Ok: 'Access granted' }),
+      revokeMedicalRecordAccess: async (_recordId: string, _userId: Principal) => ({ Ok: 'Access revoked' }),
+      getAuditLogs: async (_recordTypeOpt?: { [key: string]: null }[], _recordIdOpt?: string[], _limitOpt?: bigint[]) => ({ ok: [] }),
       sendMessage: async (_receiverId: Principal, _content: string, _messageType: string) => ({ Err: 'Not implemented' }),
       getMessages: async (_otherUserId: Principal) => [],
       markMessageAsRead: async (_messageId: string) => ({ Err: 'Not implemented' }),
+      createTherapyConversation: async (_therapistId: Principal, _sessionId: string) => ({ ok: 'Conversation created' }),
+      sendSecureMessage: async (_conversationId: string, _recipientId: Principal, _content: string, _messageType: { [key: string]: null }) => ({ ok: 'Message sent' }),
+      getUserSecureConversations: async () => ({ ok: [] }),
+      getSecureConversationMessages: async (_conversationId: string, _limit?: bigint[], _offset?: bigint[]) => ({ ok: [] }),
+      registerUserEncryptionKey: async (_publicKey: string, _keyType: { RSA2048?: null; ECDSA?: null; Ed25519?: null }) => ({ ok: 'Key registered' }),
+      getSecureMessagingHealth: async () => ({ status: 'healthy', timestamp: BigInt(Date.now()) }),
       healthCheck: async () => ({ status: 'healthy', timestamp: BigInt(Date.now()), version: '1.0.0' }),
       getSystemStats: async () => ({ totalPatients: 0, totalDoctors: 0, totalAppointments: 0, totalMedicalRecords: 0, totalMessages: 0 }),
     };
@@ -511,6 +618,10 @@ export class AuthService {
 
   getActor(): BackendService | null {
     return this.actor;
+  }
+
+  getSecureMessaging(): SecureMessagingService | null {
+    return this.secureMessaging;
   }
 
   async registerUser(role: 'patient' | 'doctor'): Promise<{ success: boolean; message: string }> {
@@ -627,6 +738,340 @@ export class AuthService {
       }
     } catch (error) {
       console.error('Transfer tokens error:', error);
+      throw error;
+    }
+  }
+
+  // === INTER-CANISTER SECURE MESSAGING ===
+  
+  // Create a therapy conversation through the backend
+  async createTherapyConversation(therapistId: string, sessionId: string): Promise<any> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const therapistPrincipal = Principal.fromText(therapistId);
+      const result = await this.actor.createTherapyConversation(therapistPrincipal, sessionId);
+      
+      if ('ok' in result) {
+        return result.ok;
+      } else {
+        throw new Error(result.err);
+      }
+    } catch (error) {
+      console.error('Error creating therapy conversation:', error);
+      throw error;
+    }
+  }
+  
+  // Send secure message through backend
+  async sendSecureMessage(
+    conversationId: string,
+    recipientId: Principal,
+    content: string,
+    messageType: { [key: string]: null } = { Text: null }
+  ): Promise<any> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const result = await this.actor.sendSecureMessage(conversationId, recipientId, content, messageType);
+      
+      if ('ok' in result) {
+        return result.ok;
+      } else {
+        throw new Error(result.err);
+      }
+    } catch (error) {
+      console.error('Error sending secure message:', error);
+      throw error;
+    }
+  }
+  
+  // Get user's secure conversations
+  async getUserSecureConversations(): Promise<{ ok?: SecureConversation[]; err?: string }> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const result = await this.actor.getUserSecureConversations();
+      return result;
+    } catch (error) {
+      console.error('Error getting secure conversations:', error);
+      throw error;
+    }
+  }
+  
+  // Get messages from a secure conversation
+  async getSecureConversationMessages(
+    conversationId: string,
+    limit?: number,
+    offset?: number
+  ): Promise<{ ok?: SecureMessage[]; err?: string }> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const limitOpt = limit ? [BigInt(limit)] : [];
+      const offsetOpt = offset ? [BigInt(offset)] : [];
+      const result = await this.actor.getSecureConversationMessages(conversationId, limitOpt, offsetOpt);
+      return result;
+    } catch (error) {
+      console.error('Error getting secure conversation messages:', error);
+      throw error;
+    }
+  }
+  
+  // Register user encryption key
+  async registerUserEncryptionKey(
+    publicKey: string,
+    keyType: 'RSA2048' | 'ECDSA' | 'Ed25519' = 'Ed25519'
+  ): Promise<any> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const keyTypeVariant = { [keyType]: null };
+      const result = await this.actor.registerUserEncryptionKey(publicKey, keyTypeVariant);
+      
+      if ('ok' in result) {
+        return result.ok;
+      } else {
+        throw new Error(result.err);
+      }
+    } catch (error) {
+      console.error('Error registering encryption key:', error);
+      throw error;
+    }
+  }
+  
+  // Get secure messaging health status
+  async getSecureMessagingHealth(): Promise<{ status: string; timestamp: bigint }> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const result = await this.actor.getSecureMessagingHealth();
+      return result;
+    } catch (error) {
+      console.error('Error getting secure messaging health:', error);
+      throw error;
+    }
+  }
+
+  // Medical Records Functions
+  
+  // Create session note
+  async createSessionNote(
+    patientId: string,
+    sessionId: string,
+    content: string,
+    encryptionLevel: 'None' | 'Basic' | 'Advanced' = 'Basic'
+  ): Promise<any> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const patientPrincipal = Principal.fromText(patientId);
+      const result = await this.actor.createSessionNote(patientPrincipal, content, sessionId);
+      
+      if ('Ok' in result) {
+        return result.Ok;
+      } else {
+        throw new Error(result.Err);
+      }
+    } catch (error) {
+      console.error('Error creating session note:', error);
+      throw error;
+    }
+  }
+  
+  // Get session notes
+  async getSessionNotes(patientId?: Principal): Promise<SessionNote[]> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const result = await this.actor.getSessionNotes(patientId);
+      return result;
+    } catch (error) {
+      console.error('Error getting session notes:', error);
+      throw error;
+    }
+  }
+  
+  // Create prescription
+  async createPrescription(
+    patientId: Principal,
+    medication: string,
+    dosage: string,
+    instructions: string,
+    duration: string
+  ): Promise<{ Ok?: string; Err?: string }> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const result = await this.actor.createPrescription(
+        patientId,
+        medication,
+        dosage,
+        instructions,
+        duration
+      );
+      
+      if ('Ok' in result) {
+        return result;
+      } else {
+        throw new Error(result.Err);
+      }
+    } catch (error) {
+      console.error('Error creating prescription:', error);
+      throw error;
+    }
+  }
+  
+  // Get prescriptions
+  async getPrescriptions(patientId?: Principal): Promise<Prescription[]> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const result = await this.actor.getPrescriptions(patientId);
+      return result;
+    } catch (error) {
+      console.error('Error getting prescriptions:', error);
+      throw error;
+    }
+  }
+  
+  // Create treatment summary
+  async createTreatmentSummary(
+    patientId: Principal,
+    summary: string,
+    recommendations: string[],
+    nextAppointment?: string
+  ): Promise<{ Ok?: string; Err?: string }> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const result = await this.actor.createTreatmentSummary(
+        patientId,
+        summary,
+        recommendations,
+        nextAppointment
+      );
+      
+      if ('Ok' in result) {
+        return result;
+      } else {
+        throw new Error(result.Err);
+      }
+    } catch (error) {
+      console.error('Error creating treatment summary:', error);
+      throw error;
+    }
+  }
+  
+  // Get treatment summaries
+  async getTreatmentSummaries(patientId?: Principal): Promise<TreatmentSummary[]> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const result = await this.actor.getTreatmentSummaries(patientId);
+      return result;
+    } catch (error) {
+      console.error('Error getting treatment summaries:', error);
+      throw error;
+    }
+  }
+  
+  // Grant access to medical record
+  async grantMedicalRecordAccess(
+    recordId: string,
+    userId: Principal,
+    accessLevel: string
+  ): Promise<{ Ok?: string; Err?: string }> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const result = await this.actor.grantMedicalRecordAccess(
+        recordId,
+        userId,
+        accessLevel
+      );
+      
+      if ('Ok' in result) {
+        return result;
+      } else {
+        throw new Error(result.Err);
+      }
+    } catch (error) {
+      console.error('Error granting medical record access:', error);
+      throw error;
+    }
+  }
+  
+  // Revoke access to medical record
+  async revokeMedicalRecordAccess(
+    recordId: string,
+    userId: Principal
+  ): Promise<{ Ok?: string; Err?: string }> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const result = await this.actor.revokeMedicalRecordAccess(
+        recordId,
+        userId
+      );
+      
+      if ('Ok' in result) {
+        return result;
+      } else {
+        throw new Error(result.Err);
+      }
+    } catch (error) {
+      console.error('Error revoking medical record access:', error);
+      throw error;
+    }
+  }
+  
+  // Get audit logs
+  async getAuditLogs(
+    recordType?: 'SessionNote' | 'Prescription' | 'TreatmentSummary',
+    recordId?: string,
+    limit?: number
+  ): Promise<{ ok?: AuditLog[]; err?: string }> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const recordTypeOpt = recordType ? [{ [recordType]: null }] : [];
+      const recordIdOpt = recordId ? [recordId] : [];
+      const limitOpt = limit ? [BigInt(limit)] : [];
+      const result = await this.actor.getAuditLogs(recordTypeOpt, recordIdOpt, limitOpt);
+      return result;
+    } catch (error) {
+      console.error('Error getting audit logs:', error);
       throw error;
     }
   }

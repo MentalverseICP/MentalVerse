@@ -1,6 +1,6 @@
 # MentalVerse - Web3 Mental Health Platform
 
-MentalVerse is the world's first Web3-powered mental health platform built on the Internet Computer Protocol (ICP) using Motoko for smart contracts and React/TypeScript for the frontend. The platform combines blockchain technology, AI assistance, and community-driven care to provide secure, decentralized mental health services including peer support, professional therapy, token-based incentives, and comprehensive medical record management.
+MentalVerse is the world's first Web3-powered mental health platform built on the Internet Computer Protocol (ICP) using both Motoko and Rust for smart contracts and React/TypeScript for the frontend. The platform combines blockchain technology, AI assistance, and community-driven care to provide secure, decentralized mental health services including peer support, professional therapy, token-based incentives, and comprehensive medical record management.
 
 ## 🪙 MVT Token Integration
 
@@ -27,16 +27,102 @@ The **MentalVerse Token (MVT)** is the native utility token that powers the enti
 
 ## 🏗️ Architecture
 
-### Backend (Motoko)
+### Backend Smart Contracts
+
+#### Motoko Canisters
 - **Main Canister**: `mentalverse_backend` - Core business logic and data management
+- **MVT Token Canister**: `mvt_token_canister` - ICRC-1 compatible token implementation
 - **Authentication**: Internet Identity integration for secure, privacy-preserving authentication
 - **Data Storage**: Stable memory for persistent data storage across canister upgrades
+
+#### Rust Canister - Secure Messaging
+- **Package**: `secure_messaging` - End-to-end encrypted messaging system
+- **IC-CDK Version**: v0.13 (Rust Canister Development Kit)
+- **Candid Version**: v0.10 (Interface Definition Language)
+- **Cryptography**: Ed25519 key pairs, HMAC, SHA-256 hashing
+- **Storage**: IC Stable Structures for persistent data
+- **Features**: WebRTC signaling, key exchange, session management
 
 ### Frontend (React/TypeScript)
 - **Framework**: React 18 with TypeScript
 - **Styling**: Tailwind CSS for modern, responsive UI
 - **Build Tool**: Vite for fast development and optimized builds
+- **ICP SDK**: @dfinity packages v0.15.7
 - **Authentication**: Internet Identity client integration
+
+## 🦀 Rust Smart Contract - Secure Messaging
+
+The secure messaging canister is implemented in Rust and provides enterprise-grade encrypted communication capabilities:
+
+### Core Functionality
+
+#### 🔐 Cryptographic Security
+- **Ed25519 Digital Signatures**: Asymmetric cryptography for message authentication
+- **HMAC Authentication**: Message integrity verification using SHA-256
+- **AES Encryption**: Symmetric encryption for message content
+- **Secure Key Generation**: Ring cryptography library for random key generation
+- **Key Exchange Protocol**: Secure establishment of shared encryption keys
+
+#### 💬 Messaging Features
+- **End-to-End Encryption**: All messages encrypted before storage
+- **Message Types**: Support for text, images, files, audio, and video
+- **Conversation Management**: Organized message threads between users
+- **Read Receipts**: Message delivery and read status tracking
+- **Message Attachments**: Secure file sharing capabilities
+- **Reply Threading**: Contextual message replies
+
+#### 🌐 WebRTC Integration
+- **Signaling Server**: Facilitates peer-to-peer connection establishment
+- **ICE Candidate Exchange**: Network traversal for direct connections
+- **Session Description Protocol (SDP)**: Media session negotiation
+- **Real-time Communication**: Voice and video call capabilities
+
+#### 🗄️ Data Persistence
+- **IC Stable Structures**: Persistent storage across canister upgrades
+- **Memory Management**: Efficient virtual memory allocation
+- **Stable BTreeMaps**: Optimized data structures for key-value storage
+- **Serialization**: Candid and Serde for data encoding/decoding
+
+### Technical Implementation
+
+#### Dependencies
+```toml
+[dependencies]
+ic-cdk = "0.13"                    # Internet Computer CDK
+candid = "0.10"                     # Interface definition language
+ic-stable-structures = "0.6"       # Persistent storage
+ring = "0.17"                       # Cryptographic operations
+hmac = "0.12"                       # Message authentication
+sha2 = "0.10"                       # Cryptographic hashing
+uuid = "1.0"                        # Unique identifier generation
+chrono = "0.4"                      # Date and time handling
+base64 = "0.21"                     # Base64 encoding/decoding
+```
+
+#### Storage Architecture
+- **MessageStore**: Encrypted messages with metadata
+- **ConversationStore**: Conversation threads and participants
+- **UserKeyStore**: User cryptographic key pairs
+- **SessionTokenStore**: Authenticated session management
+- **WebRTCSignalStore**: Real-time communication signaling
+- **KeyExchangeStore**: Secure key exchange protocols
+
+#### API Endpoints
+- `send_message()`: Send encrypted messages between users
+- `get_messages()`: Retrieve conversation history
+- `create_conversation()`: Initialize new conversation threads
+- `exchange_keys()`: Establish secure communication channels
+- `webrtc_signal()`: Handle real-time communication setup
+- `get_user_conversations()`: List user's active conversations
+
+### Why Rust for Secure Messaging?
+
+1. **Memory Safety**: Rust's ownership system prevents common security vulnerabilities
+2. **Performance**: Zero-cost abstractions and efficient compiled code
+3. **Cryptography**: Excellent ecosystem for cryptographic libraries
+4. **Concurrency**: Safe concurrent programming for handling multiple connections
+5. **WebAssembly**: Compiles efficiently to WASM for Internet Computer deployment
+6. **Type Safety**: Strong type system prevents runtime errors in critical security code
 
 ## 📋 Current Implementation
 

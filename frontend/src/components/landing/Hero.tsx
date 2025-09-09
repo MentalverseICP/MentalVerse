@@ -1,10 +1,33 @@
 import { FadeInSection, MotionDiv, SlideInSection, scrollToSection } from '@/components/landing/MotionComponent'
-import { CustomConnectButton, CustomConnectedButton } from './CustomConnectButton';
-import { Brain, Calendar } from 'lucide-react';
-import { ConnectWallet, ConnectWalletDropdownMenu } from '@nfid/identitykit/react';
-import { MouseEvent } from 'react';
+import { Calendar } from 'lucide-react';
+import { useContext } from 'react';
+import { AuthContext } from '../../App';
 import MentalIcon from "@/images/mental_mobile.svg";
 
+// Simple connect button component
+const SimpleConnectButton = () => {
+  const { user, login, logout } = useContext(AuthContext);
+  
+  if (user) {
+    return (
+      <button
+        onClick={logout}
+        className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg text-md font-semibold transition-all transform hover:scale-105"
+      >
+        Disconnect
+      </button>
+    );
+  }
+  
+  return (
+    <button
+      onClick={login}
+      className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg text-md font-semibold transition-all transform hover:scale-105"
+    >
+      Connect Wallet
+    </button>
+  );
+};
 
 export const Hero: React.FC = () => {
 
@@ -24,13 +47,7 @@ export const Hero: React.FC = () => {
               Connect with licensed therapists, access mental health resources, and take control of your wellbeing with our comprehensive Web3-powered platform.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 items-center sm:items-start">
-              <ConnectWallet
-                connectButtonComponent={CustomConnectButton}
-                connectedButtonComponent={(props: {connectedAccount?: string; onClick?:(e:MouseEvent<HTMLButtonElement>) => void }) => (
-                  <CustomConnectedButton {...props} />
-                )}
-                dropdownMenuComponent={ConnectWalletDropdownMenu}
-              />
+              <SimpleConnectButton />
               <button
                 type='button'
                 className="border border-green-500/50 text-green-300 px-8 py-3 rounded-lg text-md font-semibold hover:bg-green-600/20 transition-all transform hover:scale-105"

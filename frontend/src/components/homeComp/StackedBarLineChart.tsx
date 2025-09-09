@@ -1,7 +1,7 @@
 import React from "react";
 import { Bar } from "react-chartjs-2";
 import { chartOptions, chartData } from "@/components/ui/chartConfig";
-import { ArrowUpFromDot } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 import { useSidebar } from "../ui/Sidebar";
 
@@ -30,7 +30,7 @@ export const StackedBarLineChart: React.FC<prop> = ({ className }) => {
           >
             75%
           </span>
-          <ArrowUpFromDot className="text-[#F80D38] w-10 h-10 max-sm:w-8 max-sm:h-8 max-[400px]:w-6 max-[400px]:h-6 font-extrabold text-3xl" />
+          <TrendingUp className="text-[#F80D38] w-10 h-10 max-sm:w-8 max-sm:h-8 max-[400px]:w-6 max-[400px]:h-6 font-extrabold text-3xl" />
         </div>
         <div className="flex flex-col items-start mt-3 max-sm:mt-2 max-[400px]:mt-1">
           <span

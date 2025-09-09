@@ -56,7 +56,7 @@ const HistogramChart: React.FC<HistogramChartProps> = ({ className }) => {
             <Bar 
               dataKey="patients" 
               radius={[2, 2, 0, 0]}
-              fill={(entry: any) => entry.color}
+              fill="#8884d8"
             />
           </BarChart>
         </ResponsiveContainer>

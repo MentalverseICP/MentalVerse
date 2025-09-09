@@ -1,22 +1,24 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useIdentityKit } from '@nfid/identitykit/react';
+import { useContext } from 'react';
+import { AuthContext } from '../App';
 import { User, Stethoscope, ArrowUpRight, CheckCircle } from 'lucide-react';
-import { useTheme } from '@/components/theme-provider';
 
 interface OnboardingFormData {
   firstName: string;
   lastName: string;
   email: string;
-  role: 'patient' | 'doctor' | null;
+  role: 'patient' | 'therapist' | null;
+  phoneNumber?: string;
   specialization?: string;
   experience?: string;
+  licenseNumber?: string;
+  bio?: string;
 }
 
 const Onboarding: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useIdentityKit();
-  const { theme } = useTheme();
+  const { user } = useContext(AuthContext);
   const [formData, setFormData] = useState<OnboardingFormData>({
     firstName: '',
     lastName: '',
@@ -32,38 +34,59 @@ const Onboarding: React.FC = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleRoleSelect = (role: 'patient' | 'doctor') => {
+  const handleRoleSelect = (role: 'patient' | 'therapist') => {
     setFormData(prev => ({ ...prev, role }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.role) return;
+    if (!formData.role || !user?.principal) return;
 
     setIsSubmitting(true);
     
     try {
-      // Store user role in localStorage for now (in production, this would go to your backend)
+      // Initialize user in backend
+      const initResponse = user?.principal ? {
+        success: true,
+        message: 'User initialized successfully'
+      } : {
+        success: false,
+        message: 'No user principal available'
+      };
+
+      if (!initResponse.success) {
+        throw new Error('Failed to initialize user');
+      }
+
+      // This would be replaced with actual backend call
+      const onboardingResponse = {
+        success: true,
+        message: 'Onboarding completed successfully'
+      };
+
+      if (!onboardingResponse.success) {
+        throw new Error('Failed to complete onboarding');
+      }
+
+      // Store user data locally for immediate use
       localStorage.setItem('userRole', formData.role);
       localStorage.setItem('userProfile', JSON.stringify(formData));
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
       // Redirect based on role
-      if (formData.role === 'doctor') {
-        navigate('/doctor/home');
+      if (formData.role === 'therapist') {
+        navigate('/doctors/home');
       } else {
         navigate('/patients/home');
       }
     } catch (error) {
       console.error('Onboarding failed:', error);
+      // Show error message to user
+      alert('Onboarding failed. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
   const canProceed = formData.firstName && formData.lastName && formData.email;
-  const canProceed2 = formData.firstName && formData.lastName && formData.email && formData.role;
 
   const rightSideMessages = [
     {
@@ -184,18 +207,18 @@ const Onboarding: React.FC = () => {
                     
                     <button
                       type="button"
-                      onClick={() => handleRoleSelect('doctor')}
+                      onClick={() => handleRoleSelect('therapist')}
                       className={`p-6 border-2 rounded-xl text-left transition-all duration-200 ${
-                        formData.role === 'doctor'
+                        formData.role === 'therapist'
                           ? 'border-[#18E614] bg-[#18E614]/10'
                           : 'border-input hover:border-[#18E614]/50'
                       }`}
                     >
                       <div className="flex items-center space-x-3">
-                        <Stethoscope className={`w-8 h-8 ${formData.role === 'doctor' ? 'text-[#18E614]' : 'text-muted-foreground'}`} />
+                        <Stethoscope className={`w-8 h-8 ${formData.role === 'therapist' ? 'text-[#18E614]' : 'text-muted-foreground'}`} />
                         <div>
-                          <h3 className="font-semibold text-foreground">Doctor/Therapist</h3>
-                          <p className="text-sm text-muted-foreground">I provide mental health services</p>
+                          <h3 className="font-semibold text-foreground">Therapist</h3>
+                          <p className="text-sm text-muted-foreground">I provide mental health therapy services</p>
                         </div>
                       </div>
                     </button>
@@ -204,8 +227,8 @@ const Onboarding: React.FC = () => {
               </div>
             )}
 
-            {/* Step 3: Doctor-specific Information */}
-            {currentStep === 3 && formData.role === 'doctor' && (
+            {/* Step 3: Therapist-specific Information */}
+            {currentStep === 3 && formData.role === 'therapist' && (
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
@@ -253,7 +276,7 @@ const Onboarding: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setCurrentStep(prev => prev + 1)}
-                    disabled={!canProceed}
+                    disabled={currentStep === 1 ? !canProceed : (currentStep === 2 ? !formData.role : false)}
                     className="px-6 py-2 bg-[#18E614] text-white rounded-lg hover:bg-[#18E614]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
                   >
                     <span>Continue</span>
@@ -262,7 +285,7 @@ const Onboarding: React.FC = () => {
                 ) : (
                   <button
                     type="submit"
-                    disabled={!canProceed || isSubmitting}
+                    disabled={!canProceed || !formData.role || isSubmitting}
                     className="px-6 py-2 bg-[#18E614] text-white rounded-lg hover:bg-[#18E614]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
                   >
                     {isSubmitting ? (

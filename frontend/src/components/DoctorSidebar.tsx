@@ -1,16 +1,16 @@
 "use client"
 
 import {
-  VibrateIcon,
+  Smartphone,
   Users,
   Calendar,
   FileText,
   MessageSquare,
   Settings,
   LogOut,
-  BarChart3Icon,
+
   Stethoscope,
-  UserCheck,
+
   TrendingUp,
 } from "lucide-react"
 import {
@@ -152,7 +152,7 @@ export function DoctorSidebar({ className }: { className?: string }) {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="border-t dark:border-[#2f3339] p-4 pl-5 tracking-wide flex flex-row gap-5 h-fit">
-        <VibrateIcon className="self-center text-[#18E614]" />
+        <Smartphone className="self-center text-[#18E614]" />
         {!isCollapsed && (
           <div className="flex flex-col gap-2 justify-items-end">
             <div className="text-sm font-semibold text-[#F80D38]">Emergency Hotlines:</div>

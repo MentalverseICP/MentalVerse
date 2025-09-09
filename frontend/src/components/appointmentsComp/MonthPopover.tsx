@@ -1,5 +1,6 @@
 import React from "react";
-import { Pen, ShoppingBasket, Clock } from "lucide-react";
+import { ShoppingBag, Clock } from "lucide-react";
+import { Edit } from 'lucide-react';
 import moment from "moment";
 
 interface MonthPopoverProps {
@@ -46,10 +47,10 @@ const MonthPopover = ({ event, onClose, style = {}, onEdit }: MonthPopoverProps)
                         onClick={() => onEdit(event)} // Pass event to onEdit
                         className="p-2 rounded-full border border-[#DFE0E2] hover:bg-black hover:border-white transition-all hover:text-white text-black dark:hover:text-black dark:text-white dark:hover:bg-[#DFE0E2]"
                     >
-                        <Pen size={14} fill="1" />
+                        <Edit size={14} fill="1" />
                     </button>
                     <button title="button" type="button" onClick={onClose} className="p-2 rounded-full border border-[#DFE0E2] hover:bg-black hover:border-white transition-all hover:text-white text-black dark:hover:text-black dark:text-white dark:hover:bg-[#DFE0E2]">
-                        <ShoppingBasket size={16} fill="1" />
+                        <ShoppingBag size={16} fill="1" />
                     </button>
                 </div>
             </div>

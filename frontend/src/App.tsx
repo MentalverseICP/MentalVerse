@@ -8,37 +8,60 @@ import { AppRoutes } from './AppRoutes'
 import SearchBar from './components/SearchBar'
 import LandingPage from '@/pages/LandingPage'
 import Onboarding from '@/pages/Onboarding'
-import "@nfid/identitykit/react/styles.css"
-import { IdentityKitProvider, useIdentityKit } from "@nfid/identitykit/react"
-import { NFIDW, InternetIdentity, Stoic, OISY } from "@nfid/identitykit"
+import { AuthClient } from '@dfinity/auth-client'
+import { createContext, useContext } from 'react'
 import Loader from './components/Loader'
 
 interface SubAppProps {
-  searchTerm: string;
   onSearchChange: (value: string) => void;
 }
 
+interface User {
+  authenticated: boolean;
+}
+
+// Simple auth context
+export const AuthContext = createContext<{ user: User | null; login: () => void; logout: () => void }>({ 
+  user: null, 
+  login: () => {}, 
+  logout: () => {} 
+})
+
 function App() {
+  const [user, setUser] = useState<User | null>(null)
+  
+  const login = async () => {
+    const authClient = await AuthClient.create()
+    await authClient.login({
+      identityProvider: 'https://identity.ic0.app/#authorize',
+      onSuccess: () => {
+        setUser({ authenticated: true })
+      }
+    })
+  }
+  
+  const logout = async () => {
+    const authClient = await AuthClient.create()
+    await authClient.logout()
+    setUser(null)
+  }
+  
   return (
     <ThemeProvider defaultTheme='dark' storageKey='vite-ui-theme'>
-      <IdentityKitProvider
-        signers={[ InternetIdentity, NFIDW]}
-        authType="ACCOUNTS"
-        windowOpenerFeatures="top=250rem,left=300px,width=280rem,height=500rem"
-      >
+      <AuthContext.Provider value={{ user, login, logout }}>
         <BrowserRouter>
           <AppRouter />
         </BrowserRouter>
-      </IdentityKitProvider>
+      </AuthContext.Provider>
     </ThemeProvider>
   )
 }
 
 function AppRouter() {
-  const [searchTerm, setSearchTerm] = useState<string>('')
-  const { user } = useIdentityKit()
+  const { user } = useContext(AuthContext)
   const authenticated = !!user
   const [isLoading, setIsLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
 
   // Loader state
   const [showLoader, setShowLoader] = useState(false)
@@ -100,7 +123,6 @@ function AppRouter() {
         element={
           authenticated ? (
             <SubApp
-              searchTerm={searchTerm}
               onSearchChange={handleSearchChange}
             />
           ) : (
@@ -112,7 +134,7 @@ function AppRouter() {
   )
 }
 
-function SubApp({ searchTerm, onSearchChange }: SubAppProps) {
+function SubApp({ onSearchChange }: SubAppProps) {
   // Check if user has completed onboarding
   const userRole = localStorage.getItem('userRole');
   const hasCompletedOnboarding = !!userRole;

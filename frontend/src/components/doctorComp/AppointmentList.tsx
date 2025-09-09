@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { Calendar, Clock, User, MessageCircle, Video, Phone } from "lucide-react";
-import { useTheme } from "../theme-provider";
+import { Calendar, User, Video, Phone, MessageCircle } from "lucide-react";
 
 interface Appointment {
   id: number;
@@ -67,7 +66,6 @@ interface AppointmentListProps {
 
 const AppointmentList: React.FC<AppointmentListProps> = ({ className }) => {
   const [appointments] = useState<Appointment[]>(mockAppointments);
-  const { theme } = useTheme();
 
   const getTypeIcon = (type: string) => {
     switch (type) {

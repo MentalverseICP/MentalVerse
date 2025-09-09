@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bot, MessageCircle, Search, SearchIcon, SearchX, X } from 'lucide-react'; 
+import { Search } from 'lucide-react'; 
 import notification from '@/images/Notification Icon.svg'
 import { useTheme } from "@/components/theme-provider"
 import { cn } from '@/lib/utils';

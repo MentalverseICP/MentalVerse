@@ -1,4 +1,5 @@
-import { Phone, MessageCircle, Activity,  } from 'lucide-react';
+import { Phone, Activity } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 import { useState } from 'react';
 import { FadeInSection, SlideInSection } from '@/components/landing/MotionComponent'
 

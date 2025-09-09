@@ -1,12 +1,36 @@
-import { Brain, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { MouseEvent, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CustomConnectButton, CustomConnectedButton } from "./CustomConnectButton";
 import { scrollToSection } from "./MotionComponent";
-import { ConnectWallet, ConnectWalletDropdownMenu } from "@nfid/identitykit/react";
+import { useContext } from 'react';
+import { AuthContext } from '../../App';
 import MentalIcon from "@/images/mental_mobile.svg";
 
-
+// Simple connect button component
+const SimpleConnectButton = () => {
+  const { user, login, logout } = useContext(AuthContext);
+  
+  if (user) {
+    return (
+      <button
+        onClick={logout}
+        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
+      >
+        Disconnect
+      </button>
+    );
+  }
+  
+  return (
+    <button
+      onClick={login}
+      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
+    >
+      Connect Wallet
+    </button>
+  );
+};
 
 export const Header: React.FC<{ onWalletDisconnect?: () => void }> = ({ onWalletDisconnect }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -15,7 +39,7 @@ export const Header: React.FC<{ onWalletDisconnect?: () => void }> = ({ onWallet
   account?: string;
 };
 
-  const useAuth = (): { user: User | null } => ({ user: null });
+
   // const { user } = useAuth();
   const navigate = useNavigate();
   const ids = [
@@ -35,12 +59,7 @@ export const Header: React.FC<{ onWalletDisconnect?: () => void }> = ({ onWallet
   }, []);
 
 
-  const handleDisconnect = () => {
-    if (onWalletDisconnect) {
-      onWalletDisconnect();
-      navigate('/');
-    }
-  };
+
 
   return (
     <header className={`fixed w-full z-50 transition-all duration-500 ${isScrolled ? 'bg-black/95 backdrop-blur-lg border-b border-green-500/30' : ''}`}>
@@ -69,13 +88,7 @@ export const Header: React.FC<{ onWalletDisconnect?: () => void }> = ({ onWallet
           </nav>
           
           <div className="hidden lg:flex items-center space-x-4">
-            <ConnectWallet
-              connectButtonComponent={CustomConnectButton}
-              connectedButtonComponent={(props: {connectedAccount?: string; onClick?:(e:MouseEvent<HTMLButtonElement>) => void }) => (
-                <CustomConnectedButton {...props} />
-              )}
-              dropdownMenuComponent={ConnectWalletDropdownMenu}
-            />
+            <SimpleConnectButton />
           </div>
           
           <button 
@@ -101,13 +114,7 @@ export const Header: React.FC<{ onWalletDisconnect?: () => void }> = ({ onWallet
                 </button>
               ))}
               <div className="pt-4 border-t border-gray-700 flex justify-center">
-                <ConnectWallet
-                  connectButtonComponent={CustomConnectButton}
-                  connectedButtonComponent={(props: {connectedAccount?: string; onClick?:(e:MouseEvent<HTMLButtonElement>) => void }) => (
-                    <CustomConnectedButton {...props} />
-                  )}
-                  dropdownMenuComponent={ConnectWalletDropdownMenu}
-                />
+                <SimpleConnectButton />
               </div>
             </nav>
           </div>

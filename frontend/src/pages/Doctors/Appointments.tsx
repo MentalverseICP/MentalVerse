@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSidebar } from "@/components/ui/Sidebar";
-import { Calendar, Clock, User, MessageCircle, Video, Phone, Plus, Filter, Search } from 'lucide-react';
+import { Calendar, Clock, User, Video, Phone, Plus, Filter, Search, MessageCircle } from 'lucide-react';
 import { useTheme } from '@/components/theme-provider';
 
 interface Appointment {

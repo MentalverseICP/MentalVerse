@@ -1,4 +1,4 @@
-import { ArrowRight, BookOpen, Headphones, MessageCircle, Phone, TrendingUp, Video } from "lucide-react";
+import { ArrowUpRight, Headphones, Phone, TrendingUp, Video, BookOpen, MessageCircle } from "lucide-react";
 import { FadeInSection } from "./MotionComponent";
 
 export const ResourcesSection: React.FC = () => {
@@ -68,7 +68,7 @@ export const ResourcesSection: React.FC = () => {
                 <p className="text-gray-300 mb-4">{resource.description}</p>
                 <button className="text-green-400 hover:text-green-300 font-medium flex items-center group-hover:gap-2 transition-all duration-300">
                   Access Resource
-                  <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform duration-300" />
+                  <ArrowUpRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform duration-300" />
                 </button>
               </div>
             </FadeInSection>

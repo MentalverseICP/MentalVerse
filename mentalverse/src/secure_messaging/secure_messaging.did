@@ -1,0 +1,103 @@
+type MessageType = variant {
+  Text;
+  Image;
+  File;
+  Audio;
+  Video;
+  System;
+};
+
+type ConversationType = variant {
+  DirectMessage;
+  GroupChat;
+  SessionChat;
+};
+
+type KeyType = variant {
+  RSA2048;
+  ECDSA;
+  Ed25519;
+};
+
+type Attachment = record {
+  id: text;
+  filename: text;
+  content_type: text;
+  size: nat64;
+  encrypted_data: text;
+};
+
+type ConversationMetadata = record {
+  title: opt text;
+  description: opt text;
+  session_id: opt text;
+  encryption_key_id: text;
+};
+
+type Message = record {
+  id: nat64;
+  conversation_id: text;
+  sender_id: principal;
+  recipient_id: principal;
+  content: text;
+  message_type: MessageType;
+  timestamp: nat64;
+  is_read: bool;
+  is_deleted: bool;
+  reply_to: opt nat64;
+  attachments: vec Attachment;
+};
+
+type Conversation = record {
+  id: text;
+  participants: vec principal;
+  conversation_type: ConversationType;
+  created_at: nat64;
+  updated_at: nat64;
+  last_message_id: opt nat64;
+  is_archived: bool;
+  metadata: ConversationMetadata;
+};
+
+type UserKey = record {
+  user_id: principal;
+  public_key: text;
+  key_type: KeyType;
+  created_at: nat64;
+  is_active: bool;
+};
+
+type MessageResult = record {
+  success: bool;
+  message: opt Message;
+  error: opt text;
+};
+
+type ConversationResult = record {
+  success: bool;
+  conversation: opt Conversation;
+  error: opt text;
+};
+
+type Stats = vec record { text; nat64 };
+
+service : {
+  // User key management
+  register_user_key: (text, KeyType) -> (variant { Ok: UserKey; Err: text });
+  get_user_key: (principal) -> (opt UserKey) query;
+  
+  // Conversation management
+  create_conversation: (vec principal, ConversationType, ConversationMetadata) -> (ConversationResult);
+  get_user_conversations: () -> (vec Conversation) query;
+  archive_conversation: (text) -> (variant { Ok; Err: text });
+  
+  // Message management
+  send_message: (text, principal, text, MessageType, opt nat64, vec Attachment) -> (MessageResult);
+  get_conversation_messages: (text, opt nat64, opt nat64) -> (vec Message) query;
+  mark_message_read: (nat64) -> (variant { Ok; Err: text });
+  delete_message: (nat64) -> (variant { Ok; Err: text });
+  
+  // Utility functions
+  health_check: () -> (text) query;
+  get_stats: () -> (Stats) query;
+}

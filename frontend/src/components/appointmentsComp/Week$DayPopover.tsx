@@ -1,6 +1,7 @@
 import * as Popover from "@radix-ui/react-popover";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { X, ChevronDown, Plus, Pen, ShoppingBasket, Clock } from "lucide-react";
+import { X, ChevronDown, Plus, ShoppingBag, Clock } from "lucide-react";
+import { Edit } from 'lucide-react';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import moment from "moment";
@@ -227,7 +228,7 @@ const Week$DayPopover = ({
               onClick={deleteEvent}
               title="Delete Event"
             >
-              <ShoppingBasket size={20} />
+              <ShoppingBag size={20} />
             </button>
           )}
           <button
@@ -237,7 +238,7 @@ const Week$DayPopover = ({
           >
             {selectedEvent ? (
               <div className="flex items-center gap-1">
-                <Pen size={10} />
+                <Edit size={10} />
                 <span className="block text-[#2f3339] dark:text-gray-200 font-bold dark:font-medium text-[10px] uppercase">
                   Edit appointment
                 </span>

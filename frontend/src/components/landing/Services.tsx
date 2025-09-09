@@ -1,5 +1,5 @@
 import { FadeInSection } from '@/components/landing/MotionComponent'
-import { Brain, Users, User, Phone, Heart, Smile, Shield, Sparkles } from 'lucide-react';
+import { Brain, Users, User, Phone, Heart, Shield, Sparkles, Smile } from 'lucide-react';
 
 
 export const Services: React.FC = () => {

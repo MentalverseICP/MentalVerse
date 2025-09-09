@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/Button"
 import { TooltipProvider } from "@/components/ui/Tooltip"
 import { Slot } from "@radix-ui/react-slot"
-import { ChevronsLeftRightEllipsis } from "lucide-react"
+import { Menu } from "lucide-react"
 
 const SIDEBAR_COOKIE_NAME = "sidebar:state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
@@ -274,7 +274,7 @@ export const SidebarTrigger = React.forwardRef<
       }}
       {...props}
     >
-      <ChevronsLeftRightEllipsis className="h-5 w-5" />
+      <Menu className="h-5 w-5" />
     </Button>
   )
 })

@@ -3,7 +3,8 @@ import { useTheme } from "@/components/theme-provider"
 import { Link } from "react-router-dom"
 import mentalIconMobileLight from "@/images/mental_Icon_mobile_light.svg"
 import mentalIconMobileDark from "@/images/mental_mobile.svg"
-import { useIdentityKit } from "@nfid/identitykit/react";
+import { useContext } from 'react';
+import { AuthContext } from '../App';
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Brain } from 'lucide-react';
@@ -21,7 +22,7 @@ const Logout = ({ onWalletDisconnect }: LogoutProps) => {
     return theme === 'dark' ? mentalIconMobileDark : mentalIconMobileLight
   }
   
-  const { disconnect, user } = useIdentityKit();
+  const { logout, user } = useContext(AuthContext);
   const navigate = useNavigate();
   const [showLoader, setShowLoader] = useState(false);
 
@@ -35,7 +36,7 @@ const Logout = ({ onWalletDisconnect }: LogoutProps) => {
   const handleDisconnect = async () => {
     try {
       setShowLoader(true);
-      await disconnect();
+      await logout();
       if (onWalletDisconnect) {
         onWalletDisconnect();
       }

@@ -48,6 +48,7 @@ declare module 'lucide-react' {
   export const MoreVertical: Icon;
   export const Edit: Icon;
   export const Trash: Icon;
+  export const Trash2: Icon;
   export const Eye: Icon;
   export const EyeOff: Icon;
   export const Download: Icon;
@@ -58,6 +59,7 @@ declare module 'lucide-react' {
   export const Bell: Icon;
   export const BellOff: Icon;
   export const MessageSquare: Icon;
+  export const MessageCircle: Icon;
   export const FileText: Icon;
   export const Image: Icon;
   export const Video: Icon;
@@ -238,6 +240,22 @@ declare module 'lucide-react' {
   export const Fireworks: Icon;
   export const Sparkles: Icon;
   export const Sparkle: Icon;
+  export const Loader2: Icon;
+  export const BookOpen: Icon;
+  export const Smile: Icon;
+  export const ChevronRight: Icon;
+  export const ChevronLeft: Icon;
+  export const ChevronLeftIcon: Icon;
+  export const ChevronRightIcon: Icon;
+  export const MoreHorizontal: Icon;
+  export const MoreHorizontalIcon: Icon;
+  export const ArrowLeft: Icon;
+  export const Circle: Icon;
+  export const SearchX: Icon;
+  export const SearchIcon: Icon;
+  export const Bot: Icon;
+  export const BarChart3: Icon;
+  export const BarChart3Icon: Icon;
   export const Glitter: Icon;
   export const Diamond: Icon;
   export const Gem: Icon;

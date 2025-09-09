@@ -15,7 +15,8 @@
       "main": "src/mentalverse_backend/main.mo",
       "type": "motoko",
       "dependencies": [
-        "internet_identity"
+        "internet_identity",
+        "secure_messaging"
       ]
     },
     "mvt_token_canister": {
@@ -25,10 +26,19 @@
         "internet_identity"
       ]
     },
+    "secure_messaging": {
+      "type": "rust",
+      "package": "secure_messaging",
+      "candid": "src/secure_messaging/secure_messaging.did",
+      "dependencies": [
+        "internet_identity"
+      ]
+    },
     "frontend": {
       "dependencies": [
         "mentalverse_backend",
         "mvt_token_canister",
+        "secure_messaging",
         "internet_identity"
       ],
       "source": [

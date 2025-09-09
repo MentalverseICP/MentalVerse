@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { Search, MessageCircle, Calendar, User } from "lucide-react";
-import { useTheme } from "../theme-provider";
+import { Search, Calendar, User, MessageCircle } from "lucide-react";
 import {
   Pagination,
   PaginationContent,
@@ -85,12 +84,11 @@ interface PatientListProps {
 }
 
 const PatientList: React.FC<PatientListProps> = ({ className }) => {
-  const [patients, setPatients] = useState<Patient[]>(mockPatients);
+  const [patients] = useState<Patient[]>(mockPatients);
   const [selectedStatus, setSelectedStatus] = useState<"All" | "Active" | "Inactive" | "Pending">("All");
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const patientsPerPage = 5;
-  const { theme } = useTheme();
 
   const handleStatusFilter = (status: "All" | "Active" | "Inactive" | "Pending") => {
     setSelectedStatus(status);

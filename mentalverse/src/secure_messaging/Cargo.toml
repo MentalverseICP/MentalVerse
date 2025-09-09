@@ -1,0 +1,26 @@
+[package]
+name = "secure_messaging"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+candid.workspace = true
+ic-cdk.workspace = true
+ic-cdk-timers.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+rand.workspace = true
+base64.workspace = true
+time.workspace = true
+getrandom = { version = "0.2", features = ["custom"] }
+hmac = "0.12"
+ring = "0.17"
+uuid = { version = "1.0", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+
+[dependencies.ic-stable-structures]
+version = "0.6"

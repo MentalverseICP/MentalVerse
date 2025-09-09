@@ -7,6 +7,9 @@ MentalVerse is a web application designed to provide a supportive digital space 
 - Modern React + TypeScript frontend
 - Fast development with Vite
 - Community and resource sections
+- Internet Computer Protocol (ICP) integration with @dfinity packages v0.15.7
+- Secure messaging and authentication via ICP canisters
+- Rust-based secure messaging canister for end-to-end encrypted communication
 
 ## Getting Started
 
@@ -43,7 +46,44 @@ npm run dev
 yarn dev
 ```
 
-The app will be available at [http://localhost:3000](http://localhost:3000) by default.
+The app will be available at [http://localhost:5173](http://localhost:5173) by default.
+
+## Recent Updates
+
+### Current SDK Versions (January 2025)
+
+The project uses the following Internet Computer Protocol (ICP) SDK versions:
+
+- **@dfinity packages v0.15.7:**
+  - `@dfinity/agent` - ICP agent for canister communication
+  - `@dfinity/auth-client` - Internet Identity authentication
+  - `@dfinity/candid` - Candid interface definition language
+  - `@dfinity/identity` - Identity management
+  - `@dfinity/principal` - Principal handling
+
+- **Backend Smart Contracts:**
+  - **Motoko Canisters**: Main backend logic and MVT token management
+  - **Rust Canister**: Secure messaging with end-to-end encryption
+  - **IC-CDK v0.13**: Rust Canister Development Kit
+  - **Candid v0.10**: Interface definition language
+
+### Rust Smart Contract Integration
+
+The project includes a **secure messaging canister** written in Rust that provides:
+
+- **End-to-End Encryption**: Messages encrypted using Ed25519 cryptography
+- **WebRTC Signaling**: Peer-to-peer communication setup
+- **Key Exchange**: Secure cryptographic key management
+- **Session Management**: Encrypted session tokens and authentication
+- **Stable Storage**: Persistent message and conversation storage
+- **Inter-Canister Communication**: Seamless integration with Motoko canisters
+
+**What Rust is doing:**
+- Handling cryptographic operations for secure messaging
+- Managing encrypted message storage and retrieval
+- Providing WebRTC signaling for real-time communication
+- Implementing secure key exchange protocols
+- Ensuring data persistence across canister upgrades
 
 ### Building for Production
 
