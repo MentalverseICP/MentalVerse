@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useContext } from 'react';
 import { AuthContext } from '../App';
+import { useAuth } from '../hooks/useAuth';
 import { User, Stethoscope, ArrowUpRight, CheckCircle } from 'lucide-react';
 
 interface OnboardingFormData {
@@ -19,6 +20,7 @@ interface OnboardingFormData {
 const Onboarding: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
+  const { registerUser } = useAuth();
   const [formData, setFormData] = useState<OnboardingFormData>({
     firstName: '',
     lastName: '',
@@ -40,32 +42,17 @@ const Onboarding: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.role || !user?.principal) return;
+    if (!formData.role || !user?.authenticated) return;
 
     setIsSubmitting(true);
     
     try {
-      // Initialize user in backend
-      const initResponse = user?.principal ? {
-        success: true,
-        message: 'User initialized successfully'
-      } : {
-        success: false,
-        message: 'No user principal available'
-      };
+      // Register user with backend using proper role mapping
+      const backendRole = formData.role === 'therapist' ? 'doctor' : 'patient';
+      const registrationResult = await registerUser(backendRole as 'patient' | 'doctor');
 
-      if (!initResponse.success) {
-        throw new Error('Failed to initialize user');
-      }
-
-      // This would be replaced with actual backend call
-      const onboardingResponse = {
-        success: true,
-        message: 'Onboarding completed successfully'
-      };
-
-      if (!onboardingResponse.success) {
-        throw new Error('Failed to complete onboarding');
+      if (!registrationResult.success) {
+        throw new Error(registrationResult.message || 'Failed to register user');
       }
 
       // Store user data locally for immediate use
@@ -81,7 +68,7 @@ const Onboarding: React.FC = () => {
     } catch (error) {
       console.error('Onboarding failed:', error);
       // Show error message to user
-      alert('Onboarding failed. Please try again.');
+      alert(`Onboarding failed: ${error instanceof Error ? error.message : 'Please try again.'}`);
     } finally {
       setIsSubmitting(false);
     }

@@ -58,9 +58,9 @@ export const AppRoutes: React.FC<RouteProps> = () => {
           <Route path="/patients/token-staking" element={<TokenStaking />} />
           
           {/* Doctor Routes */}
-          <Route path="/doctor/home" element={<DoctorHome />} />
-          <Route path="/doctor/patients" element={<DoctorPatients />} />
-          <Route path="/doctor/appointments" element={<DoctorAppointments />} />
+          <Route path="/doctors/home" element={<DoctorHome />} />
+          <Route path="/doctors/patients" element={<DoctorPatients />} />
+          <Route path="/doctors/appointments" element={<DoctorAppointments />} />
           
           {/* Shared Routes */}
           <Route path="/login" element={<Login />} />

@@ -145,7 +145,7 @@ function SubApp({ onSearchChange }: SubAppProps) {
   }
 
   // Determine which sidebar to show based on user role
-  const isDoctor = userRole === 'doctor';
+  const isDoctor = userRole === 'therapist';
 
   return (
     <div className="min-h-screen">
