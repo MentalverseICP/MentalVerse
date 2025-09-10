@@ -46,32 +46,32 @@ const Onboarding: React.FC = () => {
 
     setIsSubmitting(true);
     
-    try {
-      // Register user with backend using proper role mapping
-      const backendRole = formData.role === 'therapist' ? 'doctor' : 'patient';
-      const registrationResult = await registerUser(backendRole as 'patient' | 'doctor');
+    // try {
+    //   // Register user with backend using proper role mapping
+    //   const backendRole = formData.role === 'therapist' ? 'doctor' : 'patient';
+    //   const registrationResult = await registerUser(backendRole as 'patient' | 'doctor');
 
-      if (!registrationResult.success) {
-        throw new Error(registrationResult.message || 'Failed to register user');
-      }
+    //   if (!registrationResult.success) {
+    //     throw new Error(registrationResult.message || 'Failed to register user');
+    //   }
 
-      // Store user data locally for immediate use
-      localStorage.setItem('userRole', formData.role);
-      localStorage.setItem('userProfile', JSON.stringify(formData));
+    //   // Store user data locally for immediate use
+    //   localStorage.setItem('userRole', formData.role);
+    //   localStorage.setItem('userProfile', JSON.stringify(formData));
       
-      // Redirect based on role
+    //   // Redirect based on role
       if (formData.role === 'therapist') {
-        navigate('/doctors/home');
+        navigate('/therapist/home');
       } else {
         navigate('/patients/home');
       }
-    } catch (error) {
-      console.error('Onboarding failed:', error);
-      // Show error message to user
-      alert(`Onboarding failed: ${error instanceof Error ? error.message : 'Please try again.'}`);
-    } finally {
-      setIsSubmitting(false);
-    }
+    // } catch (error) {
+    //   console.error('Onboarding failed:', error);
+    //   // Show error message to user
+    //   alert(`Onboarding failed: ${error instanceof Error ? error.message : 'Please try again.'}`);
+    // } finally {
+    //   setIsSubmitting(false);
+    // }
   };
   const canProceed = formData.firstName && formData.lastName && formData.email;
 
