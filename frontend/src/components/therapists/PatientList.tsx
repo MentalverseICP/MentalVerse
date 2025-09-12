@@ -166,12 +166,12 @@ const PatientList: React.FC<PatientListProps> = ({ className }) => {
         <table className="w-full table-auto border-separate border-spacing-y-3">
           <thead>
             <tr className="text-left">
-              <th className="pb-2 text-xs font-semibold text-muted-foreground">Patient</th>
-              <th className="pb-2 text-xs font-semibold text-muted-foreground">Condition</th>
-              <th className="pb-2 text-xs font-semibold text-muted-foreground">Last Visit</th>
-              <th className="pb-2 text-xs font-semibold text-muted-foreground">Next Appointment</th>
-              <th className="pb-2 text-xs font-semibold text-muted-foreground">Status</th>
-              <th className="pb-2 text-xs font-semibold text-muted-foreground">Actions</th>
+              <th className="pb-2 text-xs max-sm:text-[10px] font-semibold text-muted-foreground">Patient</th>
+              <th className="pb-2 text-xs max-sm:text-[10px] font-semibold text-muted-foreground">Condition</th>
+              <th className="pb-2 text-xs max-sm:text-[10px] font-semibold text-muted-foreground">Last Visit</th>
+              <th className="pb-2 text-xs max-sm:text-[10px] font-semibold text-muted-foreground">Next Appointment</th>
+              <th className="pb-2 text-xs max-sm:text-[10px] font-semibold text-muted-foreground">Status</th>
+              <th className="pb-2 text-xs max-sm:text-[10px] font-semibold text-muted-foreground">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -179,28 +179,28 @@ const PatientList: React.FC<PatientListProps> = ({ className }) => {
               <tr key={patient.id} className="bg-background rounded-lg">
                 <td className="p-4">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-[#18E614] rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                    <div className="w-10 h-10 max-sm:w-8 max-sm:h-8 bg-[#18E614] rounded-full flex items-center justify-center text-white font-semibold text-sm max-sm:text-xs">
                       {patient.avatar}
                     </div>
                     <div>
-                      <div className="font-medium text-foreground">{patient.name}</div>
-                      <div className="text-sm text-muted-foreground">
+                      <div className="font-medium text-foreground text-sm max-sm:text-xs">{patient.name}</div>
+                      <div className="text-sm max-sm:text-xs text-muted-foreground">
                         {patient.age} years • {patient.gender}
                       </div>
                     </div>
                   </div>
                 </td>
                 <td className="p-4">
-                  <div className="text-sm text-foreground">{patient.condition}</div>
+                  <div className="text-sm max-sm:text-xs text-foreground">{patient.condition}</div>
                 </td>
                 <td className="p-4">
-                  <div className="text-sm text-muted-foreground">{patient.lastVisit}</div>
+                  <div className="text-sm max-sm:text-xs text-muted-foreground">{patient.lastVisit}</div>
                 </td>
                 <td className="p-4">
-                  <div className="text-sm text-foreground">{patient.nextAppointment}</div>
+                  <div className="text-sm max-sm:text-xs text-foreground">{patient.nextAppointment}</div>
                 </td>
                 <td className="p-4">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(patient.status)}`}>
+                  <span className={`px-2 py-1 rounded-full text-xs max-sm:text-[10px] font-medium ${getStatusColor(patient.status)}`}>
                     {getStatusText(patient.status)}
                   </span>
                 </td>

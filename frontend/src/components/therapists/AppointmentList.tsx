@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Calendar, User, Video, Phone, MessageCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface Appointment {
   id: number;
@@ -57,6 +58,50 @@ const mockAppointments: Appointment[] = [
     status: 'completed',
     duration: "45 min",
     condition: "Bipolar Disorder"
+  },
+  {
+    id: 5,
+    patientName: "Lisa Wang",
+    patientAvatar: "LW",
+    date: "2024-01-23",
+    time: "9:00 AM",
+    type: 'video',
+    status: 'upcoming',
+    duration: "50 min",
+    condition: "OCD"
+  },
+  {
+    id: 6,
+    patientName: "Robert Kim",
+    patientAvatar: "RK",
+    date: "2024-01-23",
+    time: "1:00 PM",
+    type: 'phone',
+    status: 'upcoming',
+    duration: "30 min",
+    condition: "Social Anxiety"
+  },
+  {
+    id: 7,
+    patientName: "Maria Garcia",
+    patientAvatar: "MG",
+    date: "2024-01-21",
+    time: "4:00 PM",
+    type: 'in-person',
+    status: 'completed',
+    duration: "60 min",
+    condition: "Depression"
+  },
+  {
+    id: 8,
+    patientName: "James Wilson",
+    patientAvatar: "JW",
+    date: "2024-01-24",
+    time: "10:30 AM",
+    type: 'video',
+    status: 'upcoming',
+    duration: "45 min",
+    condition: "PTSD"
   }
 ];
 
@@ -114,10 +159,10 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ className }) => {
   const recentAppointments = appointments.filter(apt => apt.status === 'completed');
 
   return (
-    <div className={`bg-transparent p-4 rounded-3xl ${className}`}>
-      <div className="mb-4">
+    <div className={`bg-transparent  rounded-3xl ${className}`}>
+      <div className="mb-10">
         <h3 className="text-md font-semibold text-foreground mb-3">Today's Appointments</h3>
-        <div className="space-y-3">
+        <div className="space-y-5">
           {upcomingAppointments.map((appointment) => (
             <div key={appointment.id} className="bg-background p-3 rounded-lg border border-border">
               <div className="flex items-center justify-between">
@@ -181,9 +226,12 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ className }) => {
       )}
 
       <div className="mt-4 text-center">
-        <button className="text-sm text-[#18E614] hover:text-[#18E614]/80 transition-colors">
+        <Link 
+          to="/therapist/appointments" 
+          className="text-sm text-[#18E614] hover:text-[#18E614]/80 transition-colors inline-block"
+        >
           View All Appointments
-        </button>
+        </Link>
       </div>
     </div>
   );

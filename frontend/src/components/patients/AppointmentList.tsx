@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useTheme } from "@/components/theme-provider"
+import { useTheme } from "@/components/shared/theme-provider";
+import { Link } from "react-router-dom";
 
 interface prop {
   className?: string;
@@ -13,6 +14,11 @@ type Appointment = {
 };
 
 const upcomingAppointments: Appointment[] = [
+  { doctor: 'Dr. Sarah Johnson', type: 'Video Call', date: 'Mon, Dec 11', typeColor: '#18e614' },
+  { doctor: 'Dr. Michael Chen', type: 'Phone Call', date: 'Tues, Dec 12', typeColor: '#ffc107' },
+  { doctor: 'Dr. Emily Rodriguez', type: 'In-Person', date: 'Wed, Dec 13', typeColor: '#6366F1' },
+  { doctor: 'Dr. David Thompson', type: 'Video Call', date: 'Thurs, Dec 14', typeColor: '#18e614' },
+  { doctor: 'Dr. Lisa Wang', type: 'Phone Call', date: 'Fri, Dec 15', typeColor: '#ffc107' },
   { doctor: 'Dr. Ibrahim Yekeni', type: 'Emergency', date: 'Tues, Oct 24', typeColor: '#18e614' },
   { doctor: 'Dr. Ebuka Kelechi', type: 'Examination', date: 'Mon, Nov 2', typeColor: '#ffc107' },
   { doctor: 'Dr. Bridget Olowojoje', type: 'Consultation', date: 'Fri, Nov 13', typeColor: '#129a1b' },
@@ -46,11 +52,11 @@ const AppointmentList: React.FC<prop> = ({ className }) => {
   const { theme } = useTheme()
 
   return (
-    <div className={`w-full p-4 bg-transparent text-white mt-6 space-y-6 ${className}`}>
+    <div className={`w-full p-2 bg-transparent text-white space-y-4 ${className}`}>
       {/* Upcoming Appointments */}
       <div>
         <h2 className={`uppercase font-bold text-xs max-lg:text-md ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Upcoming Appointments</h2>
-        <ul className="space-y-4 mt-4">
+        <ul className="space-y-2 mt-2">
           {upcomingAppointments.map((appointment, index) => (
             <li
               key={index}
@@ -74,7 +80,7 @@ const AppointmentList: React.FC<prop> = ({ className }) => {
       {/* Previous Appointments */}
       <div>
         <h2 className={`uppercase font-bold text-xs max-lg:text-md ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Previous Appointments</h2>
-        <div className="flex justify-between mt-4 rounded-lg overflow-hidden dark:border-[#2f3339] border-2">
+        <div className="flex justify-between mt-2 rounded-lg overflow-hidden dark:border-[#2f3339] border-2">
           <button
             type='button'
             className={`px-4 py-2 uppercase text-xs font-bold ${
@@ -103,7 +109,7 @@ const AppointmentList: React.FC<prop> = ({ className }) => {
             Month
           </button>
         </div>
-        <ul className="space-y-4 mt-4">
+        <ul className="space-y-2 mt-2">
           {previousAppointments[tab].map((appointment, index) => (
             <li
               key={index}
@@ -122,6 +128,16 @@ const AppointmentList: React.FC<prop> = ({ className }) => {
             </li>
           ))}
         </ul>
+      </div>
+
+      {/* View All Appointments Link */}
+      <div className="mt-4 text-center">
+        <Link 
+          to="/appointments" 
+          className="text-sm text-[#18E614] hover:text-[#18E614]/80 transition-colors inline-block"
+        >
+          View All Appointments
+        </Link>
       </div>
     </div>
   );

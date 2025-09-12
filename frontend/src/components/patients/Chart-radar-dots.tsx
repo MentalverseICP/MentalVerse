@@ -146,21 +146,21 @@ export function ChartRadar({ className }: { className?: string }) {
       </CardContent>
       
       {/* Legend */}
-      <div className="px-4 sm:px-6 pb-4 sm:pb-6 max-sm:px-3 max-sm:pb-3 max-[400px]:px-2 max-[400px]:pb-2 max-xs:sr-only">
+      <div className="px-2 sm:px-4 pb-2 sm:pb-4 max-sm:px-2 max-sm:pb-2 max-[400px]:px-1 max-[400px]:pb-1 max-xs:sr-only">
         <div className="
-          grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 
-          max-sm:grid-cols-4
-          gap-2 sm:gap-3 md:gap-4 max-sm:gap-1
-          text-xs sm:text-sm max-sm:text-[10px] max-[400px]:text-[9px]
+          grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 
+          max-sm:grid-cols-5
+          gap-1 sm:gap-2 md:gap-2 max-sm:gap-0.5
+          text-[8px] sm:text-[10px] max-sm:text-[7px] max-[400px]:text-[6px]
         ">
           {legendItems.map((item, index) => (
             <div 
               key={index} 
-              className="flex items-center gap-1.5 sm:gap-2 max-sm:gap-1 max-[400px]:gap-0.5"
+              className="flex items-center gap-0.5 sm:gap-1 max-sm:gap-0.5 max-[400px]:gap-0"
             >
               <div 
                 className="
-                  w-2 h-2 sm:w-3 sm:h-3 max-sm:w-1.5 max-sm:h-1.5 max-[400px]:w-1 max-[400px]:h-1
+                  w-1 h-1 sm:w-1.5 sm:h-1.5 max-sm:w-1 max-sm:h-1 max-[400px]:w-0.5 max-[400px]:h-0.5
                   rounded-full flex-shrink-0
                 "
                 style={{ backgroundColor: item.color }}
@@ -168,7 +168,7 @@ export function ChartRadar({ className }: { className?: string }) {
               <span className="
                 dark:text-white text-gray-900
                 font-medium truncate
-                text-xs sm:text-sm max-sm:text-[10px] max-[400px]:text-[8px]
+                text-[8px] sm:text-[10px] max-sm:text-[7px] max-[400px]:text-[6px]
               ">
                 {item.name}
               </span>

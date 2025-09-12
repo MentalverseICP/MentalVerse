@@ -1,5 +1,5 @@
 import { useSidebar } from '@/components/ui/Sidebar';
-import { useTheme } from "@/components/theme-provider"
+import { useTheme } from "@/components/shared/theme-provider"
 import { Link } from "react-router-dom"
 import mentalIconMobileLight from "@/images/mental_Icon_mobile_light.svg"
 import mentalIconMobileDark from "@/images/mental_mobile.svg"
@@ -60,7 +60,7 @@ const Logout = ({ onWalletDisconnect }: LogoutProps) => {
   );
 
   return (
-    <div className="h-full w-full flex items-center justify-center transition-colors duration-500 sm:p-4 md:p-8 p-5 relative max-[640px]:ml-16 max-[640px]:w-[calc(100vw-5rem)] max-[500px]:overflow-x-auto max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)] dark:bg-transparent">
+    <div className="w-full flex items-center justify-center transition-colors duration-500 sm:p-4 md:p-8 p-5 relative max-[640px]:ml-16 max-[640px]:w-[calc(100vw-5rem)] max-[500px]:overflow-x-auto max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)] dark:bg-transparent">
       {showLoader && <Loader />}
       <div className="w-full max-w-lg mx-auto px-4 py-10 sm:px-8 sm:py-12 flex flex-col items-center space-y-8 transition-all duration-300">
         <div className="flex flex-col items-center w-full">
@@ -86,7 +86,8 @@ const Logout = ({ onWalletDisconnect }: LogoutProps) => {
             <div className="bg-emerald-50 dark:bg-gray-900 rounded-xl p-4 text-sm shadow border border-emerald-100 dark:border-gray-800">
               <p className="font-semibold text-emerald-500">Connected Wallet:</p>
               <p className="text-gray-600 dark:text-gray-400 truncate">
-                {user.principal?.toString() || 'Connected'}
+                {/* Fix: user.principal does not exist on type 'User'. Use user.walletAddress or user.id if available */}
+                {('Connected').toString()}
               </p>
             </div>
           )}

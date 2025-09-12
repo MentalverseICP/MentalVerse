@@ -25,7 +25,7 @@ import { useSecureMessaging } from '@/hooks/useSecureMessaging';
 import { SecureMessage } from '@/services/backend';
 import { Principal } from '@dfinity/principal';
 import { cn } from '@/lib/utils';
-import { useTheme } from '@/components/theme-provider';
+import { useTheme } from '@/components/shared/theme-provider';
 
 interface SecureChatProps {
   className?: string;

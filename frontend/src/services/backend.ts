@@ -624,7 +624,7 @@ export class AuthService {
     return this.secureMessaging;
   }
 
-  async registerUser(role: 'patient' | 'doctor'): Promise<{ success: boolean; message: string }> {
+  async registerUser(role: 'patient' | 'therapist'): Promise<{ success: boolean; message: string }> {
     if (!this.actor) {
       return { success: false, message: 'Not authenticated' };
     }

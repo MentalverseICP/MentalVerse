@@ -7,7 +7,7 @@ interface MonthPopoverProps {
     event: Event;
     onClose: () => void;
     style?: React.CSSProperties;
-    onEdit: (event: Event) => void; // Corrected onEdit type
+    onEdit: (event: Event) => void; 
 }
 
 const eventColors: { [key: string]: string } = {

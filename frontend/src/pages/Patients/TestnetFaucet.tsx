@@ -8,7 +8,7 @@ import { Separator } from '@/components/ui/Separator';
 import { Coins, Gift, Clock, CheckCircle, Droplets, Info } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
-
+import { useTheme } from '@/components/shared/theme-provider';
 import { authService } from '@/services/backend';
 import { toast } from 'react-toastify';
 import { useSidebar } from '@/components/ui/Sidebar';
@@ -42,6 +42,7 @@ export default function TestnetFaucet() {
   const [success, setSuccess] = useState<string | null>(null);
   const [timeUntilNextClaim, setTimeUntilNextClaim] = useState<string>('');
   const { state } = useSidebar();
+  const { theme } = useTheme();
   const isCollapsed = state === "collapsed";
 
   useEffect(() => {
@@ -159,7 +160,7 @@ export default function TestnetFaucet() {
   if (loading) {
     return (
       <div className={cn(
-        "min-h-screen w-full flex items-center justify-center transition-colors duration-500 px-2 py-8 sm:p-4 md:p-8 p-5 relative max-[640px]:ml-16 max-[640px]:w-[calc(100vw-5rem)] max-[500px]:overflow-x-auto max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)] dark:bg-transparent",
+        "w-full flex items-center justify-center transition-colors duration-500 px-2 py-8 sm:p-4 md:p-8 p-5 relative max-[640px]:ml-16 max-[640px]:w-[calc(100vw-5rem)] max-[500px]:overflow-x-auto max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)] dark:bg-transparent",
         isCollapsed ? "md:w-[90vw]" : "md:w-[80vw]"
       )}>
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#18E614]"></div>
@@ -169,7 +170,7 @@ export default function TestnetFaucet() {
 
   return (
     <div className={cn(
-      "min-h-screen w-full flex items-center justify-center transition-colors duration-500 px-2 py-8 sm:p-4 md:p-8 p-5 relative max-[640px]:ml-16 max-[640px]:w-[calc(100vw-5rem)] max-[500px]:overflow-x-auto max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)] dark:bg-transparent",
+      "w-full flex items-center justify-center transition-colors duration-500 px-2 py-8 sm:p-4 md:p-8 p-5 relative max-[640px]:ml-16 max-[640px]:w-[calc(100vw-5rem)] max-[500px]:overflow-x-auto max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)] dark:bg-transparent",
       isCollapsed ? "md:w-[90vw]" : "md:w-[80vw]"
     )}>
       <div className="w-full mx-auto p-4 sm:p-8 md:p-12 mt-4 flex flex-col gap-8 transition-all duration-300">
@@ -318,7 +319,7 @@ export default function TestnetFaucet() {
                     <Badge 
                       variant={claim.status === 'completed' ? 'default' : claim.status === 'pending' ? 'secondary' : 'destructive'}
                       className={cn(
-                        claim.status === 'completed' && "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+                        claim.status === 'completed' && "text-white dark:text-white" + (theme === 'dark' ? ' bg-[#0DB16A]' : ' bg-[#18E614]'),
                         claim.status === 'pending' && "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
                       )}
                     >

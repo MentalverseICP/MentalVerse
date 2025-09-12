@@ -12,7 +12,7 @@ import { TestimonialsSection } from '@/components/landing/TestimonialsSection'
 import { ResourcesSection } from '@/components/landing/ResourcesSection'
 import { ContactSection } from '@/components/landing/ContactSection'
 import { Footer } from '@/components/landing/Footer'
-import Chatbot from '@/components/Chatbot'
+import Chatbot from '@/components/shared/Chatbot'
 
 interface LandingPageProps {
   onWalletDisconnect: () => void;

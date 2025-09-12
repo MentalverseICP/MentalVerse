@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/Button";
 import { useSidebar } from "@/components/ui/Sidebar";
 import { cn } from "@/lib/utils";
-import { useTheme } from "@/components/theme-provider";
+import { useTheme } from "@/components/shared/theme-provider";
 import { Sun, Moon } from "lucide-react";
 
 const Settings: React.FC = () => {
@@ -12,39 +12,101 @@ const Settings: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { theme, setTheme } = useTheme();
 
-  // Dummy state for form fields
-  const [form, setForm] = React.useState({
-    firstName: "Ola",
-    lastName: "Boluwatife",
-    email: "Olaboluwatofezzy@ymail.com",
-    accountType: "Patient",
-    photo: "",
-  });
+  // Get user data from localStorage
+  const getUserData = () => {
+    const userProfile = localStorage.getItem('userProfile');
+    const userRole = localStorage.getItem('userRole');
+    
+    if (userProfile) {
+      const profile = JSON.parse(userProfile);
+      return {
+        firstName: profile.firstName || "",
+        lastName: profile.lastName || "",
+        email: profile.email || "",
+        accountType: userRole ? userRole.charAt(0).toUpperCase() + userRole.slice(1) : "User",
+        phoneNumber: profile.phoneNumber || "",
+        specialization: profile.specialization || "",
+        experience: profile.experience || "",
+        licenseNumber: profile.licenseNumber || "",
+        bio: profile.bio || "",
+        age: profile.age || "",
+        emergencyContact: profile.emergencyContact || "",
+        medicalHistory: profile.medicalHistory || "",
+        currentMedications: profile.currentMedications || "",
+        therapyGoals: profile.therapyGoals || "",
+        photo: profile.photo || "",
+      };
+    }
+    
+    // Fallback data
+    return {
+      firstName: "Ola",
+      lastName: "Boluwatife", 
+      email: "Olaboluwatofezzy@ymail.com",
+      accountType: "Patient",
+      phoneNumber: "",
+      specialization: "",
+      experience: "",
+      licenseNumber: "",
+      bio: "",
+      age: "",
+      emergencyContact: "",
+      medicalHistory: "",
+      currentMedications: "",
+      therapyGoals: "",
+      photo: "",
+    };
+  };
 
-  // Password change state
-  const [passwords, setPasswords] = React.useState({
-    current: "",
-    new: "",
-    confirm: "",
-  });
+  const [form, setForm] = React.useState(getUserData());
+
 
   const handlePhotoClick = () => {
     fileInputRef.current?.click();
   };
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
+    const file = e.target.files?.[0];
+    if (file) {
       setForm((prev) => ({
         ...prev,
-        photo: URL.createObjectURL(e.target.files[0]),
+        photo: URL.createObjectURL(file),
       }));
     }
+  };
+
+  const handleSaveChanges = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Update localStorage with new profile data
+    const updatedProfile = {
+      firstName: form.firstName,
+      lastName: form.lastName,
+      email: form.email,
+      phoneNumber: form.phoneNumber,
+      specialization: form.specialization,
+      experience: form.experience,
+      licenseNumber: form.licenseNumber,
+      bio: form.bio,
+      age: form.age,
+      emergencyContact: form.emergencyContact,
+      medicalHistory: form.medicalHistory,
+      currentMedications: form.currentMedications,
+      therapyGoals: form.therapyGoals,
+      photo: form.photo,
+    };
+    
+    localStorage.setItem('userProfile', JSON.stringify(updatedProfile));
+    // Trigger custom event to update other components in same tab
+    window.dispatchEvent(new Event('profileUpdated'));
+    // Also trigger storage event for cross-tab updates
+    window.dispatchEvent(new Event('storage'));
+    alert('Profile updated successfully!');
   };
 
   return (
     <div
       className={cn(
-        "min-h-screen w-full flex items-center justify-center transition-colors duration-500 px-2 py-8 sm:p-4 md:p-8 p-5 relative max-[640px]:ml-16 max-[640px]:w-[calc(100vw-5rem)] max-[500px]:overflow-x-auto max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)] dark:bg-transparent",
+        "w-full flex items-center justify-center transition-colors duration-500 px-2 py-8 sm:p-4 md:p-8 p-5 relative max-[640px]:ml-16 max-[640px]:w-[calc(100vw-5rem)] max-[500px]:overflow-x-auto max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)] dark:bg-transparent",
         isCollapsed ? "md:w-[90vw]" : "md:w-[80vw]"
       )}
     >
@@ -96,7 +158,7 @@ const Settings: React.FC = () => {
             <div className="mb-4">
               <span className="font-semibold text-lg text-black dark:text-white">Account Details</span>
             </div>
-            <form className="flex flex-col gap-4">
+            <form className="flex flex-col gap-4" onSubmit={handleSaveChanges}>
               <div>
                 <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium">First Name</label>
                 <Input
@@ -129,6 +191,56 @@ const Settings: React.FC = () => {
                   disabled
                 />
               </div>
+              {form.phoneNumber && (
+                <div>
+                  <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium">Phone Number</label>
+                  <Input
+                    className="rounded-xl bg-white dark:bg-gray-900 border border-emerald-200 dark:border-gray-700 text-black dark:text-white shadow-sm"
+                    value={form.phoneNumber}
+                    onChange={e => setForm(f => ({ ...f, phoneNumber: e.target.value }))}
+                  />
+                </div>
+              )}
+              {form.age && (
+                <div>
+                  <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium">Age</label>
+                  <Input
+                    className="rounded-xl bg-white dark:bg-gray-900 border border-emerald-200 dark:border-gray-700 text-black dark:text-white shadow-sm"
+                    value={form.age}
+                    onChange={e => setForm(f => ({ ...f, age: e.target.value }))}
+                  />
+                </div>
+              )}
+              {form.specialization && (
+                <div>
+                  <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium">Specialization</label>
+                  <Input
+                    className="rounded-xl bg-white dark:bg-gray-900 border border-emerald-200 dark:border-gray-700 text-black dark:text-white shadow-sm"
+                    value={form.specialization}
+                    onChange={e => setForm(f => ({ ...f, specialization: e.target.value }))}
+                  />
+                </div>
+              )}
+              {form.experience && (
+                <div>
+                  <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium">Years of Experience</label>
+                  <Input
+                    className="rounded-xl bg-white dark:bg-gray-900 border border-emerald-200 dark:border-gray-700 text-black dark:text-white shadow-sm"
+                    value={form.experience}
+                    onChange={e => setForm(f => ({ ...f, experience: e.target.value }))}
+                  />
+                </div>
+              )}
+              {form.licenseNumber && (
+                <div>
+                  <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium">License Number</label>
+                  <Input
+                    className="rounded-xl bg-white dark:bg-gray-900 border border-emerald-200 dark:border-gray-700 text-black dark:text-white shadow-sm"
+                    value={form.licenseNumber}
+                    onChange={e => setForm(f => ({ ...f, licenseNumber: e.target.value }))}
+                  />
+                </div>
+              )}
               <Button
                 type="submit"
                 className={`px-6 sm:px-8 py-2 sm:py-3 rounded-full font-bold border hover:-translate-y-1 transition-all duration-300 hover:border-t hover:border-b text-sm ${
@@ -142,52 +254,74 @@ const Settings: React.FC = () => {
             </form>
           </div>
         </div>
-        {/* Security Section */}
-        <div className="mt-8">
-          <span className="font-semibold text-lg text-black dark:text-white mb-2 block">Security</span>
-          <form className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium">Current Password</label>
-              <Input
-                type="password"
-                className="rounded-xl bg-white dark:bg-gray-900 border border-emerald-200 dark:border-gray-700 text-black dark:text-white shadow-sm"
-                value={passwords.current}
-                onChange={e => setPasswords(p => ({ ...p, current: e.target.value }))}
-                placeholder="Enter current password"
-              />
+
+        {/* Additional Information Section */}
+        {(form.bio || form.medicalHistory || form.currentMedications || form.therapyGoals || form.emergencyContact) && (
+          <div className="mt-8">
+            <span className="font-semibold text-lg text-black dark:text-white mb-2 block">Additional Information</span>
+            <div className="flex flex-col gap-4">
+              {form.bio && (
+                <div>
+                  <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium">Bio</label>
+                  <textarea
+                    className="w-full px-3 py-2 border border-emerald-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-black dark:text-white shadow-sm resize-none"
+                    rows={3}
+                    value={form.bio}
+                    onChange={e => setForm(f => ({ ...f, bio: e.target.value }))}
+                    placeholder="Tell us about yourself..."
+                  />
+                </div>
+              )}
+              {form.medicalHistory && (
+                <div>
+                  <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium">Medical History</label>
+                  <textarea
+                    className="w-full px-3 py-2 border border-emerald-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-black dark:text-white shadow-sm resize-none"
+                    rows={3}
+                    value={form.medicalHistory}
+                    onChange={e => setForm(f => ({ ...f, medicalHistory: e.target.value }))}
+                    placeholder="Any relevant medical history..."
+                  />
+                </div>
+              )}
+              {form.currentMedications && (
+                <div>
+                  <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium">Current Medications</label>
+                  <textarea
+                    className="w-full px-3 py-2 border border-emerald-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-black dark:text-white shadow-sm resize-none"
+                    rows={3}
+                    value={form.currentMedications}
+                    onChange={e => setForm(f => ({ ...f, currentMedications: e.target.value }))}
+                    placeholder="List any current medications..."
+                  />
+                </div>
+              )}
+              {form.therapyGoals && (
+                <div>
+                  <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium">Therapy Goals</label>
+                  <textarea
+                    className="w-full px-3 py-2 border border-emerald-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-black dark:text-white shadow-sm resize-none"
+                    rows={3}
+                    value={form.therapyGoals}
+                    onChange={e => setForm(f => ({ ...f, therapyGoals: e.target.value }))}
+                    placeholder="What do you hope to achieve through therapy?"
+                  />
+                </div>
+              )}
+              {form.emergencyContact && (
+                <div>
+                  <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium">Emergency Contact</label>
+                  <Input
+                    className="rounded-xl bg-white dark:bg-gray-900 border border-emerald-200 dark:border-gray-700 text-black dark:text-white shadow-sm"
+                    value={form.emergencyContact}
+                    onChange={e => setForm(f => ({ ...f, emergencyContact: e.target.value }))}
+                    placeholder="Emergency contact number"
+                  />
+                </div>
+              )}
             </div>
-            <div className="flex-1">
-              <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium">New Password</label>
-              <Input
-                type="password"
-                className="rounded-xl bg-white dark:bg-gray-900 border border-emerald-200 dark:border-gray-700 text-black dark:text-white shadow-sm"
-                value={passwords.new}
-                onChange={e => setPasswords(p => ({ ...p, new: e.target.value }))}
-                placeholder="Enter new password"
-              />
-            </div>
-            <div className="flex-1">
-              <label className="block text-gray-700 dark:text-gray-300 mb-1 font-medium">Confirm Password</label>
-              <Input
-                type="password"
-                className="rounded-xl bg-white dark:bg-gray-900 border border-emerald-200 dark:border-gray-700 text-black dark:text-white shadow-sm"
-                value={passwords.confirm}
-                onChange={e => setPasswords(p => ({ ...p, confirm: e.target.value }))}
-                placeholder="Confirm new password"
-              />
-            </div>
-          </form>
-          <Button
-            type="button"
-            className={`mt-6 px-6 sm:px-8 py-2 sm:py-3 rounded-full font-bold border hover:-translate-y-1 transition-all duration-300 hover:border-t hover:border-b text-sm ${
-              theme === 'dark'
-                ? 'bg-transparent hover:bg-black hover:shadow-[0_2px_0_0_rgba(24,230,20,0.811)] hover:border-[#18E614]'
-                : 'bg-white text-black hover:bg-zinc-100 hover:border-black hover:shadow-[0_2px_0_0_rgba(0,0,0,0.811)]'
-            }`}
-          >
-            CHANGE PASSWORD
-          </Button>
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

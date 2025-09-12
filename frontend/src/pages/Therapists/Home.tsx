@@ -1,16 +1,17 @@
+import { useSidebar } from "@/components/ui/Sidebar";
 import DiagnosticsChart from "@/components/charts/DiagnosticsChart";
 import PatientsChart from "@/components/charts/PatientsChart";
 import HealthIndexChart from "@/components/charts/HealthIndexChart";
 import AppointmentsChart from "@/components/charts/AppointmentsChart";
-import { useSidebar } from "@/components/ui/Sidebar";
+import CompanyGrowthChart from "@/components/charts/CompanyGrowthChart";
 import MapComponent from "@/components/charts/MapComponent";
-import { ChartRadar } from "@/components/patients/Chart-radar-dots";
+import PatientList from "@/components/therapists/PatientList";
+import AppointmentList from "@/components/therapists/AppointmentList";
 import DoctorList from "@/components/patients/DoctorList";
-import AppointmentList from "@/components/patients/AppointmentList";
 
-export default function Home() {
+export default function DoctorHome() {
   const { state } = useSidebar();
-const isCollapsed = state === "collapsed";
+  const isCollapsed = state === "collapsed";
 
   return (
     <>
@@ -22,15 +23,22 @@ const isCollapsed = state === "collapsed";
         }`}
       >
         <DiagnosticsChart className="col-start-1 col-span-3 max-xl:col-span-4 max-lg:col-span-6 max-md:col-span-12 max-sm:col-span-full dark:border-[#2f3339] border-2 bg-transparent" />
+        
         <PatientsChart className="col-start-4 col-span-3 max-xl:col-start-5 max-xl:col-span-4 max-lg:col-start-7 max-lg:col-span-6 max-md:col-span-12 max-sm:col-span-full dark:border-[#2f3339] border-2 bg-transparent" />
+        
         <HealthIndexChart className="col-start-7 col-span-3 max-xl:col-start-9 max-xl:col-span-4 max-lg:col-start-1 max-lg:col-span-6 max-md:col-span-12 max-sm:col-span-full dark:border-[#2f3339] border-2 bg-transparent" />
+        
         <div className="col-start-10 col-span-3 max-xl:col-start-1 max-xl:col-span-full row-start-1 max-xl:row-start-4 row-span-3 max-md:row-start-4 max-sm:col-start-1 max-sm:col-span-full rounded-3xl shadow-lg dark:border-[#2f3339] border-2 bg-transparent p-4 flex flex-col gap-4">
           <AppointmentsChart className="w-full" />
-          <AppointmentList className="w-full" />
+          <AppointmentList className="mt-20 w-full" />
         </div>
+        
         <MapComponent className="col-start-1 col-span-6 max-xl:col-span-8 row-span-1 max-lg:col-span-full max-md:col-span-12 max-sm:row-start-7 dark:border-[#2f3339] border-2 " />
-        <ChartRadar className="row-span-1 col-start-7 col-span-3 max-xl:col-start-9 max-xl:col-span-4 max-lg:col-start-7 max-lg:row-start-2 max-lg:col-span-6 max-md:col-span-12 max-sm:col-span-full dark:border-[#2f3339] border-2 bg-transparent" />
-        <DoctorList className="col-start-1 col-span-9 max-xl:col-span-full max-lg:col-span-full max-md:col-span-12 max-sm:col-span-full dark:border-[#2f3339] border-2 " />
+        
+        <CompanyGrowthChart className="row-span-1 col-start-7 col-span-3 max-xl:col-start-9 max-xl:col-span-4 max-lg:col-start-7 max-lg:row-start-2 max-lg:col-span-6 max-md:col-span-12 max-sm:col-span-full dark:border-[#2f3339] border-2 bg-transparent" />
+        
+        <PatientList className="col-start-1 col-span-9 max-xl:col-span-9 max-lg:col-span-full max-md:col-span-12 max-sm:col-span-full dark:border-[#2f3339] border-2 " />
+
       </div>
     </>
   );

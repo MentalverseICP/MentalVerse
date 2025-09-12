@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { cn } from "@/lib/utils";
-import { useTheme } from "@/components/theme-provider";
+import { useTheme } from "@/components/shared/theme-provider";
 import { Search } from "lucide-react";
 import { useSidebar } from '@/components/ui/Sidebar';
 import doctorsData, { PathologyResult } from "@/data/DoctorsData";
