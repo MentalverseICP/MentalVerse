@@ -354,7 +354,7 @@ const CustomCalendar = () => {
       className={`p-5 relative max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 
       max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)] 
       transition-all dark:bg-transparent 
-      scrollbar-custom overflow-x-scroll grid 
+      scrollbar-custom grid
       ${isCollapsed ? "grid-cols-1" : "grid-cols-1"}`}
     >
       <Calendar
@@ -365,8 +365,13 @@ const CustomCalendar = () => {
         selectable
         onSelectSlot={handleSelect}
         onSelectEvent={handleEventClick}
-        style={{ height: "100%" }}
-        className={`w-full max-[640px]:min-w-[600px] max-sm:w-screen  max-sm:-mr-5`}
+        style={{
+          height:
+            currentView === "month" || currentView === "agenda"
+              ? "calc(100vh - 6rem)"
+              : "100%",
+        }}
+        className={`w-full max-[640px]:min-w-[600px] max-sm:w-screen max-sm:-mr-5`}
         eventPropGetter={(event) => eventStyleGetter(event)}
         dayPropGetter={dayPropGetter}
         slotPropGetter={slotPropGetter}
