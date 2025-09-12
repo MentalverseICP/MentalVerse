@@ -157,7 +157,7 @@ export default function DoctorPatients() {
       <div
         className={`grid grid-cols-12 justify-evenly max-sm:ml-[4.5rem] max-lg:ml-20 mt-4 mb-4 mr-2 w-fit max-sm:w-fit ${
           isCollapsed
-            ? "gap-5 w-full max-md:w-fit md:pr-4 md:pl-2"
+            ? "gap-5 w-full max-md:w-fit md:pr-4 md:pl-2 px-2"
             : "xl:gap-x-5 gap-5 px-2"
         }`}
       >

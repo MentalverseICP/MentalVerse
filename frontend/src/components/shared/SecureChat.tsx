@@ -405,6 +405,7 @@ const SecureChat: React.FC<SecureChatProps> = ({ className }) => {
                 </Button>
               </div>
               <input
+                title='file'
                 ref={fileInputRef}
                 type="file"
                 className="hidden"

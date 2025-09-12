@@ -131,7 +131,7 @@ export default function MentalHealthRecords() {
   return (
     <div className={`grid grid-cols-12 justify-evenly max-sm:ml-[4.5rem] max-lg:ml-20 mt-4 mb-4 mr-2 w-fit max-sm:w-fit ${
       isCollapsed
-        ? "gap-2 lg:gap-3 xl:gap-4 w-full max-md:w-fit md:pr-4 md:pl-2"
+        ? "gap-2 lg:gap-3 xl:gap-4 w-full max-md:w-fit md:pr-4 md:pl-2 max-md:px"
         : "gap-2 lg:gap-3 xl:gap-4 px-2"
     }`}>
       <div className="col-span-12 w-full">
@@ -143,7 +143,7 @@ export default function MentalHealthRecords() {
           </div>
           <Button className="bg-[#18E614] hover:bg-[#18E614]/90 text-white">
             <Plus className="w-4 h-4 mr-2" />
-            New Record
+            <span className='max-md:hidden'>New Record</span>
           </Button>
         </div>
 
@@ -234,7 +234,7 @@ export default function MentalHealthRecords() {
           {filteredRecords.map((record) => (
             <Card key={record.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-6">
-                <div className="flex items-start justify-between">
+                <div className="flex items-start justify-between max-md:flex-col max-md:gap-10">
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
                       <h3 className="font-semibold text-lg">{record.title}</h3>
@@ -246,7 +246,7 @@ export default function MentalHealthRecords() {
                       </Badge>
                     </div>
                     
-                    <div className="flex items-center space-x-4 text-sm text-muted-foreground mb-3">
+                    <div className="flex flex-wrap items-center space-y-1 space-x-4 text-sm text-muted-foreground mb-3">
                       <div className="flex items-center space-x-1">
                         <User className="w-4 h-4" />
                         <span>{record.patientName} (ID: {record.patientId})</span>

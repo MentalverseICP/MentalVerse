@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useSidebar } from "@/components/ui/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/Button";
@@ -119,10 +119,10 @@ export default function TreatmentPlans() {
   };
 
   return (
-    <div className={`grid grid-cols-12 justify-evenly max-sm:ml-[4.5rem] max-lg:ml-20 mt-4 mb-4 mr-2 w-fit max-sm:w-fit ${
+    <div className={`grid grid-cols-12 justify-evenly max-sm:ml-[4.5rem] max-lg:ml-20 mt-4 mb-4 pr-4 w-full ${
       isCollapsed
         ? "gap-2 lg:gap-3 xl:gap-4 w-full max-md:w-fit md:pr-4 md:pl-2"
-        : "gap-2 lg:gap-3 xl:gap-4 px-2"
+        : "gap-2 lg:gap-3 xl:gap-4 px-2  w-full max-md:w-fit"
     }`}>
       <div className="col-span-12 w-full">
         {/* Header */}
@@ -133,7 +133,7 @@ export default function TreatmentPlans() {
           </div>
           <Button className="bg-[#18E614] hover:bg-[#18E614]/90 text-white">
             <Plus className="w-4 h-4 mr-2" />
-            Create Plan
+            <span className='max-md:hidden'>Create Plant</span>
           </Button>
         </div>
 

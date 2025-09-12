@@ -88,10 +88,10 @@ export default function TherapySessions() {
   };
 
   return (
-    <div className={`grid grid-cols-12 justify-evenly max-sm:ml-[4.5rem] max-lg:ml-20 mt-4 mb-4 mr-2 w-fit max-sm:w-fit ${
+    <div className={`grid grid-cols-12 justify-evenly max-sm:ml-[4.5rem] max-lg:ml-20 mt-4 mb-4 pr-4  w-full ${
       isCollapsed
-        ? "gap-2 lg:gap-3 xl:gap-4 w-full max-md:w-fit md:pr-4 md:pl-2"
-        : "gap-2 lg:gap-3 xl:gap-4 px-2"
+        ? "gap-2 lg:gap-3 xl:gap-4 md:pr-4 md:pl-2 max-md:mx-8 max-md:pr-4"
+        : "gap-2 lg:gap-3 xl:gap-4 pr-2"
     }`}>
       <div className="col-span-12 w-full">
         {/* Header */}
@@ -102,7 +102,7 @@ export default function TherapySessions() {
           </div>
           <Button className="bg-[#18E614] hover:bg-[#18E614]/90 text-white w-full sm:w-auto">
             <Plus className="w-4 h-4 mr-2" />
-            Schedule Session
+            <span className='max-md:hidden'>Schedule Session</span>
           </Button>
         </div>
 
@@ -162,7 +162,7 @@ export default function TherapySessions() {
           {sessions.map((session) => (
             <Card key={session.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-6">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between max-md:flex-col max-md:items-start">
                   <div className="flex items-center space-x-4">
                     <div className="flex items-center space-x-2">
                       {getSessionTypeIcon(session.sessionType)}
@@ -171,14 +171,14 @@ export default function TherapySessions() {
                       </span>
                     </div>
                     
-                    <div>
+                    <div className='max-md:flex max-md:items-center max-md:justify-items-center gap-5'>
                       <h3 className="font-semibold text-lg">{session.patientName}</h3>
                       <p className="text-sm text-muted-foreground">Patient ID: {session.patientId}</p>
                     </div>
                   </div>
                   
-                  <div className="flex items-center space-x-4">
-                    <div className="text-right">
+                  <div className="flex items-center space-x-4 max-md:flex-col max-md:items-start gap-5">
+                    <div className="text-right max-md:flex max-md:items-center max-md:justify-items-center gap-5">
                       <p className="font-medium">{formatTime(session.scheduledTime)}</p>
                       <p className="text-sm text-muted-foreground">{session.duration} minutes</p>
                     </div>

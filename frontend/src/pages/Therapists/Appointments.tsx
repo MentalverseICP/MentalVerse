@@ -191,9 +191,9 @@ export default function DoctorAppointments() {
   return (
     <>
       <div
-        className={`grid grid-cols-12 justify-evenly max-sm:ml-[4.5rem] max-lg:ml-20 mt-4 mb-4 mr-2 w-fit max-sm:w-fit ${
+        className={`grid grid-cols-12 justify-evenly max-sm:ml-[4.5rem] max-lg:ml-20 mt-4 mb-4 w-full pr-4 ${
           isCollapsed
-            ? "gap-2 lg:gap-3 xl:gap-4 w-full max-md:w-fit md:pr-4 md:pl-2"
+            ? "gap-2 lg:gap-3 xl:gap-4 w-full md:pr-4 md:pl-2 px-2"
             : "gap-2 lg:gap-3 xl:gap-4 px-2"
         }`}
       >
@@ -205,9 +205,9 @@ export default function DoctorAppointments() {
               <p className="text-muted-foreground">Manage your schedule and patient appointments</p>
             </div>
             <div className="flex items-center gap-3">
-              <button className="px-4 py-2 bg-[#18E614] text-white rounded-lg hover:bg-[#18E614]/90 transition-colors flex items-center gap-2">
+              <button type='button' className="px-4 py-2 bg-[#18E614] text-white rounded-lg hover:bg-[#18E614]/90 transition-colors flex items-center gap-2">
                 <Plus className="w-4 h-4" />
-                New Appointment
+                <span className='max-md:hidden'>New Appointment</span>
               </button>
             </div>
           </div>
@@ -268,6 +268,7 @@ export default function DoctorAppointments() {
           <div className="flex items-center gap-4">
             <label className="text-sm font-medium text-foreground">Select Date:</label>
             <input
+              title='select date'
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
@@ -320,7 +321,7 @@ export default function DoctorAppointments() {
                     >
                       View Details
                     </button>
-                    <button className="px-3 py-2 text-sm border border-border rounded-lg hover:bg-muted transition-colors">
+                    <button title='message' className="px-3 py-2 text-sm border border-border rounded-lg hover:bg-muted transition-colors">
                       <MessageCircle className="w-4 h-4" />
                     </button>
                   </div>
