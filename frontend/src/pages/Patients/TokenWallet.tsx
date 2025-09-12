@@ -8,7 +8,7 @@ import { Separator } from '@/components/ui/Separator';
 import { Wallet, TrendingUp, TrendingDown, Clock, Award, ShoppingCart } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
-import { useTheme } from '@/components/theme-provider';
+import { useTheme } from '@/components/shared/theme-provider';
 import { authService, TokenBalance, Transaction, EarningRecord, SpendingRecord } from '@/services/backend';
 import { useSidebar } from '@/components/ui/Sidebar';
 
@@ -114,7 +114,7 @@ export default function TokenWallet() {
 
   const getStatusBadge = (status: string) => {
     const variants = {
-      completed: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+      completed: 'text-white dark:text-white' + (theme === 'dark' ? ' bg-[#0DB16A]' : ' bg-[#18E614]'),
       pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
       failed: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
     };
@@ -154,7 +154,7 @@ export default function TokenWallet() {
   }
 
   return (
-    <div className={cn("space-y-6 min-h-screen w-full transition-colors duration-500 px-2 py-8 sm:p-4 md:p-8 p-5 relative max-[640px]:ml-16 max-[640px]:w-[calc(100vw-5rem)] max-[500px]:overflow-x-auto max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)] dark:bg-transparent", isCollapsed ? "md:w-[90vw]" : "md:w-[80vw]"
+    <div className={cn("space-y-6 w-full transition-colors duration-500 px-2 py-8 sm:p-4 md:p-8 p-5 relative max-[640px]:ml-16 max-[640px]:w-[calc(100vw-5rem)] max-[500px]:overflow-x-auto max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)] dark:bg-transparent", isCollapsed ? "md:w-[90vw]" : "md:w-[80vw]"
 )}>
       {/* Balance Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

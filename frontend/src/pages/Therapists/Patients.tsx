@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useSidebar } from "@/components/ui/Sidebar";
 import { Search, Filter, Plus, Download, Eye, Edit, Trash2 } from 'lucide-react';
-import { useTheme } from '@/components/theme-provider';
+import { useTheme } from '@/components/shared/theme-provider';
 
 interface Patient {
   id: number;
@@ -165,7 +165,7 @@ export default function DoctorPatients() {
         <div className="col-span-full mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Patient Management</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-red-500">Patient Management</h1>
               <p className="text-muted-foreground">Manage your patient roster and medical records</p>
             </div>
             <div className="flex items-center gap-3">

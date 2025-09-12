@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Search } from "lucide-react";
 import chats from "@/images/Chats Icon.svg";
-import { useTheme } from "../theme-provider";
+import { useTheme } from "@/components/shared/theme-provider";
 import doctorsData, { Doctor } from "@/data/DoctorsData";
 import {
   Pagination,
@@ -119,17 +119,17 @@ const DoctorList: React.FC<prop> = ({ className }) => {
                 }`}
               >
                 <td className="p-4 flex items-center gap-4">
-                  <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full lg:flex lg:items-center lg:justify-center text-gray-500 dark:text-gray-300 font-bold text-sm uppercase hidden">
+                  <div className="w-10 h-10 max-sm:w-8 max-sm:h-8 bg-gray-200 dark:bg-gray-700 rounded-full lg:flex lg:items-center lg:justify-center text-gray-500 dark:text-gray-300 font-bold text-sm max-sm:text-xs uppercase hidden">
                     {doctor.name
                       .split(" ")
                       .map((n) => n[0])
                       .join("")
                       .slice(0, 2)}
                   </div>
-                  {doctor.name}
+                  <span className="text-sm max-sm:text-xs">{doctor.name}</span>
                 </td>
-                <td className="p-4">{doctor.role}</td>
-                <td className="p-4 text-[#ff0000] font-bold">
+                <td className="p-4 text-sm max-sm:text-xs">{doctor.role}</td>
+                <td className="p-4 text-[#ff0000] font-bold text-sm max-sm:text-xs">
                   {doctor.appointments}
                 </td>
                 <td className="p-4">

@@ -8,10 +8,9 @@ import {
   MessageSquare,
   Settings,
   LogOut,
-
-  Stethoscope,
-
-  TrendingUp,
+  BarChart3,
+  Brain,
+  Clipboard
 } from "lucide-react"
 import {
   Sidebar,
@@ -24,7 +23,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/Sidebar"
 import { Link, useLocation } from "react-router-dom"
-import { useTheme } from "@/components/theme-provider"
+import { useTheme } from "../shared/theme-provider"
 import { cn } from "@/lib/utils"
 
 export function DoctorSidebar({ className }: { className?: string }) {
@@ -36,23 +35,18 @@ export function DoctorSidebar({ className }: { className?: string }) {
   const mainNavItems = [
     {
       title: "Dashboard",
-      icon: BarChart3Icon,
-      href: "/doctor/home",
+      icon: BarChart3,
+      href: "/therapist/home",
     },
     {
       title: "Patients",
       icon: Users,
-      href: "/doctor/patients",
+      href: "/therapist/patients",
     },
     {
       title: "Appointments",
       icon: Calendar,
-      href: "/doctor/appointments",
-    },
-    {
-      title: "Medical Records",
-      icon: FileText,
-      href: "/medical-records",
+      href: "/therapist/appointments",
     },
     {
       title: "Chats",
@@ -61,14 +55,19 @@ export function DoctorSidebar({ className }: { className?: string }) {
       badge: "3",
     },
     {
-      title: "Analytics",
-      icon: TrendingUp,
-      href: "/analytics",
+      title: "Therapy Sessions",
+      icon: Brain,
+      href: "/therapist/sessions",
     },
     {
-      title: "Profile",
-      icon: Stethoscope,
-      href: "/profile",
+      title: "Treatment Plans",
+      icon: Clipboard,
+      href: "/therapist/treatment-plans",
+    },
+    {
+      title: "Mental Health Records",
+      icon: FileText,
+      href: "/therapist/records",
     },
   ]
   
@@ -111,9 +110,7 @@ export function DoctorSidebar({ className }: { className?: string }) {
                   to={item.href}
                   className={`flex items-center md:gap-6 ${location.pathname === item.href ? 'text-[#18E614] font-medium' : (theme === 'dark' ? 'text-white' : 'text-black')}`}
                 >
-                  {item.icon && typeof item.icon === "function" ? (
-                    <item.icon />
-                  ) : null}
+                  {item.icon && <item.icon className="w-4 h-4" />}
                   {!isCollapsed && <span>{item.title}</span>}
                   {item.badge && (
                     <span className={`ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-[#F80D38] text-xs text-white ${isCollapsed ? 'hidden' : 'flex'}`}>
@@ -143,7 +140,7 @@ export function DoctorSidebar({ className }: { className?: string }) {
                   to={item.href}
                   className={cn(`flex items-center md:gap-6 ${location.pathname === item.href ? 'text-[#18E614] font-medium' : (theme === 'dark' ? 'text-white' : 'text-black')}`, item.className)}
                 >
-                  <item.icon />
+                  {item.icon && <item.icon className="w-4 h-4" />}
                   {!isCollapsed && <span>{item.title}</span>}
                 </Link>
               </SidebarMenuButton>

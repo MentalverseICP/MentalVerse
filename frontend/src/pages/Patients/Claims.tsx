@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { useSidebar } from "@/components/ui/Sidebar";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "@/components/theme-provider";
+import { useTheme } from "@/components/shared/theme-provider";
 
 const claimsData = [
   {
@@ -51,7 +51,7 @@ const Claims: React.FC = () => {
   return (
     <div
       className={cn(
-        "min-h-screen w-full flex items-center justify-center transition-colors duration-500 px-2 py-8 sm:p-4 md:p-8 p-5 relative max-[640px]:ml-16 max-[640px]:w-[calc(100vw-5rem)] max-[500px]:overflow-x-auto max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)] dark:bg-transparent",
+        "w-full flex items-center justify-center transition-colors duration-500 px-2 py-8 sm:p-4 md:p-8 p-5 relative max-[640px]:ml-16 max-[640px]:w-[calc(100vw-5rem)] max-[500px]:overflow-x-auto max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)] dark:bg-transparent",
         isCollapsed ? "md:w-[90vw]" : "md:w-[80vw]"
       )}
     >

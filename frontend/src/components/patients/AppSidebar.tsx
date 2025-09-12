@@ -19,7 +19,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/Sidebar"
 import { Link, useLocation } from "react-router-dom"
-import { useTheme } from "@/components/theme-provider"
+import { useTheme } from "../shared/theme-provider"
 import { cn } from "@/lib/utils"
 
 import overview from '@/images/Overview Icon.svg'

@@ -1,16 +1,17 @@
 import { useState, useEffect, useRef } from 'react'
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
 import { SidebarProvider } from "@/components/ui/Sidebar"
-import { ThemeProvider } from './components/theme-provider'
-import { AppSidebar } from './components/AppSidebar'
-import { DoctorSidebar } from './components/DoctorSidebar'
+import { ThemeProvider } from './components/shared/theme-provider'
+import { SearchProvider } from './contexts/SearchContext'
+import { AppSidebar } from './components/patients/AppSidebar'
+import { DoctorSidebar } from './components/therapists/DoctorSidebar'
 import { AppRoutes } from './AppRoutes'
-import SearchBar from './components/SearchBar'
+import SearchBar from './components/shared/SearchBar'
 import LandingPage from '@/pages/LandingPage'
 import Onboarding from '@/pages/Onboarding'
 import { AuthClient } from '@dfinity/auth-client'
 import { createContext, useContext } from 'react'
-import Loader from './components/Loader'
+import Loader from './components/shared/Loader'
 
 interface SubAppProps {
   onSearchChange: (value: string) => void;
@@ -48,11 +49,13 @@ function App() {
   
   return (
     <ThemeProvider defaultTheme='dark' storageKey='vite-ui-theme'>
-      <AuthContext.Provider value={{ user, login, logout }}>
-        <BrowserRouter>
-          <AppRouter />
-        </BrowserRouter>
-      </AuthContext.Provider>
+      <SearchProvider>
+        <AuthContext.Provider value={{ user, login, logout }}>
+          <BrowserRouter>
+            <AppRouter />
+          </BrowserRouter>
+        </AuthContext.Provider>
+      </SearchProvider>
     </ThemeProvider>
   )
 }
@@ -61,7 +64,7 @@ function AppRouter() {
   const { user } = useContext(AuthContext)
   const authenticated = !!user
   const [isLoading, setIsLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
+  const [, setSearchTerm] = useState('')
 
   // Loader state
   const [showLoader, setShowLoader] = useState(false)

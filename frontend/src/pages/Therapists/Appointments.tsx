@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useSidebar } from "@/components/ui/Sidebar";
 import { Calendar, Clock, User, Video, Phone, Plus, Filter, Search, MessageCircle } from 'lucide-react';
-import { useTheme } from '@/components/theme-provider';
+import { useTheme } from '@/components/shared/theme-provider';
 
 interface Appointment {
   id: number;
@@ -193,15 +193,15 @@ export default function DoctorAppointments() {
       <div
         className={`grid grid-cols-12 justify-evenly max-sm:ml-[4.5rem] max-lg:ml-20 mt-4 mb-4 mr-2 w-fit max-sm:w-fit ${
           isCollapsed
-            ? "gap-5 w-full max-md:w-fit md:pr-4 md:pl-2"
-            : "xl:gap-x-5 gap-5 px-2"
+            ? "gap-2 lg:gap-3 xl:gap-4 w-full max-md:w-fit md:pr-4 md:pl-2"
+            : "gap-2 lg:gap-3 xl:gap-4 px-2"
         }`}
       >
         {/* Header Section */}
         <div className="col-span-full mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Appointment Management</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-red-500">Appointment Management</h1>
               <p className="text-muted-foreground">Manage your schedule and patient appointments</p>
             </div>
             <div className="flex items-center gap-3">
@@ -228,12 +228,12 @@ export default function DoctorAppointments() {
             </div>
             
             <div className="flex flex-col sm:flex-row gap-2">
-              <div className="flex rounded-lg overflow-hidden border border-border">
+              <div className="flex flex-wrap rounded-lg overflow-hidden border border-border">
                 {["All", "Scheduled", "In Progress", "Completed", "Cancelled", "No Show"].map((status) => (
                   <button
                     key={status}
                     onClick={() => handleStatusFilter(status as any)}
-                    className={`px-3 py-2 text-xs transition-colors ${
+                    className={`px-2 py-1 text-xs transition-colors ${
                       selectedStatus === status
                         ? "bg-[#18E614] text-white"
                         : "bg-background text-foreground hover:bg-muted"
@@ -244,12 +244,12 @@ export default function DoctorAppointments() {
                 ))}
               </div>
               
-              <div className="flex rounded-lg overflow-hidden border border-border">
+              <div className="flex flex-wrap rounded-lg overflow-hidden border border-border">
                 {["All", "Video", "Phone", "In-Person"].map((type) => (
                   <button
                     key={type}
                     onClick={() => handleTypeFilter(type as any)}
-                    className={`px-3 py-2 text-xs transition-colors ${
+                    className={`px-2 py-1 text-xs transition-colors ${
                       selectedType === type
                         ? "bg-[#6366F1] text-white"
                         : "bg-background text-foreground hover:bg-muted"
@@ -336,58 +336,58 @@ export default function DoctorAppointments() {
             <h2 className="text-lg font-semibold text-foreground mb-4">Upcoming Appointments</h2>
             <div className="bg-background rounded-3xl border border-border overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full min-w-[600px]">
                   <thead className="bg-muted/50">
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Patient</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Date & Time</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Type</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Actions</th>
+                      <th className="px-3 sm:px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Patient</th>
+                      <th className="px-3 sm:px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Date & Time</th>
+                      <th className="px-3 sm:px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Type</th>
+                      <th className="px-3 sm:px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
+                      <th className="px-3 sm:px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
                     {upcomingAppointments.slice(0, 5).map((appointment) => (
                       <tr key={appointment.id} className="hover:bg-muted/30 transition-colors">
-                        <td className="px-6 py-4">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-[#18E614] rounded-full flex items-center justify-center text-white font-semibold text-xs">
+                        <td className="px-3 sm:px-6 py-4">
+                          <div className="flex items-center space-x-2 sm:space-x-3">
+                            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-[#18E614] rounded-full flex items-center justify-center text-white font-semibold text-xs">
                               {appointment.patientAvatar}
                             </div>
-                            <div>
-                              <div className="font-medium text-foreground">{appointment.patientName}</div>
-                              <div className="text-sm text-muted-foreground">{appointment.condition}</div>
+                            <div className="min-w-0">
+                              <div className="font-medium text-foreground text-sm sm:text-base truncate">{appointment.patientName}</div>
+                              <div className="text-xs sm:text-sm text-muted-foreground truncate">{appointment.condition}</div>
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm text-foreground">{appointment.date}</div>
-                          <div className="text-sm text-muted-foreground">{appointment.time} • {appointment.duration}</div>
+                        <td className="px-3 sm:px-6 py-4">
+                          <div className="text-xs sm:text-sm text-foreground">{appointment.date}</div>
+                          <div className="text-xs sm:text-sm text-muted-foreground">{appointment.time} • {appointment.duration}</div>
                         </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center space-x-2">
+                        <td className="px-3 sm:px-6 py-4">
+                          <div className="flex items-center space-x-1 sm:space-x-2">
                             <span className={`${getTypeColor(appointment.type)}`}>
                               {getTypeIcon(appointment.type)}
                             </span>
-                            <span className="text-sm text-foreground capitalize">{appointment.type}</span>
+                            <span className="text-xs sm:text-sm text-foreground capitalize">{appointment.type}</span>
                           </div>
                         </td>
-                        <td className="px-6 py-4">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(appointment.status)}`}>
+                        <td className="px-3 sm:px-6 py-4">
+                          <span className={`px-1 sm:px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(appointment.status)}`}>
                             {getStatusText(appointment.status)}
                           </span>
                         </td>
-                        <td className="px-6 py-4">
-                          <div className="flex space-x-2">
+                        <td className="px-3 sm:px-6 py-4">
+                          <div className="flex space-x-1 sm:space-x-2">
                             <button
                               onClick={() => openAppointmentModal(appointment)}
-                              className="p-2 text-[#18E614] hover:bg-[#18E614]/10 rounded-lg transition-colors"
+                              className="p-1 sm:p-2 text-[#18E614] hover:bg-[#18E614]/10 rounded-lg transition-colors"
                               title="View Details"
                             >
-                              <User className="w-4 h-4" />
+                              <User className="w-3 h-3 sm:w-4 sm:h-4" />
                             </button>
-                            <button className="p-2 text-[#6366F1] hover:bg-[#6366F1]/10 rounded-lg transition-colors" title="Message">
-                              <MessageCircle className="w-4 h-4" />
+                            <button className="p-1 sm:p-2 text-[#6366F1] hover:bg-[#6366F1]/10 rounded-lg transition-colors" title="Message">
+                              <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4" />
                             </button>
                           </div>
                         </td>

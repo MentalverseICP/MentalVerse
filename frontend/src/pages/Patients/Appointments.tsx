@@ -351,12 +351,7 @@ const CustomCalendar = () => {
   return (
     <div
       ref={calendarRef}
-      className={`p-5 relative ${
-        currentView === "month" || currentView === "agenda"
-          ? "h-screen"
-          : "h-full"
-      }
-      max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 
+      className={`p-5 relative max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 
       max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)] 
       transition-all dark:bg-transparent 
       scrollbar-custom overflow-x-scroll grid 

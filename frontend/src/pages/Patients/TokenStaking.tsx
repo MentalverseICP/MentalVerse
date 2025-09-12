@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Award, TrendingUp, Lock, Unlock, Calculator, Info } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
-import { useTheme } from '@/components/theme-provider';
+import { useTheme } from '@/components/shared/theme-provider';
 import { authService } from '@/services/backend';
 import { useSidebar } from '@/components/ui/Sidebar';
 
@@ -238,7 +238,7 @@ export default function TokenStaking() {
   }
 
   return (
-    <div className={cn("space-y-6 min-h-screen w-full transition-colors duration-500 px-2 py-8 sm:p-4 md:p-8 p-5 relative max-[640px]:ml-16 max-[640px]:w-[calc(100vw-5rem)] max-[500px]:overflow-x-auto max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)] dark:bg-transparent", isCollapsed ? "md:w-[90vw]" : "md:w-[80vw]")}>
+    <div className={cn("space-y-6 w-full transition-colors duration-500 px-2 py-8 sm:p-4 md:p-8 p-5 relative max-[640px]:ml-16 max-[640px]:w-[calc(100vw-5rem)] max-[500px]:overflow-x-auto max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)] dark:bg-transparent", isCollapsed ? "md:w-[90vw]" : "md:w-[80vw]")}>
       {/* Staking Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className={cn('border-2', theme === 'dark' ? 'bg-[#0B0B0C] border-[#2f3339]' : 'bg-white border-gray-200')}>
@@ -441,7 +441,7 @@ export default function TokenStaking() {
                     <Badge 
                       className={cn(
                         position.status === 'active' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
-                        position.status === 'unlocked' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
+                        position.status === 'unlocked' ? 'text-white dark:text-white' + (theme === 'dark' ? ' bg-[#0DB16A]' : ' bg-[#18E614]') :
                         'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
                       )}
                     >
