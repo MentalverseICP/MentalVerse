@@ -5,7 +5,7 @@ import { useTheme } from "./theme-provider"
 import { cn } from '@/lib/utils';
 import { Separator } from '@radix-ui/react-separator';
 import userImg from '@/images/OIP (18).jpeg'
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useSearch } from '@/contexts/SearchContext';
 
 import mentalIcon from "@/images/mental_Icon.svg"
@@ -84,7 +84,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   return (
     <div className={`dark:border-[#2f3339] border-2 rounded-b-3xl max-lg:rounded-bl-none h-24 mx-2 p-5 max-sm:p-3 grid xl:gap-8 lg:gap-6 md:gap-4 sm:gap-3 gap-2 grid-flow-col items-center justify-between z-20 ${className}`}>
 
-      <Link to={"/home"} className="flex items-center justify-start px-1 relative z-[52] flex-shrink-0">
+      <div className="flex items-center justify-start px-1 relative z-[52] flex-shrink-0">
         <img
           src={
             isLargeScreen 
@@ -98,7 +98,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           alt="Mental Verse"
           className={cn("logo fill-mental transition max-h-12 w-auto")}
         />
-      </Link>
+      </div>
 
       <div className={`flex xl:gap-4 lg:gap-3 sm:gap-2 gap-1 items-center justify-end flex-shrink-0`}>
         {/* Search */}
