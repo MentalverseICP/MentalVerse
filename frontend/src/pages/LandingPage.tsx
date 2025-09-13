@@ -1,16 +1,12 @@
 import React from 'react'
-import { Enhanced3DBackground } from '@/components/landing/MotionComponent'
-import { Interactive3DBrain } from '@/components/landing/Interactive3DBrain'
 import { Header } from '@/components/landing/Header'
 import { Hero } from '@/components/landing/Hero'
+import { SmilesSection } from '@/components/landing/SmilesSection'
 import { Services } from '@/components/landing/Services'
-import { Stats } from '@/components/landing/Stats'
-import { TechnologySection } from '@/components/landing/TechnologySection'
-import { FeaturesSection } from '@/components/landing/FeaturesSection'
-// import { Therapists } from '@/components/landing/Therapists'
+import { WellnessSection } from '@/components/landing/WellnessSection'
 import { TestimonialsSection } from '@/components/landing/TestimonialsSection'
-import { ResourcesSection } from '@/components/landing/ResourcesSection'
-import { ContactSection } from '@/components/landing/ContactSection'
+import { HealthGuidanceSection } from '@/components/landing/HealthGuidanceSection'
+import { AppointmentSection } from '@/components/landing/AppointmentSection'
 import { Footer } from '@/components/landing/Footer'
 import Chatbot from '@/components/shared/Chatbot'
 
@@ -20,20 +16,15 @@ interface LandingPageProps {
 
 const LandingPage: React.FC<LandingPageProps> = ({ onWalletDisconnect }) => {
   return (
-    <div className="min-h-screen bg-black text-white overflow-x-hidden">
-      {/* All responsiveness handled in child components */}
-      <Enhanced3DBackground />
-      <Interactive3DBrain />
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       <Header onWalletDisconnect={onWalletDisconnect} />
       <Hero />
-      <Stats />
+      <SmilesSection />
       <Services />
-      <TechnologySection />
-      <FeaturesSection />
-      {/* <Therapists /> */}
+      <WellnessSection />
       <TestimonialsSection />
-      <ResourcesSection />
-      <ContactSection />
+      <HealthGuidanceSection />
+      <AppointmentSection />
       <Footer />
       <Chatbot />
     </div>

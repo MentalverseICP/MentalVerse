@@ -1,73 +1,77 @@
-import { Star } from "lucide-react";
-import { FadeInSection } from '@/components/landing/MotionComponent'
-
+import { motion } from 'framer-motion';
+import { Quote, ArrowRight } from 'lucide-react';
 
 export const TestimonialsSection: React.FC = () => {
   const testimonials = [
     {
-      name: 'Sarah M.',
-      role: 'Software Engineer',
-      content: 'MentalVerse has revolutionized how I approach mental health. The blockchain security gives me peace of mind knowing my data is truly private.',
-      rating: 5,
-      avatar: 'SM'
+      name: "Sarah",
+      content: "The progress tracker is fantastic. It's motivating to see how much I've improved over time. MentalVerse has a great mix of common and challenging words."
     },
     {
-      name: 'James L.',
-      role: 'Student',
-      content: 'The 24/7 crisis support saved my life. Having access to professional help instantly through the platform made all the difference.',
-      rating: 5,
-      avatar: 'JL'
+      name: "Darlene", 
+      content: "The progress tracker is fantastic. It's motivating to see how much I've improved over time. MentalVerse has a great mix of common and challenging words."
     },
     {
-      name: 'Maria R.',
-      role: 'Teacher',
-      content: 'The group therapy sessions are incredibly well-organized. I love how I can connect with others while maintaining complete privacy.',
-      rating: 5,
-      avatar: 'MR'
-    },
-    {
-      name: 'David K.',
-      role: 'Entrepreneur',
-      content: 'The AI-powered insights have helped me understand my mental health patterns better than ever before. Truly innovative.',
-      rating: 5,
-      avatar: 'DK'
+      name: "Maria",
+      content: "The progress tracker is fantastic. It's motivating to see how much I've improved over time. MentalVerse has a great mix of common and challenging words."
     }
   ];
 
   return (
-    <section id="testimonials" className="py-20 relative">
-      <div className="container mx-auto px-4 relative z-10">
-        <FadeInSection className="text-center mb-16">
-          <p className="text-green-400 mb-4 text-sm uppercase tracking-wide">Testimonials</p>
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">What Our Clients Say</h2>
-          <p className="text-gray-300 text-lg max-w-3xl mx-auto">
-            Real stories from people who have transformed their mental health journey with MentalVerse.
-          </p>
-        </FadeInSection>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-center md:text-left">
+    <section id="testimonials" className="py-16 bg-background">
+      <div className="container mx-auto px-6">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true }}
+          className="text-center mb-12"
+        >
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-8">Happy Clients</h2>
+        </motion.div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {testimonials.map((testimonial, index) => (
-            <FadeInSection key={testimonial.name} delay={index * 200}>
-              <div className="bg-black/50 backdrop-blur-xl border border-green-500/30 rounded-2xl p-8 hover:shadow-2xl transition-all duration-500 group hover:scale-105 h-full">
-                <div className="flex items-center mb-6">
-                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold mr-4">
-                    {testimonial.avatar}
-                  </div>
-                  <div>
-                    <h4 className="text-white font-semibold">{testimonial.name}</h4>
-                    <p className="text-gray-400 text-sm">{testimonial.role}</p>
-                  </div>
+            <motion.div 
+              key={index}
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: index * 0.2 }}
+              viewport={{ once: true }}
+              whileHover={{ scale: 1.02 }}
+              className="bg-card border border-border rounded-xl p-6 hover:shadow-lg transition-all duration-300"
+            >
+              <div className="flex items-start space-x-4">
+                <div className="w-8 h-8 bg-primary/20 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                  <Quote className="w-4 h-4 text-primary" />
                 </div>
-                <div className="flex mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 text-yellow-500 fill-current" />
-                  ))}
+                <div>
+                  <p className="text-muted-foreground text-sm leading-relaxed mb-4">
+                    "{testimonial.content}"
+                  </p>
+                  <p className="text-foreground font-medium">- {testimonial.name}</p>
                 </div>
-                <p className="text-gray-300 leading-relaxed italic">"{testimonial.content}"</p>
               </div>
-            </FadeInSection>
+            </motion.div>
           ))}
         </div>
+
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true }}
+          className="text-center"
+        >
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center space-x-2 mx-auto"
+          >
+            <span>View All Reviews</span>
+            <ArrowRight className="w-4 h-4" />
+          </motion.button>
+        </motion.div>
       </div>
     </section>
   );

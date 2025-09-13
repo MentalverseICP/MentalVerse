@@ -1,56 +1,110 @@
-import { Brain } from "lucide-react";
+import { motion } from 'framer-motion';
+import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
 
 export const Footer: React.FC = () => {
+  const currentYear = new Date().getFullYear();
+
+  const footerSections = [
+    {
+      title: "Contact",
+      links: [
+        { label: "123 Main Street, City, State 12345", icon: MapPin },
+        { label: "+1 (555) 123-4567", icon: Phone },
+        { label: "info@mentalverse.com", icon: Mail }
+      ]
+    },
+    {
+      title: "Navigate",
+      links: [
+        { label: "Home", href: "#home" },
+        { label: "Services", href: "#services" },
+        { label: "Testimonials", href: "#testimonials" },
+        { label: "Resources", href: "#resources" },
+        { label: "Download App", href: "#download" }
+      ]
+    },
+    {
+      title: "Solution",
+      links: [
+        { label: "Care", href: "#care" },
+        { label: "Support", href: "#support" },
+        { label: "What We Do", href: "#what-we-do" },
+        { label: "Expertise", href: "#expertise" }
+      ]
+    },
+    {
+      title: "Follow Us",
+      social: [
+        { icon: Facebook, href: "#facebook", label: "Facebook" },
+        { icon: Instagram, href: "#instagram", label: "Instagram" },
+        { icon: Twitter, href: "#twitter", label: "Twitter" },
+        { icon: Linkedin, href: "#linkedin", label: "LinkedIn" }
+      ]
+    }
+  ];
+
   return (
-    <footer className="bg-black/80 backdrop-blur-xl border-t border-green-500/30 py-12">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center md:text-left">
-          <div>
-            <div className="flex items-center space-x-2 mb-4">
-              <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
-                <Brain className="text-white" size={20} />
-              </div>
-              <span className="text-white text-xl font-bold">MentalVerse</span>
-            </div>
-            <p className="text-gray-400">
-              Revolutionizing mental health care through blockchain technology and compassionate support.
-            </p>
-          </div>
-          
-          <div>
-            <h4 className="text-white font-semibold mb-4">Services</h4>
-            <ul className="space-y-2 text-gray-400">
-              <li><a href="#" className="hover:text-green-400 transition-colors">Individual Therapy</a></li>
-              <li><a href="#" className="hover:text-green-400 transition-colors">Group Therapy</a></li>
-              <li><a href="#" className="hover:text-green-400 transition-colors">Crisis Support</a></li>
-              <li><a href="#" className="hover:text-green-400 transition-colors">Mindfulness</a></li>
-            </ul>
-          </div>
-          
-          <div>
-            <h4 className="text-white font-semibold mb-4">Resources</h4>
-            <ul className="space-y-2 text-gray-400">
-              <li><a href="#" className="hover:text-green-400 transition-colors">Articles</a></li>
-              <li><a href="#" className="hover:text-green-400 transition-colors">Meditations</a></li>
-              <li><a href="#" className="hover:text-green-400 transition-colors">Workshops</a></li>
-              <li><a href="#" className="hover:text-green-400 transition-colors">Community</a></li>
-            </ul>
-          </div>
-          
-          <div>
-            <h4 className="text-white font-semibold mb-4">Connect</h4>
-            <ul className="space-y-2 text-gray-400">
-              <li><a href="#" className="hover:text-green-400 transition-colors">Discord</a></li>
-              <li><a href="https://x.com/mentalverse_ICP" className="hover:text-green-400 transition-colors">Twitter</a></li>
-              <li><a href="#" className="hover:text-green-400 transition-colors">Telegram</a></li>
-              <li><a href="#" className="hover:text-green-400 transition-colors">GitHub</a></li>
-            </ul>
-          </div>
+    <footer className="bg-background border-t border-border">
+      <div className="container mx-auto px-6 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {footerSections.map((section, index) => (
+            <motion.div 
+              key={section.title}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: index * 0.1 }}
+              viewport={{ once: true }}
+            >
+              <h3 className="text-foreground font-semibold text-lg mb-6">{section.title}</h3>
+              
+              {section.links && (
+                <ul className="space-y-3">
+                  {section.links.map((link, linkIndex) => (
+                    <li key={linkIndex}>
+                      <a
+                        href={link.href || '#'}
+                        className="text-muted-foreground hover:text-foreground transition-colors duration-300 flex items-center space-x-2"
+                      >
+                        {link.icon && <link.icon className="w-4 h-4" />}
+                        <span>{link.label}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {section.social && (
+                <div className="flex space-x-4">
+                  {section.social.map((social) => (
+                    <motion.a
+                      key={social.label}
+                      href={social.href}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="w-10 h-10 bg-muted hover:bg-primary rounded-lg flex items-center justify-center transition-colors duration-300 group"
+                      aria-label={social.label}
+                    >
+                      <social.icon className="w-5 h-5 text-muted-foreground group-hover:text-primary-foreground" />
+                    </motion.a>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          ))}
         </div>
-        
-        <div className="border-t border-green-500/30 mt-8 pt-8 text-center text-gray-400">
-          <p>&copy; 2024 MentalVerse. All rights reserved. Built on Internet Computer Protocol.</p>
-        </div>
+
+        {/* Copyright */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true }}
+          className="mt-12 pt-8 border-t border-border text-center"
+        >
+          <p className="text-muted-foreground">
+            © {currentYear} MentalVerse. All rights reserved. Built with Web3 technology for a better mental health future.
+          </p>
+        </motion.div>
       </div>
     </footer>
   );
