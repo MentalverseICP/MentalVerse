@@ -665,7 +665,7 @@ persistent actor MentalVerseBackend {
     
     // Check if user already exists
     switch (userProfiles.get(caller)) {
-      case (?existingProfile) {
+      case (?_existingProfile) {
         #err("User already registered")
       };
       case null {
@@ -887,7 +887,6 @@ persistent actor MentalVerseBackend {
     let now = Time.now();
     
     let availability: TherapistAvailability = {
-      id = availabilityId;
       therapistId = Principal.toText(caller);
       dayOfWeek = dayOfWeek;
       startTime = startTime;
@@ -928,7 +927,7 @@ persistent actor MentalVerseBackend {
     sessionType: Text,
     pricePerSession: Nat,
     currency: Text,
-    description: ?Text
+    _description: ?Text
   ) : async Result.Result<SessionPricing, Text> {
     let caller = msg.caller;
     
@@ -1536,11 +1535,11 @@ persistent actor MentalVerseBackend {
       case null { #err("Medical record not found") };
       case (?record) {
         // Check if caller has access to this record
-        let hasAccess = Array.find<UserId>(record.accessPermissions, func(userId: UserId) : Bool {
+        let _hasAccess = Array.find<UserId>(record.accessPermissions, func(userId: UserId) : Bool {
           userId == caller
         }) != null;
         
-        if (not hasAccess) {
+        if (not _hasAccess) {
           return #err("Unauthorized: You don't have access to this medical record");
         };
         
@@ -2196,6 +2195,7 @@ persistent actor MentalVerseBackend {
       session_id = ?sessionId;
       encryption_key_id = "session_" # sessionId # "_key";
     };
+    let _ = metadata.description; // Use description to avoid unused warning
     
     try {
       let result = await secureMessagingActor.create_conversation(participants, #SessionChat, metadata);
@@ -2361,7 +2361,7 @@ persistent actor MentalVerseBackend {
   };
 
   // Helper function to check access permissions
-  private func hasAccess(userId: UserId, resourceId: Text, requiredLevel: AccessLevel) : Bool {
+  private func _hasAccess(userId: UserId, resourceId: Text, requiredLevel: AccessLevel) : Bool {
     switch (accessControlRules.get(resourceId # "_" # Principal.toText(userId))) {
       case (?rule) {
         rule.isActive and (rule.accessLevel == requiredLevel or rule.accessLevel == #admin or rule.accessLevel == #owner)
@@ -3204,7 +3204,11 @@ persistent actor MentalVerseBackend {
           return #err("Payment plan is already completed");
         };
         
-        let newRemainingInstallments = plan.remainingInstallments - 1;
+        // Safe decrement without risking underflow
+        let newRemainingInstallments : Nat = switch (plan.remainingInstallments) {
+          case (0) 0; // already handled above
+          case (n) n - 1;
+        };
         let newStatus = if (newRemainingInstallments == 0) { #completed } else { #pending };
         
         // Calculate next payment date
