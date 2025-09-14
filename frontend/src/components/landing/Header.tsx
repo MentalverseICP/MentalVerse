@@ -7,7 +7,6 @@ import { ThemeToggle } from '../shared/theme-toggle';
 import { motion } from 'framer-motion';
 import MentalIcon from "@/images/mental_mobile.svg";
 
-// Simple connect button component
 const SimpleConnectButton = () => {
   const { user, login, logout } = useContext(AuthContext);
   
@@ -17,7 +16,7 @@ const SimpleConnectButton = () => {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={logout}
-        className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-all duration-300 font-medium"
+        className="bg-destructive hover:bg-destructive/90 text-white px-6 py-2 rounded-lg transition-all duration-300 font-medium"
       >
         Disconnect
       </motion.button>
@@ -29,14 +28,14 @@ const SimpleConnectButton = () => {
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       onClick={login}
-      className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 rounded-lg transition-all duration-300 font-medium"
+      className="bg-[#18E614] hover:bg-[#18E614]/90 text-white px-6 py-2 rounded-lg transition-all duration-300 font-medium"
     >
       Connect Wallet
     </motion.button>
   );
 };
 
-export const Header: React.FC<{ onWalletDisconnect?: () => void }> = ({ onWalletDisconnect }) => {
+export const Header: React.FC<{ onWalletDisconnect?: () => void }> = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -44,8 +43,8 @@ export const Header: React.FC<{ onWalletDisconnect?: () => void }> = ({ onWallet
     { label: 'Home', id: 'home' },
     { label: 'Services', id: 'services' },
     { label: 'Testimonials', id: 'testimonials' },
-    { label: 'Resources', id: 'resources' },
-    { label: 'About', id: 'about' }
+    { label: 'Health Guidance', id: 'health-guidance' },
+    { label: 'Book Appointment', id: 'appointment' }
   ];
 
   useEffect(() => {
@@ -62,8 +61,8 @@ export const Header: React.FC<{ onWalletDisconnect?: () => void }> = ({ onWallet
       animate={{ y: 0 }}
       className={`fixed w-full z-50 transition-all duration-500 ${
         isScrolled 
-          ? 'bg-background/95 backdrop-blur-lg border-b border-border shadow-lg' 
-          : 'bg-transparent'
+          ? 'bg-background/90 backdrop-blur-lg border-b border-border shadow-lg' 
+          : 'bg-background/95'
       }`}
     >
       <div className="container mx-auto px-6 py-4">
@@ -73,8 +72,8 @@ export const Header: React.FC<{ onWalletDisconnect?: () => void }> = ({ onWallet
             className="flex items-center space-x-3"
             whileHover={{ scale: 1.05 }}
           >
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary/80 rounded-lg flex items-center justify-center">
-              <img src={MentalIcon} alt="MentalVerse" className="w-6 h-6" />
+            <div className="w-15 h-15 flex items-center justify-center">
+              <img src={MentalIcon} alt="MentalVerse" className="w-12 h-12" />
             </div>
             <span className="text-foreground text-xl font-bold">MentalVerse</span>
           </motion.div>
@@ -119,7 +118,7 @@ export const Header: React.FC<{ onWalletDisconnect?: () => void }> = ({ onWallet
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="lg:hidden mt-4 pb-4 bg-card/95 backdrop-blur-lg rounded-lg shadow-lg border border-border"
+            className="lg:hidden mt-4 pb-4"
           >
             <nav className="flex flex-col space-y-4 p-4">
               {navigationItems.map((item) => (

@@ -1,17 +1,22 @@
-import React from 'react';
+import React from "react";
 import { Brain } from "lucide-react";
 
-
 // Custom Connect Button Component
-type CustomConnectButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  loading?: boolean;
-};
+type CustomConnectButtonProps =
+  React.ButtonHTMLAttributes<HTMLButtonElement> & {
+    loading?: boolean;
+  };
 
-export const CustomConnectButton: React.FC<CustomConnectButtonProps> = ({ onClick, loading = false, disabled, ...props }) => {
+export const CustomConnectButton: React.FC<CustomConnectButtonProps> = ({
+  onClick,
+  loading = false,
+  disabled,
+  ...props
+}) => {
   return (
     <button
       onClick={onClick}
-      className="border border-green-500/50 text-green-300 px-8 py-3 rounded-lg text-md font-semibold hover:bg-green-600/20 transition-all transform hover:scale-105 flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-green-400/10 disabled:hover:scale-100"
+      className="border border-[#18E614]/50 text-white px-8 py-3 rounded-lg text-md font-semibold hover:bg-[#18E614]/20 transition-all transform hover:scale-105 flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-[#18E614]/10 disabled:hover:scale-100 bg-[#18E614]"
       disabled={loading || disabled}
       aria-busy={!!loading}
       {...props}
@@ -25,7 +30,6 @@ export const CustomConnectButton: React.FC<CustomConnectButtonProps> = ({ onClic
     </button>
   );
 };
-
 
 type CustomConnectedButtonProps = {
   connectedAccount?: string;
@@ -44,14 +48,13 @@ export const CustomConnectedButton: React.FC<CustomConnectedButtonProps> = ({
 }) => {
   const truncatedAccount = connectedAccount
     ? `${connectedAccount.slice(0, 6)}...${connectedAccount.slice(-4)}`
-    : 'Connected';
-
+    : "Connected";
 
   return (
     <div className="flex items-center gap-2">
       <button
         onClick={onClick}
-        className="bg-black/50 backdrop-blur-xl border border-green-500/50 text-green-300 px-4 py-2 rounded-lg hover:bg-green-600/20 transition-all flex items-center gap-2 font-medium disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-green-400/10 disabled:hover:scale-100"
+        className="bg-[#18E614] backdrop-blur-xl border border-[#18E614]/50 text-white px-4 py-2 rounded-lg hover:bg-[#18E614]/90 transition-all flex items-center gap-2 font-medium disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-[#18E614]/10 disabled:hover:scale-100"
         disabled={loading || disabled}
         aria-busy={loading}
         {...props}

@@ -4,20 +4,20 @@ export const HealthGuidanceSection: React.FC = () => {
   const articles = [
     {
       title: "How to Finally Stop Catastrophizing",
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
+      image: "/src/app/Mentalverse images for lP/group-therapy-session.jpg"
     },
     {
       title: "So, Relationship OCD is a Thing",
-      image: "https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
+      image: "/src/app/Mentalverse images for lP/colleagues.jpg"
     },
     {
       title: "Wait, Am I Autistic?",
-      image: "https://images.unsplash.com/photo-1544027993-37dbfe43562a?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
+      image: "/src/app/Mentalverse images for lP/people-sitting-chairs.jpg"
     }
   ];
 
   return (
-    <section className="py-16 bg-background">
+    <section id="health-guidance" className="py-16 bg-transparent">
       <div className="container mx-auto px-6">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -29,7 +29,7 @@ export const HealthGuidanceSection: React.FC = () => {
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-8">Health Guidance</h2>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {articles.map((article, index) => (
             <motion.div 
               key={index}
@@ -38,7 +38,7 @@ export const HealthGuidanceSection: React.FC = () => {
               transition={{ duration: 0.8, delay: index * 0.2 }}
               viewport={{ once: true }}
               whileHover={{ scale: 1.02 }}
-              className="bg-card border border-border rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer"
+              className="bg-card border border-border/30 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer"
             >
               <div className="relative">
                 <img 

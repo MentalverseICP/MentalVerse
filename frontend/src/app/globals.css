@@ -29,7 +29,7 @@
   }
 
   .dark {
-    --background: 142 20% 8%;
+    --background: 142 20% 6%;
     --foreground: 0 0% 98%;
     --card: 142 20% 8%;
     --card-foreground: 0 0% 98%;
@@ -37,16 +37,16 @@
     --popover-foreground: 0 0% 98%;
     --primary: 142 76% 36%;
     --primary-foreground: 0 0% 98%;
-    --secondary: 142 15% 15%;
+    --secondary: 142 15% 12%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 142 15% 15%;
+    --muted: 142 15% 12%;
     --muted-foreground: 240 5% 64.9%;
     --accent: 142 76% 36%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 142 15% 15%;
-    --input: 142 15% 15%;
+    --border: 142 15% 18%;
+    --input: 142 15% 12%;
     --ring: 142 76% 36%;
   }
 }
@@ -128,7 +128,27 @@
 
 /* Add transition for theme changes */
 * {
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Smooth transitions for theme-specific elements */
+.theme-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Enhanced transitions for interactive elements */
+button, a, [role="button"] {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Smooth transitions for cards and containers */
+.bg-card, .bg-background, .bg-popover {
+  transition: background-color 0.3s ease;
+}
+
+/* Enhanced border transitions */
+.border-border {
+  transition: border-color 0.3s ease;
 }
 
 /* Ensure the theme toggle is visible in the sheet */

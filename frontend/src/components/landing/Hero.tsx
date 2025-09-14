@@ -1,12 +1,11 @@
+import { AuthContext } from '@/App';
 import { motion } from 'framer-motion';
-import { ArrowRight, Star, Download, Play } from 'lucide-react';
+import { ArrowUpRight, Star } from 'lucide-react';
 import { useContext } from 'react';
-import { AuthContext } from '../../App';
-import { scrollToSection } from './MotionComponent';
 
 // Simple connect button component
 const SimpleConnectButton = () => {
-  const { user, login, logout } = useContext(AuthContext);
+  const { user, logout, login } = useContext(AuthContext);
   
   if (user) {
     return (
@@ -14,10 +13,10 @@ const SimpleConnectButton = () => {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={logout}
-        className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg text-md font-semibold transition-all duration-300 flex items-center space-x-2"
+        className="bg-destructive hover:bg-destructive/90 text-white px-8 py-3 rounded-2xl text-md font-semibold transition-all duration-300 flex items-center space-x-2"
       >
         <span>Disconnect</span>
-        <ArrowRight className="w-4 h-4" />
+        <ArrowUpRight className="w-4 h-4" />
       </motion.button>
     );
   }
@@ -27,44 +26,46 @@ const SimpleConnectButton = () => {
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       onClick={login}
-      className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 rounded-lg text-md font-semibold transition-all duration-300 flex items-center space-x-2"
+      className="bg-[#18E614] hover:bg-[#18E614]/90 text-white px-8 py-3 rounded-2xl text-md font-semibold transition-all duration-300 flex items-center space-x-2"
     >
       <span>Book Appointment</span>
-      <ArrowRight className="w-4 h-4" />
+      <ArrowUpRight className="w-5 h-5" />
     </motion.button>
   );
 };
 
-export const Hero: React.FC = () => {
+export const Hero = () => {
   return (
-    <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background Image */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-background/80 to-background/60 z-10"></div>
-        <img 
-          src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" 
-          alt="Therapy session" 
-          className="w-full h-full object-cover"
-        />
-      </div>
+    <section id="home" className="relative md:min-h-screen bg-transparent">
+      <div className="mx-auto px-6 pt-24 pb-12">
+        {/* Main Hero Card */}
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="relative bg-card rounded-3xl shadow-2xl overflow-hidden max-w-[90rem] mx-auto min-h-[600px]"
+        >
+          {/* Full Background Image */}
+          <div className="absolute inset-0 w-full h-full">
+            <img 
+              src="https://images.unsplash.com/photo-1544027993-37dbfe43562a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" 
+              alt="Mental wellness and meditation" 
+              className="w-full h-full object-cover"
+            />
+            {/* Gradient overlay for better text readability */}
+            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/30"></div>
+          </div>
 
-      <div className="container mx-auto px-6 pt-20 relative z-20">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Left Content */}
-          <motion.div 
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-            className="flex flex-col items-start text-left"
-          >
+          {/* Main Content */}
+          <div className="relative z-10 p-8 lg:p-12 w-full lg:w-3/5 xl:w-1/2 flex flex-col justify-center min-h-[600px]">
             {/* Badge */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="inline-flex items-center space-x-2 bg-primary/20 backdrop-blur-sm border border-primary/30 text-primary px-4 py-2 rounded-full text-sm mb-6"
+              className="w-fit flex items-center space-x-2 bg-[#18E614]/10 border border-[#18E614]/30 text-[#3aa03f] px-4 py-2 rounded-full text-sm font-medium mb-8 backdrop-blur-sm"
             >
-              <Star className="w-4 h-4" />
+              <Star className="w-4 h-4 fill-current" />
               <span>24K Happy Customers</span>
             </motion.div>
 
@@ -73,7 +74,7 @@ export const Hero: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="text-5xl md:text-6xl font-bold text-foreground mb-6 leading-tight"
+              className="text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-6 leading-tight"
             >
               Revitalize Your Thoughts & Enrich Your Soul Each Day
             </motion.h1>
@@ -83,7 +84,7 @@ export const Hero: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="text-muted-foreground text-lg mb-8 max-w-lg"
+              className="text-white/80 text-lg mb-8 leading-relaxed max-w-lg"
             >
               Our mission is to drive progress and enhance the lives of our customers by delivering superior products and services that exceed expectations.
             </motion.p>
@@ -96,81 +97,8 @@ export const Hero: React.FC = () => {
             >
               <SimpleConnectButton />
             </motion.div>
-          </motion.div>
-
-          {/* Right Content - App Download Card */}
-          <motion.div 
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="flex justify-end"
-          >
-            <div className="relative">
-              {/* App Download Card */}
-              <motion.div 
-                whileHover={{ scale: 1.02 }}
-                className="bg-card/80 backdrop-blur-xl border border-border rounded-2xl p-6 max-w-sm shadow-2xl"
-              >
-                <div className="text-center mb-6">
-                  <h3 className="text-foreground font-semibold text-lg mb-2">Get Our App</h3>
-                  
-                  {/* QR Code Placeholder */}
-                  <div className="w-24 h-24 bg-muted rounded-lg mx-auto mb-4 flex items-center justify-center">
-                    <div className="w-16 h-16 bg-primary/20 rounded-lg flex items-center justify-center">
-                      <span className="text-primary text-xs">QR</span>
-                    </div>
-                  </div>
-
-                  {/* Download Buttons */}
-                  <div className="space-y-3">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="w-full bg-foreground text-background px-4 py-2 rounded-lg text-sm font-medium flex items-center justify-center space-x-2"
-                    >
-                      <Download className="w-4 h-4" />
-                      <span>Download on the App Store</span>
-                    </motion.button>
-                    
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="w-full bg-foreground text-background px-4 py-2 rounded-lg text-sm font-medium flex items-center justify-center space-x-2"
-                    >
-                      <Download className="w-4 h-4" />
-                      <span>Get it on Google Play</span>
-                    </motion.button>
-                  </div>
-                </div>
-
-                {/* Phone Image */}
-                <div className="relative">
-                  <img 
-                    src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80" 
-                    alt="Woman using phone" 
-                    className="w-full h-32 object-cover rounded-lg"
-                  />
-                </div>
-              </motion.div>
-
-              {/* Floating Elements */}
-              <motion.div
-                animate={{ 
-                  y: [0, -10, 0],
-                  rotate: [0, 5, 0]
-                }}
-                transition={{ 
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-                className="absolute -top-4 -right-4 w-8 h-8 bg-primary rounded-full flex items-center justify-center"
-              >
-                <Play className="w-4 h-4 text-primary-foreground" />
-              </motion.div>
-            </div>
-          </motion.div>
-        </div>
+          </div>
+        </motion.div>
       </div>
     </section>
   );

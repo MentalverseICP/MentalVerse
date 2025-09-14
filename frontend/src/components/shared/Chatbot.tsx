@@ -137,11 +137,10 @@ const Chatbot: React.FC<ChatbotProps> = ({ className = "" }) => {
   };
 
   return (
-    
-      <div className={`fixed bottom-6 right-6 z-50  ${className}`}>
-        <AnimatePresence>
-          {isOpen && (
-            <div className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50">
+    <div className={`fixed bottom-6 right-6 z-50  ${className}`}>
+      <AnimatePresence>
+        {isOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50">
             <motion.div
               initial={{ opacity: 0, scale: 0.8, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -150,7 +149,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ className = "" }) => {
               className="max-h-[85vh] h-full max-w-[90vw] w-full relative mb-100 w-80 h-96 bg-black/50 backdrop-blur-2xl border border-green-500/30 rounded-xl shadow-2xl flex flex-col overflow-hidden"
             >
               {/* Header */}
-              <div className="   bg-gradient-to-r from-green-500 to-emerald-600 text-white p-4 flex items-center justify-between">
+              <div className="bg-[#18E614] text-white p-4 flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
                     <MessageCircle size={16} />
@@ -228,7 +227,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ className = "" }) => {
                     type="button"
                     onClick={sendMessage}
                     disabled={!inputMessage.trim() || isLoading}
-                    className="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-green-500/50  text-md font-semibold hover:bg-green-600/80 transform hover:scale-105"
+                    className="px-3 py-2 bg-[#18E614] text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-[#18E614]/50  text-md font-semibold hover:bg-[#18E614]/80 transform hover:scale-105"
                     aria-label="Send message"
                   >
                     <Send size={16} />
@@ -236,44 +235,24 @@ const Chatbot: React.FC<ChatbotProps> = ({ className = "" }) => {
                 </div>
               </div>
             </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
+          </div>
+        )}
+      </AnimatePresence>
 
-        {/* Toggle Button */}
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setIsOpen(!isOpen)}
-          className="w-14 h-14 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-full shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center"
-          aria-label={isOpen ? "Close chat" : "Open chat"}
-        >
-          <AnimatePresence mode="wait">
-            {isOpen ? (
-              <motion.div
-                key="close"
-                initial={{ rotate: -90, opacity: 0 }}
-                animate={{ rotate: 0, opacity: 1 }}
-                exit={{ rotate: 90, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <X size={24} />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="open"
-                initial={{ rotate: 90, opacity: 0 }}
-                animate={{ rotate: 0, opacity: 1 }}
-                exit={{ rotate: -90, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <MessageCircle size={24} />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.button>
-      </div>
-   
+      {/* Toggle Button */}
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => setIsOpen(!isOpen)}
+        className="fixed bottom-4 right-4 bg-[#18E614] text-white p-4 rounded-full shadow-lg hover:bg-[#18E614] transition-all duration-300 z-50"
+      >
+        {isOpen ? (
+          <X className="w-6 h-6" />
+        ) : (
+          <MessageCircle className="w-6 h-6" />
+        )}
+      </motion.button>
+    </div>
   );
 };
 
