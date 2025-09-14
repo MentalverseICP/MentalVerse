@@ -21,11 +21,13 @@ const eventColors: { [key: string]: string } = {
 type EventType = 'emergency' | 'examination' | 'routine' | 'consultation' | 'sick';
 
 interface Event {
-    doctor: string;
+    doctor?: string;
     start: Date;
     end: Date;
     type: EventType;
     title: string;
+    startTime?: string;
+    endTime?: string;
 }
 
 const MonthPopover = ({ event, onClose, style = {}, onEdit }: MonthPopoverProps) => {
@@ -35,7 +37,7 @@ const MonthPopover = ({ event, onClose, style = {}, onEdit }: MonthPopoverProps)
                 <div className="flex items-center gap-2">
                     <div className="w-10 h-10 bg-[#DFE0E2] dark:bg-[#3D3D3D] rounded-full"></div>
                     <div>
-                        <h3 className="text-sm font-semibold">{event.doctor}</h3>
+                        <h3 className="text-sm font-semibold">{event.doctor || 'No Doctor Assigned'}</h3>
                         <p className="text-xs text-green-600">DOCTOR</p>
                     </div>
                 </div>

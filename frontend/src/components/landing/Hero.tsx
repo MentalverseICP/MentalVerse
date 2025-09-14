@@ -1,14 +1,13 @@
 import { FadeInSection, MotionDiv, SlideInSection, scrollToSection } from '@/components/landing/MotionComponent'
 import { Calendar } from 'lucide-react';
-import { useContext } from 'react';
-import { AuthContext } from '../../App';
+import { useAuth } from '../../contexts/AuthContext';
 import MentalIcon from "@/images/mental_mobile.svg";
 
 // Simple connect button component
 const SimpleConnectButton = () => {
-  const { user, login, logout } = useContext(AuthContext);
+  const { isAuthenticated, login, logout } = useAuth();
   
-  if (user) {
+  if (isAuthenticated) {
     return (
       <button
         onClick={logout}

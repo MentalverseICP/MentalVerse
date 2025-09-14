@@ -1,67 +1,73 @@
-import React from "react";
-import { Bar } from "react-chartjs-2";
-import { chartOptions, chartData } from "@/components/ui/chartConfig";
-import { TrendingUp } from "lucide-react";
-import { useTheme } from "@/components/theme-provider";
-import { useSidebar } from "../ui/Sidebar";
+"use client";
 
-interface prop {
-  className?: string;
-}
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+  ChartData,
+  ChartOptions,
+} from "chart.js";
+import { Chart } from "react-chartjs-2";
 
-export const StackedBarLineChart: React.FC<prop> = ({ className }) => {
-  const { theme } = useTheme();
-  const { state } = useSidebar();
-  const isCollapsed = state === "collapsed";
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
 
-  return (
-    <div
-      className={`rounded-3xl shadow-md pt-2 relative overflow-hidden border h-full ${className}`}
-    >
-      <div className="absolute p-5 max-lg:relative max-md:absolute max-lg:ml-3 max-sm:p-3 max-[400px]:p-2">
-        <h2 className="uppercase font-bold text-xs max-lg:text-md">
-          Health Index
-        </h2>
-        <div className="flex items-center max-lg:mt-12 max-sm:mt-6 max-[400px]:mt-4">
-          <span
-            className={`text-[#18E614] text-4xl max-lg:text-[50px] max-sm:text-3xl max-[400px]:text-2xl font-bold ${
-              theme === "dark" ? "text-white" : "text-[#18E614]"
-            }`}
-          >
-            75%
-          </span>
-          <TrendingUp className="text-[#F80D38] w-10 h-10 max-sm:w-8 max-sm:h-8 max-[400px]:w-6 max-[400px]:h-6 font-extrabold text-3xl" />
-        </div>
-        <div className="flex flex-col items-start mt-3 max-sm:mt-2 max-[400px]:mt-1">
-          <span
-            className={`text-[10px] max-lg:text-[18px] max-sm:text-[12px] max-[400px]:text-[10px] pb-0 ${
-              theme === "dark" ? "text-white" : "text-gray-600"
-            }`}
-          >
-            Patience health rate
-          </span>
-          <span
-            className={`text-[10px] max-lg:text-[18px] max-sm:text-[12px] max-[400px]:text-[10px] ${
-              theme === "dark" ? "text-white" : "text-gray-600"
-            }`}
-          >
-            from Jan to Dec.
-          </span>
-        </div>
-      </div>
-      <div
-        className={`max-lg:h-72 h-64 max-sm:h-48 max-[400px]:h-40 lg:mt-[24px] ${
-          isCollapsed
-            ? " max-md:mt-32 mt-10 max-sm:mt-20 max-[400px]:mt-16"
-            : "lg:mt-20 md:-mt-28 mt-32 max-sm:mt-24 max-[400px]:mt-20 relative lg:-bottom-16"
-        }`}
-      >
-        <Bar
-          options={chartOptions}
-          data={chartData}
-          className="h-[10rem] max-sm:h-[8rem] max-[400px]:h-[6rem] -m-8 max-sm:-m-4 max-[400px:-m-2]"
-        />
-      </div>
-    </div>
-  );
+const options: ChartOptions<"bar" | "line"> = {
+  responsive: true,
+  plugins: {
+    legend: {
+      position: "top",
+    },
+    title: {
+      display: true,
+      text: "Mixed Bar + Line Chart",
+    },
+  },
 };
+
+const labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"];
+
+const data: ChartData<"bar" | "line", number[], string> = {
+  labels,
+  datasets: [
+    {
+      type: "bar" as const,
+      label: "Bar Dataset",
+      data: [30, 40, 45, 60, 70, 80, 95],
+      backgroundColor: "rgba(53, 162, 235, 0.5)",
+      borderRadius: 8,
+      borderSkipped: false,
+    },
+    {
+      type: "line" as const,
+      label: "Line Dataset",
+      data: [20, 30, 40, 50, 60, 70, 85],
+      borderColor: "rgba(255, 99, 132, 1)",
+      borderWidth: 2,
+      pointStyle: "circle", // ✅ must be a valid string, not boolean
+      pointBackgroundColor: "rgba(255, 99, 132, 1)",
+      backgroundColor: "rgba(255, 99, 132, 0.2)",
+      fill: true,
+    },
+  ],
+};
+
+export default function MixedChart() {
+  return <Chart type="bar" options={options} data={data} />;
+}

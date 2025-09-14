@@ -37,7 +37,6 @@ type CustomConnectedButtonProps = {
 export const CustomConnectedButton: React.FC<CustomConnectedButtonProps> = ({
   connectedAccount,
   onClick,
-  onDisconnect,
   loading = false,
   disabled,
   ...props

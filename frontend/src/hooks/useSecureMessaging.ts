@@ -1,11 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './useAuth';
 import { authService, SecureConversation, SecureMessage } from '@/services/backend';
-import { 
-  ConversationType, 
-  MessageType,
-  ConversationMetadata
-} from '@/services/secureMessaging';
+import { MessageType } from '@/services/secureMessaging';
 import { Principal } from '@dfinity/principal';
 
 interface UseSecureMessagingReturn {
@@ -20,7 +16,12 @@ interface UseSecureMessagingReturn {
   // Actions
   loadConversations: () => Promise<void>;
   loadMessages: (conversationId: string) => Promise<void>;
-  sendMessage: (conversationId: string, recipient: Principal, content: string, messageType?: MessageType) => Promise<void>;
+  sendMessage: (
+    conversationId: string,
+    recipient: Principal,
+    content: string,
+    messageType?: MessageType
+  ) => Promise<void>;
   createConversation: (participants: Principal[]) => Promise<SecureConversation | null>;
   selectConversation: (conversation: SecureConversation | null) => void;
   markMessageAsRead: (messageId: string) => Promise<void>;
@@ -30,6 +31,7 @@ interface UseSecureMessagingReturn {
 
 export const useSecureMessaging = (): UseSecureMessagingReturn => {
   const { isAuthenticated, userPrincipal } = useAuth();
+
   const [conversations, setConversations] = useState<SecureConversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<SecureConversation | null>(null);
   const [messages, setMessages] = useState<SecureMessage[]>([]);
@@ -37,13 +39,13 @@ export const useSecureMessaging = (): UseSecureMessagingReturn => {
   const [error, setError] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Initialize secure messaging through backend
+  /** Initialize secure messaging */
   useEffect(() => {
     if (isAuthenticated && !isInitialized) {
       setIsInitialized(true);
-      loadConversations();
+      void loadConversations();
     } else if (!isAuthenticated) {
-      // Reset state when user logs out
+      // Reset state when logged out
       setConversations([]);
       setSelectedConversation(null);
       setMessages([]);
@@ -52,32 +54,32 @@ export const useSecureMessaging = (): UseSecureMessagingReturn => {
     }
   }, [isAuthenticated, isInitialized]);
 
-  // Load messages when conversation is selected
+  /** Auto-load messages when conversation changes */
   useEffect(() => {
     if (selectedConversation && isInitialized) {
-      loadMessages(selectedConversation.id);
+      void loadMessages(selectedConversation.id);
     } else {
       setMessages([]);
     }
   }, [selectedConversation, isInitialized]);
 
+  /** Clear error state */
   const clearError = useCallback(() => {
     setError(null);
   }, []);
 
+  /** Load user conversations */
   const loadConversations = useCallback(async () => {
-    if (!isAuthenticated || !isInitialized) return;
+    if (!isAuthenticated) return;
 
     try {
       setIsLoading(true);
       setError(null);
-      
-      // Use backend's inter-canister communication
+
       const result = await authService.getUserSecureConversations();
       if (result.ok) {
         setConversations(result.ok);
-        
-        // Auto-select first conversation if none selected
+
         if (result.ok.length > 0 && !selectedConversation) {
           setSelectedConversation(result.ok[0]);
         }
@@ -85,22 +87,21 @@ export const useSecureMessaging = (): UseSecureMessagingReturn => {
         throw new Error(result.err || 'Failed to load conversations');
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load conversations';
-      setError(errorMessage);
+      setError(err instanceof Error ? err.message : 'Failed to load conversations');
       console.error('Error loading conversations:', err);
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthenticated, isInitialized, selectedConversation]);
+  }, [isAuthenticated, selectedConversation]);
 
+  /** Load conversation messages */
   const loadMessages = useCallback(async (conversationId: string) => {
-    if (!isAuthenticated || !isInitialized) return;
+    if (!isAuthenticated) return;
 
     try {
       setIsLoading(true);
       setError(null);
-      
-      // Use backend's inter-canister communication
+
       const result = await authService.getSecureConversationMessages(conversationId);
       if (result.ok) {
         setMessages(result.ok);
@@ -108,27 +109,27 @@ export const useSecureMessaging = (): UseSecureMessagingReturn => {
         throw new Error(result.err || 'Failed to load messages');
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load messages';
-      setError(errorMessage);
+      setError(err instanceof Error ? err.message : 'Failed to load messages');
       console.error('Error loading messages:', err);
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthenticated, isInitialized]);
+  }, [isAuthenticated]);
 
+  /** Send a secure message */
   const sendMessage = useCallback(async (
-    conversationId: string, 
-    recipient: Principal, 
-    content: string, 
+    conversationId: string,
+    recipient: Principal,
+    content: string,
     messageType: MessageType = { text: null }
   ) => {
-    if (!isAuthenticated || !isInitialized || !userPrincipal) return;
+    if (!isAuthenticated || !userPrincipal) return;
 
     try {
       setIsLoading(true);
       setError(null);
-      
-      // Convert MessageType to string for backend
+
+      // Map MessageType to string
       let msgTypeStr: 'Text' | 'Image' | 'File' | 'Audio' | 'Video' | 'System' = 'Text';
       if ('image' in messageType) msgTypeStr = 'Image';
       else if ('file' in messageType) msgTypeStr = 'File';
@@ -136,112 +137,89 @@ export const useSecureMessaging = (): UseSecureMessagingReturn => {
       else if ('video' in messageType) msgTypeStr = 'Video';
       else if ('system' in messageType) msgTypeStr = 'System';
 
-      // Use backend's inter-canister communication
       const result = await authService.sendSecureMessage(
         conversationId,
         recipient,
         content,
         { [msgTypeStr]: null }
-      );
-      
-      if (result.err) {
-        throw new Error(result.err);
-      }
+      ) as { ok?: string; err?: string }; // explicitly type the response
 
-      // Refresh messages to get the latest state
+      if (result.err) throw new Error(result.err);
+
       await loadMessages(conversationId);
-      
-      // Refresh conversations to update timestamps
       await loadConversations();
-      
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to send message';
-      setError(errorMessage);
+      setError(err instanceof Error ? err.message : 'Failed to send message');
       console.error('Error sending message:', err);
-      throw err; // Re-throw to allow component to handle
+      throw err;
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthenticated, isInitialized, userPrincipal, loadMessages, loadConversations]);
+  }, [isAuthenticated, userPrincipal, loadMessages, loadConversations]);
 
+  /** Create a new conversation */
   const createConversation = useCallback(async (
     participants: Principal[]
   ): Promise<SecureConversation | null> => {
-    if (!isAuthenticated || !isInitialized) return null;
+    if (!isAuthenticated) return null;
 
     try {
       setIsLoading(true);
       setError(null);
-      
-      // For therapy conversations, use the backend's createTherapyConversation method
+
       if (participants.length === 1) {
-        const therapistId = participants[0].toString();
-        const sessionId = `session-${Date.now()}`; // Generate a session ID
-        
-        const result = await authService.createTherapyConversation(participants[0], sessionId);
-        
-        if (result.err) {
-          throw new Error(result.err);
-        }
-        
-        // Refresh conversations to get the new one
+        const therapistId = participants[0].toText();
+        const sessionId = `session-${Date.now()}`;
+
+        const result = await authService.createTherapyConversation(
+          therapistId, // ✅ pass string
+          sessionId
+        ) as { ok?: SecureConversation; err?: string };
+
+        if (result.err) throw new Error(result.err);
+
         await loadConversations();
-        
-        // Find and select the newly created conversation
-        const conversationsResult = await authService.getUserSecureConversations();
+
+        const conversationsResult = await authService.getUserSecureConversations() as { ok?: SecureConversation[]; err?: string };
         if (conversationsResult.ok) {
-          const newConversation = conversationsResult.ok.find(conv => 
+          const newConversation = conversationsResult.ok.find(conv =>
             conv.participants.some(p => p.toString() === therapistId)
           );
-          
           if (newConversation) {
             setSelectedConversation(newConversation);
             return newConversation;
           }
         }
-
       }
-      
-      // For other conversation types, we'd need additional backend methods
+
       throw new Error('Only therapy conversations are currently supported');
-      
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to create conversation';
-      setError(errorMessage);
+      setError(err instanceof Error ? err.message : 'Failed to create conversation');
       console.error('Error creating conversation:', err);
       return null;
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthenticated, isInitialized, loadConversations]);
+  }, [isAuthenticated, loadConversations]);
 
+  /** Select an active conversation */
   const selectConversation = useCallback((conversation: SecureConversation | null) => {
     setSelectedConversation(conversation);
-    setError(null); // Clear any previous errors when switching conversations
+    setError(null);
   }, []);
 
+  /** Mark message as read (local only for now) */
   const markMessageAsRead = useCallback(async (messageId: string) => {
-    if (!isAuthenticated || !isInitialized) return;
+    if (!isAuthenticated) return;
 
-    try {
-      // Note: Backend doesn't currently have a markMessageAsRead method
-      // For now, just update the local state
-      // TODO: Add markMessageAsRead method to backend when needed
-      
-      setMessages(prev => 
-        prev.map(msg => 
-          msg.id === messageId 
-            ? { ...msg, isRead: true }
-            : msg
-        )
-      );
-      
-    } catch (err) {
-      console.error('Error marking message as read:', err);
-      // Don't set error state for this operation as it's not critical
-    }
-  }, [isAuthenticated, isInitialized]);
+    setMessages(prev =>
+      prev.map(msg =>
+        msg.id === messageId ? { ...msg, isRead: true } : msg
+      )
+    );
+  }, [isAuthenticated]);
 
+  /** Refresh all data */
   const refreshConversations = useCallback(async () => {
     await loadConversations();
     if (selectedConversation) {
@@ -250,15 +228,12 @@ export const useSecureMessaging = (): UseSecureMessagingReturn => {
   }, [loadConversations, loadMessages, selectedConversation]);
 
   return {
-    // State
     conversations,
     selectedConversation,
     messages,
     isLoading,
     error,
     isInitialized,
-
-    // Actions
     loadConversations,
     loadMessages,
     sendMessage,
@@ -266,7 +241,7 @@ export const useSecureMessaging = (): UseSecureMessagingReturn => {
     selectConversation,
     markMessageAsRead,
     clearError,
-    refreshConversations
+    refreshConversations,
   };
 };
 

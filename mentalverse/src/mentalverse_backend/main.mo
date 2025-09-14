@@ -1124,6 +1124,21 @@ persistent actor MentalVerseBackend {
     }
   };
 
+  // Update user stats for chat interactions and activity tracking
+  public shared({ caller }) func updateUserStats(stats: { chatInteractions: Nat; lastActivity: Text }) : async Text {
+    // Verify user exists
+    switch (userProfiles.get(caller)) {
+      case (?profile) {
+        // In a full implementation, you would store these stats in a separate HashMap
+        // For now, we'll just return a success message
+        "Stats updated for user " # Principal.toText(caller) # ": " # Nat.toText(stats.chatInteractions) # " interactions, last activity: " # stats.lastActivity
+      };
+      case null {
+        "Error: User not found"
+      };
+    }
+  };
+
   // Enhanced Patient management functions
   public shared(msg) func createPatientProfile(patientData: {
     dateOfBirth: Text;

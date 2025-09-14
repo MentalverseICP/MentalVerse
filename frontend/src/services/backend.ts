@@ -1,5 +1,5 @@
 /// <reference types="vite/client" />
-import { HttpAgent } from '@dfinity/agent';
+import { HttpAgent, Actor } from '@dfinity/agent';
 import { AuthClient } from '@dfinity/auth-client';
 import { Principal } from '@dfinity/principal';
 import { secureMessagingService, SecureMessagingService } from './secureMessaging';
@@ -419,14 +419,13 @@ export class AuthService {
       await agent.fetchRootKey();
     }
 
-    // Create actor with deployed canister ID
-    const canisterId = import.meta.env.VITE_BACKEND_CANISTER_ID || 'u6s2n-gx777-77774-qaaba-cai';
+    // Import the idlFactory from generated declarations
+    const { idlFactory } = await import('../declarations/mentalverse_backend');
+    const canisterId = import.meta.env.VITE_CANISTER_MENTALVERSE_BACKEND || 'u6s2n-gx777-77774-qaaba-cai';
+    this.actor = Actor.createActor(idlFactory, { agent, canisterId }) as BackendService;
     
-    // This would use the generated declarations in a real implementation
-    // this.actor = Actor.createActor(idlFactory, { agent, canisterId });
-    
-    // For now, we'll create a mock actor
-    this.actor = this.createMockActor(agent, canisterId);
+    // Mock actor is no longer needed as we're using the real implementation
+    // this.actor = this.createMockActor();
 
     // Initialize secure messaging service
     try {
@@ -447,162 +446,7 @@ export class AuthService {
     }
   }
 
-  private createMockActor(_agent: HttpAgent, _canisterId: string): BackendService {
-    // This is a mock implementation - replace with actual Actor.createActor call
-    return {
-      registerUser: async (role: string) => ({ Ok: `User registered with role: ${role}` }),
-      getCurrentUser: async () => ({ 
-        Ok: { 
-          id: this.userPrincipal!, 
-          role: this.userRole || 'patient' 
-        } 
-      }),
-      
-      // Token operations mock implementations
-      getTokenBalance: async () => ({
-        Ok: {
-          total: 1250.75,
-          available: 850.25,
-          staked: 400.50,
-          pending: 0,
-          balance: 850.25
-        }
-      }),
-      transferTokens: async (_to: Principal, amount: number) => ({ Ok: `Transferred ${amount} MVT tokens` }),
-      stakeTokens: async (amount: number, lockPeriod: number) => ({ Ok: `Staked ${amount} MVT tokens for ${lockPeriod} days` }),
-      unstakeTokens: async (amount: number) => ({ Ok: `Unstaked ${amount} MVT tokens` }),
-      claimStakingRewards: async () => ({ Ok: 25.5 }),
-      getUserStake: async () => ({
-        Ok: {
-          amount: 400.50,
-          lockPeriod: 90,
-          startTime: Date.now() - 259200000,
-          endTime: Date.now() + 7516800000,
-          unlockTime: Date.now() + 7516800000,
-          stakeTime: Date.now() - 259200000,
-          rewardRate: 0.12,
-          accumulatedRewards: 25.5,
-          rewards: 25.5
-        }
-      }),
-      getTransactionHistory: async (_startIndex: number, _limit: number) => [
-        {
-          id: '1',
-          type: 'earn' as const,
-          amount: 50,
-          timestamp: Date.now() - 86400000,
-          description: 'Appointment completion reward',
-          status: 'completed' as const
-        },
-        {
-          id: '2',
-          type: 'spend' as const,
-          amount: -200,
-          timestamp: Date.now() - 172800000,
-          description: 'Premium consultation booking',
-          status: 'completed' as const
-        },
-        {
-          id: '3',
-          type: 'stake' as const,
-          amount: -400.50,
-          timestamp: Date.now() - 259200000,
-          description: 'Staked for 90 days',
-          status: 'completed' as const
-        }
-      ],
-      getUserEarningHistory: async () => [
-        {
-          id: '1',
-          type: 'appointment_completion' as const,
-          amount: 50,
-          timestamp: Date.now() - 86400000,
-          description: 'Completed therapy session'
-        },
-        {
-          id: '2',
-          type: 'platform_usage' as const,
-          amount: 10,
-          timestamp: Date.now() - 172800000,
-          description: 'Daily platform engagement'
-        }
-      ],
-      getUserSpendingHistory: async () => [
-        {
-          id: '1',
-          type: 'premium_consultation' as const,
-          amount: 200,
-          timestamp: Date.now() - 172800000,
-          description: 'Premium consultation with Dr. Smith'
-        }
-      ],
-      earnTokens: async (amount: number, reason: string) => ({ Ok: `Earned ${amount} MVT tokens for ${reason}` }),
-      spendTokens: async (amount: number, reason: string) => ({ Ok: `Spent ${amount} MVT tokens for ${reason}` }),
-      
-      // Faucet operations mock implementations
-      getFaucetStats: async () => ({
-        Ok: {
-          dailyLimit: 100,
-          claimedToday: 25,
-          totalClaimed: 1250,
-          nextClaimTime: Date.now() + 3600000 // 1 hour from now
-        }
-      }),
-      getFaucetClaimHistory: async () => [
-        {
-          id: '1',
-          amount: 25,
-          timestamp: Date.now() - 3600000,
-          status: 'completed' as const
-        },
-        {
-          id: '2',
-          amount: 25,
-          timestamp: Date.now() - 7200000,
-          status: 'completed' as const
-        },
-        {
-          id: '3',
-          amount: 25,
-          timestamp: Date.now() - 10800000,
-          status: 'pending' as const
-        }
-      ],
-      claimFaucetTokens: async () => ({ Ok: 'Successfully claimed 25 MVT tokens from faucet' }),
-      createPatientProfile: async (data: PatientData) => ({ Ok: { ...data, id: this.userPrincipal!, medicalHistory: [], allergies: [], currentMedications: [], createdAt: BigInt(Date.now()), updatedAt: BigInt(Date.now()) } }),
-      getPatientProfile: async () => ({ Err: 'Not implemented' }),
-      createDoctorProfile: async (_data: DoctorData) => ({ Err: 'Not implemented' }),
-      getAllDoctors: async () => [],
-      getDoctorById: async (_id: string) => ({ Err: 'Not implemented' }),
-      createAppointment: async (_data: AppointmentData) => ({ Err: 'Not implemented' }),
-      updateAppointmentStatus: async (_id: string, _status: AppointmentStatus) => ({ Err: 'Not implemented' }),
-      getPatientAppointments: async () => [],
-      getDoctorAppointments: async () => [],
-      createMedicalRecord: async (_data: MedicalRecordData) => ({ Err: 'Not implemented' }),
-      getPatientMedicalRecords: async () => [],
-      getMedicalRecordById: async (_id: string) => ({ Err: 'Not implemented' }),
-      createSessionNote: async (_patientId: Principal, _content: string, _sessionId?: string) => ({ Ok: 'Session note created' }),
-      getSessionNotes: async (_patientId?: Principal) => [],
-      createPrescription: async (_patientId: Principal, _medication: string, _dosage: string, _instructions: string, _duration: string) => ({ Ok: 'Prescription created' }),
-      getPrescriptions: async (_patientId?: Principal) => [],
-      createTreatmentSummary: async (_patientId: Principal, _summary: string, _recommendations: string[], _nextAppointment?: string) => ({ Ok: 'Treatment summary created' }),
-      getTreatmentSummaries: async (_patientId?: Principal) => [],
-      grantMedicalRecordAccess: async (_recordId: string, _userId: Principal, _accessLevel: string) => ({ Ok: 'Access granted' }),
-      revokeMedicalRecordAccess: async (_recordId: string, _userId: Principal) => ({ Ok: 'Access revoked' }),
-      getAuditLogs: async (_recordTypeOpt?: { [key: string]: null }[], _recordIdOpt?: string[], _limitOpt?: bigint[]) => ({ ok: [] }),
-      sendMessage: async (_receiverId: Principal, _content: string, _messageType: string) => ({ Err: 'Not implemented' }),
-      getMessages: async (_otherUserId: Principal) => [],
-      markMessageAsRead: async (_messageId: string) => ({ Err: 'Not implemented' }),
-      createTherapyConversation: async (_therapistId: Principal, _sessionId: string) => ({ ok: 'Conversation created' }),
-      sendSecureMessage: async (_conversationId: string, _recipientId: Principal, _content: string, _messageType: { [key: string]: null }) => ({ ok: 'Message sent' }),
-      getUserSecureConversations: async () => ({ ok: [] }),
-      getSecureConversationMessages: async (_conversationId: string, _limit?: bigint[], _offset?: bigint[]) => ({ ok: [] }),
-      registerUserEncryptionKey: async (_publicKey: string, _keyType: { RSA2048?: null; ECDSA?: null; Ed25519?: null }) => ({ ok: 'Key registered' }),
-      getSecureMessagingHealth: async () => ({ status: 'healthy', timestamp: BigInt(Date.now()) }),
-      healthCheck: async () => ({ status: 'healthy', timestamp: BigInt(Date.now()), version: '1.0.0' }),
-      getSystemStats: async () => ({ totalPatients: 0, totalDoctors: 0, totalAppointments: 0, totalMedicalRecords: 0, totalMessages: 0 }),
-    };
-  }
+
 
   getIsAuthenticated(): boolean {
     return this.isAuthenticated;
@@ -745,7 +589,7 @@ export class AuthService {
   // === INTER-CANISTER SECURE MESSAGING ===
   
   // Create a therapy conversation through the backend
-  async createTherapyConversation(therapistId: string, sessionId: string): Promise<any> {
+  async createTherapyConversation(therapistId: string, sessionId: string): Promise<unknown> {
     if (!this.actor) {
       throw new Error('Not authenticated');
     }
@@ -771,7 +615,7 @@ export class AuthService {
     recipientId: Principal,
     content: string,
     messageType: { [key: string]: null } = { Text: null }
-  ): Promise<any> {
+  ): Promise<unknown> {
     if (!this.actor) {
       throw new Error('Not authenticated');
     }
@@ -830,7 +674,7 @@ export class AuthService {
   async registerUserEncryptionKey(
     publicKey: string,
     keyType: 'RSA2048' | 'ECDSA' | 'Ed25519' = 'Ed25519'
-  ): Promise<any> {
+  ): Promise<unknown> {
     if (!this.actor) {
       throw new Error('Not authenticated');
     }
@@ -871,9 +715,8 @@ export class AuthService {
   async createSessionNote(
     patientId: string,
     sessionId: string,
-    content: string,
-    encryptionLevel: 'None' | 'Basic' | 'Advanced' = 'Basic'
-  ): Promise<any> {
+    content: string
+  ): Promise<unknown> {
     if (!this.actor) {
       throw new Error('Not authenticated');
     }

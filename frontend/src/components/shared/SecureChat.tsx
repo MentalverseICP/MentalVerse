@@ -2,9 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/Separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Send, 
@@ -17,15 +16,15 @@ import {
   Shield,
   Lock,
   CheckCircle,
-  Clock,
   AlertCircle
 } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { useSecureMessaging } from '@/hooks/useSecureMessaging';
 import { SecureMessage } from '@/services/backend';
 import { Principal } from '@dfinity/principal';
+import { icAgent } from '@/services/icAgent';
+import { httpClient } from '@/services/httpClient';
 import { cn } from '@/lib/utils';
-import { useTheme } from '@/components/shared/theme-provider';
 
 interface SecureChatProps {
   className?: string;
@@ -40,8 +39,8 @@ interface ChatUser {
 }
 
 const SecureChat: React.FC<SecureChatProps> = ({ className }) => {
-  const { isAuthenticated, userPrincipal } = useAuth();
-  const { theme } = useTheme();
+  const { user, isAuthenticated } = useAuth();
+  const userPrincipal = user;
   const {
     conversations,
     selectedConversation,
@@ -55,7 +54,7 @@ const SecureChat: React.FC<SecureChatProps> = ({ className }) => {
   } = useSecureMessaging();
   const [newMessage, setNewMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [isMobileView, setIsMobileView] = useState(false);
+  const [isMobileView] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -105,13 +104,33 @@ const SecureChat: React.FC<SecureChatProps> = ({ className }) => {
         throw new Error('No recipient found');
       }
 
-      // Send through backend's inter-canister communication
-      await sendSecureMessage(
-        selectedConversation.id,
-        recipient,
-        newMessage,
-        { text: null }
-      );
+      // Send through IC agent for secure messaging
+      if (icAgent.isInitialized()) {
+        await icAgent.sendSecureMessage(
+          selectedConversation.id,
+          newMessage.trim(),
+          recipient.toString()
+        );
+      } else {
+        // Fallback to traditional secure messaging
+        await sendSecureMessage(
+          selectedConversation.id,
+          recipient,
+          newMessage,
+          { text: null }
+        );
+      }
+      
+      // Log interaction with backend
+      try {
+        await httpClient.logInteraction({
+          message: newMessage.trim(),
+          emotionalTone: 'secure_message',
+          sessionId: selectedConversation.id
+        });
+      } catch (logError) {
+        console.warn('Failed to log secure message:', logError);
+      }
       
       setNewMessage('');
     } catch (err) {
@@ -153,7 +172,7 @@ const SecureChat: React.FC<SecureChatProps> = ({ className }) => {
     }
   };
 
-  const getMessageStatus = (message: SecureMessage) => {
+  const getMessageStatus = (_message: SecureMessage) => {
     // For now, show all messages as delivered since we don't have read status
     return <CheckCircle className="w-3 h-3 text-blue-500" />;
   };
@@ -327,16 +346,16 @@ const SecureChat: React.FC<SecureChatProps> = ({ className }) => {
             {/* Messages */}
             <ScrollArea className="flex-1 p-4">
               <div className="space-y-4">
-                {messages.map((message, index) => {
-                  const isOwnMessage = message.senderId.toString() === userPrincipal?.toString();
+                {messages.map((msg, index) => {
+                  const isOwnMessage = msg.senderId.toString() === userPrincipal?.toString();
                   const showDate = index === 0 || 
-                    formatDate(message.timestamp) !== formatDate(messages[index - 1].timestamp);
+                    formatDate(msg.timestamp) !== formatDate(messages[index - 1].timestamp);
 
                   return (
-                    <div key={message.id.toString()}>
+                    <div key={msg.id.toString()}>
                       {showDate && (
                         <div className="text-center text-xs text-muted-foreground my-4">
-                          {formatDate(message.timestamp)}
+                          {formatDate(msg.timestamp)}
                         </div>
                       )}
                       <div className={cn(
@@ -354,15 +373,15 @@ const SecureChat: React.FC<SecureChatProps> = ({ className }) => {
                             ? 'bg-primary text-primary-foreground' 
                             : 'bg-muted'
                         )}>
-                          <p className="text-sm">{message.content}</p>
+                          <p className="text-sm">{msg.content}</p>
                           <div className={cn(
                             'flex items-center justify-between mt-1 gap-2',
                             isOwnMessage ? 'text-primary-foreground/70' : 'text-muted-foreground'
                           )}>
                             <span className="text-xs">
-                              {formatTime(message.timestamp)}
+                              {formatTime(msg.timestamp)}
                             </span>
-                            {isOwnMessage && getMessageStatus(message)}
+                            {isOwnMessage && getMessageStatus(msg)}
                           </div>
                         </div>
                         {isOwnMessage && (

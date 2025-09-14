@@ -18,7 +18,7 @@ const showOptions = [8, 12, 24];
 
 // Flatten all pathology data for filtering and pagination
 const flattenPathologyData = (search: string) => {
-  let result: {
+  const result: {
     id: number;
     doctor: string;
     file: string;
@@ -186,8 +186,8 @@ const Medical: React.FC = () => {
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
+                onClick={page === 1 ? undefined : () => setPage((p) => Math.max(1, p - 1))}
+                className={page === 1 ? 'opacity-50 cursor-not-allowed pointer-events-none' : 'cursor-pointer'}
               />
             </PaginationItem>
             {[...Array(totalPages)].map((_, i) => (
@@ -202,8 +202,8 @@ const Medical: React.FC = () => {
             ))}
             <PaginationItem>
               <PaginationNext
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
+                onClick={page === totalPages ? undefined : () => setPage((p) => Math.min(totalPages, p + 1))}
+                className={page === totalPages ? 'opacity-50 cursor-not-allowed pointer-events-none' : 'cursor-pointer'}
               />
             </PaginationItem>
           </PaginationContent>

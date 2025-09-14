@@ -1,17 +1,18 @@
 import { Menu, X } from "lucide-react";
-import { MouseEvent, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { CustomConnectButton, CustomConnectedButton } from "./CustomConnectButton";
+import { useEffect, useState } from "react";
 import { scrollToSection } from "./MotionComponent";
-import { useContext } from 'react';
-import { AuthContext } from '../../App';
+import { useAuth } from "../../contexts/AuthContext";
 import MentalIcon from "@/images/mental_mobile.svg";
+
+interface HeaderProps {
+  onWalletDisconnect?: () => void;
+}
 
 // Simple connect button component
 const SimpleConnectButton = () => {
-  const { user, login, logout } = useContext(AuthContext);
-  
-  if (user) {
+  const { isAuthenticated, login, logout } = useAuth();
+
+  if (isAuthenticated) {
     return (
       <button
         onClick={logout}
@@ -21,7 +22,7 @@ const SimpleConnectButton = () => {
       </button>
     );
   }
-  
+
   return (
     <button
       onClick={login}
@@ -32,47 +33,40 @@ const SimpleConnectButton = () => {
   );
 };
 
-export const Header: React.FC<{ onWalletDisconnect?: () => void }> = ({ onWalletDisconnect }) => {
+export const Header: React.FC<HeaderProps> = ({ onWalletDisconnect }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  type User = {
-  account?: string;
-};
 
-
-  // const { user } = useAuth();
-  const navigate = useNavigate();
   const ids = [
-    { label: 'About', id: 'about' },
-    // { label: 'Services', id: 'services' },
-    { label: 'Technology', id: 'technology' },
-    { label: 'Testimonials', id: 'testimonials' },
-    { label: 'Contact', id: 'contact' }
-  ]
+    { label: "About", id: "about" },
+    { label: "Technology", id: "technology" },
+    { label: "Testimonials", id: "testimonials" },
+    { label: "Contact", id: "contact" },
+  ];
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-
-
-
   return (
-    <header className={`fixed w-full z-50 transition-all duration-500 ${isScrolled ? 'bg-black/95 backdrop-blur-lg border-b border-green-500/30' : ''}`}>
+    <header
+      className={`fixed w-full z-50 transition-all duration-500 ${
+        isScrolled
+          ? "bg-black/95 backdrop-blur-lg border-b border-green-500/30"
+          : ""
+      }`}
+    >
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            {/* <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center animate-pulse"> */}
-              {/* <Brain className="text-white" size={16} /> */}
-              <img src={MentalIcon} alt="" />
-            {/* </div> */}
+            <img src={MentalIcon} alt="MentalVerse Logo" />
             <span className="text-white text-xl font-bold">MentalVerse</span>
           </div>
-          
+
           <nav className="hidden lg:flex items-center space-x-8">
             {ids.map((item) => (
               <button
@@ -86,20 +80,20 @@ export const Header: React.FC<{ onWalletDisconnect?: () => void }> = ({ onWallet
               </button>
             ))}
           </nav>
-          
+
           <div className="hidden lg:flex items-center space-x-4">
             <SimpleConnectButton />
           </div>
-          
-          <button 
-            type='button'
+
+          <button
+            type="button"
             className="lg:hidden text-white"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
-        
+
         {isMenuOpen && (
           <div className="lg:hidden mt-4 pb-4 bg-black/95 backdrop-blur-lg rounded-lg shadow-lg transition-all duration-300 ease-in-out transform">
             <nav className="flex flex-col space-y-4 p-4">
@@ -107,7 +101,10 @@ export const Header: React.FC<{ onWalletDisconnect?: () => void }> = ({ onWallet
                 <button
                   key={item.id}
                   className="text-gray-300 hover:text-green-500 text-left transition-colors"
-                  onClick={() => { scrollToSection(item.id); setIsMenuOpen(false); }}
+                  onClick={() => {
+                    scrollToSection(item.id);
+                    setIsMenuOpen(false);
+                  }}
                   type="button"
                 >
                   {item.label}

@@ -16,6 +16,15 @@ import {
 } from "@/components/ui/chart"
 import { useTheme } from "../shared/theme-provider"
 
+interface ChartData {
+  month: string
+  emergency: number
+  examination: number
+  consultation: number
+  routine: number
+  sick: number
+}
+
 const chartConfig = {
   emergency: {
     label: "Emergency",
@@ -39,41 +48,40 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
+// Appointment types strictly typed as keys of ChartData (excluding "month")
+const appointmentTypes: (keyof Omit<ChartData, "month">)[] = [
+  "emergency",
+  "examination",
+  "consultation",
+  "routine",
+  "sick",
+]
+
 // Mock API function for appointments data
-const fetchAppointmentsData = async () => {
-  await new Promise(resolve => setTimeout(resolve, 500))
-  
-  const months = ['April', 'May', 'June', 'July', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec']
-  const appointmentTypes = ['emergency', 'examination', 'consultation', 'routine', 'sick']
-  
+const fetchAppointmentsData = async (): Promise<ChartData[]> => {
+  await new Promise((resolve) => setTimeout(resolve, 500))
+
+  const months = ["April", "May", "June", "July", "Aug", "Sept", "Oct", "Nov", "Dec"]
   const variation = 0.1
+
   const data = months.map((month, index) => {
-    const monthData: any = { month }
-    
+    const monthData: Partial<ChartData> = { month }
+
     appointmentTypes.forEach((type, typeIndex) => {
-      const baseValue = [120, 80, 150, 100, 90][typeIndex] + (index * 10)
+      const baseValue = [120, 80, 150, 100, 90][typeIndex] + index * 10
       const randomFactor = 1 + (Math.random() - 0.5) * 2 * variation
       monthData[type] = Math.floor(baseValue * randomFactor)
     })
-    
-    return monthData
+
+    return monthData as ChartData
   })
-  
+
   return data
 }
 
-type ChartDataItem = {
-  month: string;
-  emergency: number;
-  examination: number;
-  consultation: number;
-  routine: number;
-  sick: number;
-};
-
 export default function AppointmentsChart({ className = "" }) {
   const { theme } = useTheme()
-  const [chartData, setChartData] = useState<ChartDataItem[]>([])
+  const [chartData, setChartData] = useState<ChartData[]>([])
   const [loading, setLoading] = useState(true)
   const [lastUpdated, setLastUpdated] = useState(new Date())
   const [error, setError] = useState<null | string>(null)
@@ -85,8 +93,8 @@ export default function AppointmentsChart({ className = "" }) {
       setChartData(data)
       setLastUpdated(new Date())
     } catch (err) {
-      setError('Failed to fetch data')
-      console.error('Error fetching data:', err)
+      setError("Failed to fetch data")
+      console.error("Error fetching data:", err)
     } finally {
       setLoading(false)
     }
@@ -102,7 +110,9 @@ export default function AppointmentsChart({ className = "" }) {
     return (
       <Card className={`flex flex-col h-full ${className}`}>
         <CardHeader className="items-start pb-2 mb-0 px-3 pt-3 sm:px-6 sm:pt-6">
-          <CardTitle className="uppercase font-bold text-xs sm:text-sm">Overall Appointments</CardTitle>
+          <CardTitle className="uppercase font-bold text-xs sm:text-sm">
+            Overall Appointments
+          </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-1 justify-center items-center pb-0 px-3 sm:px-6">
           <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-green-500"></div>
@@ -118,13 +128,15 @@ export default function AppointmentsChart({ className = "" }) {
     return (
       <Card className={`flex flex-col h-full ${className}`}>
         <CardHeader className="items-start pb-2 mb-0 px-3 pt-3 sm:px-6 sm:pt-6">
-          <CardTitle className="uppercase font-bold text-xs sm:text-sm">Overall Appointments</CardTitle>
+          <CardTitle className="uppercase font-bold text-xs sm:text-sm">
+            Overall Appointments
+          </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-1 justify-center items-center pb-0 px-3 sm:px-6">
           <div className="text-red-500 text-xs sm:text-sm text-center px-2">{error}</div>
         </CardContent>
         <CardFooter className="flex-col gap-2 text-sm px-3 pb-3 sm:px-6 sm:pb-6">
-          <button 
+          <button
             onClick={fetchData}
             className="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-500 text-white rounded text-xs sm:text-sm hover:bg-blue-600 transition-colors"
           >
@@ -136,7 +148,9 @@ export default function AppointmentsChart({ className = "" }) {
   }
 
   return (
-    <Card className={`flex flex-col h-auto w-full p-0 border-none rounded-none shadow-none ${className}`}>
+    <Card
+      className={`flex flex-col h-auto w-full p-0 border-none rounded-none shadow-none ${className}`}
+    >
       <CardHeader className="flex-row items-start space-y-0 pb-0">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center w-full gap-1 sm:gap-0">
           <CardTitle className="uppercase font-bold text-xs max-lg:text-md">
@@ -144,15 +158,16 @@ export default function AppointmentsChart({ className = "" }) {
             <span className="ml-2 inline-block w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full animate-pulse"></span>
           </CardTitle>
           <div className="text-xs text-gray-500 order-2 sm:order-none">
-            Updated: {lastUpdated.toLocaleTimeString([], { 
-              hour: '2-digit', 
-              minute: '2-digit',
-              hour12: false 
+            Updated:{" "}
+            {lastUpdated.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: false,
             })}
           </div>
         </div>
       </CardHeader>
-      
+
       <CardContent className="flex justify-center pb-0 pt-5">
         <ChartContainer
           config={chartConfig}
@@ -161,21 +176,18 @@ export default function AppointmentsChart({ className = "" }) {
           <BarChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
             <ChartStyle id="appointments" config={chartConfig} />
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
-            <XAxis 
-              dataKey="month" 
+            <XAxis
+              dataKey="month"
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 10, fill: theme === 'dark' ? '#fff' : '#374151' }}
+              tick={{ fontSize: 10, fill: theme === "dark" ? "#fff" : "#374151" }}
             />
-            <YAxis 
+            <YAxis
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 10, fill: theme === 'dark' ? '#fff' : '#374151' }}
+              tick={{ fontSize: 10, fill: theme === "dark" ? "#fff" : "#374151" }}
             />
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent hideLabel />}
-            />
+            <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
             <Bar dataKey="emergency" stackId="a" fill="#0DB16A" radius={[0, 0, 0, 0]} />
             <Bar dataKey="examination" stackId="a" fill="#FECA57" radius={[0, 0, 0, 0]} />
             <Bar dataKey="consultation" stackId="a" fill="#18E614" radius={[0, 0, 0, 0]} />
@@ -184,18 +196,18 @@ export default function AppointmentsChart({ className = "" }) {
           </BarChart>
         </ChartContainer>
       </CardContent>
-      
+
       <CardFooter className="flex-col gap-2">
         <div className="flex flex-wrap items-center gap-4 max-sm:grid max-sm:grid-cols-5 max-sm:gap-1">
           {Object.entries(chartConfig).map(([key, config]) => (
             <div key={key} className="flex items-center gap-1 min-w-0">
-              <div 
-                className="w-2 h-2 max-sm:w-1.5 max-sm:h-1.5 flex-shrink-0" 
+              <div
+                className="w-2 h-2 max-sm:w-1.5 max-sm:h-1.5 flex-shrink-0"
                 style={{ backgroundColor: config.color }}
               />
               <span className="font-semibold text-[8px] max-sm:text-[9px] tracking-wide truncate">
                 {config.label}
-              </span>  
+              </span>
             </div>
           ))}
         </div>
@@ -203,4 +215,3 @@ export default function AppointmentsChart({ className = "" }) {
     </Card>
   )
 }
-
