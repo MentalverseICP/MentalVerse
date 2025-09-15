@@ -15,8 +15,8 @@ interface prop {
 
 interface CustomGeography {
   rsmKey: string;
-  properties: Record<string, any>;
-  geometry: Record<string, any>;
+  properties: Record<string, unknown>;
+  geometry: Record<string, unknown>;
 }
 
 const MapComponent: React.FC<prop> = ({ className }) => {

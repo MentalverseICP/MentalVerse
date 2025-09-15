@@ -32,7 +32,7 @@ const desktopData = [
   // { month: "april", desktop: 173, fill: "var(--color-april)" },
   // { month: "may", desktop: 209, fill: "var(--color-may)" },
 ]
-import { useTheme } from "@/components/theme-provider"
+import { useTheme } from "@/components/shared/theme-provider"
 
 const chartConfig = {
   visitors: {

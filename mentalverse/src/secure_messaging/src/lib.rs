@@ -8,21 +8,16 @@ use sha2::{Digest, Sha256};
 use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::HashMap;
-use hmac::{Hmac, Mac};
-use ring::{rand::SystemRandom, signature::{Ed25519KeyPair, KeyPair}};
-use uuid::Uuid;
-use chrono::{DateTime, Utc};
-use base64::{Engine as _, engine::general_purpose};
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 type IdStore = StableBTreeMap<u64, u64, Memory>;
 type MessageStore = StableBTreeMap<u64, StorableMessage, Memory>;
 type ConversationStore = StableBTreeMap<String, StorableConversation, Memory>;
 type UserKeyStore = StableBTreeMap<Principal, StorableUserKey, Memory>;
-type WebRTCSignalStore = StableBTreeMap<String, StorableWebRTCSignal, Memory>;
-type SessionTokenStore = StableBTreeMap<String, StorableSessionToken, Memory>;
-type KeyExchangeStore = StableBTreeMap<String, StorableKeyExchange, Memory>;
-type RTCSessionStore = StableBTreeMap<String, StorableRTCSession, Memory>;
+type _WebRTCSignalStore = StableBTreeMap<String, StorableWebRTCSignal, Memory>;
+type _SessionTokenStore = StableBTreeMap<String, StorableSessionToken, Memory>;
+type _KeyExchangeStore = StableBTreeMap<String, StorableKeyExchange, Memory>;
+type _RTCSessionStore = StableBTreeMap<String, StorableRTCSession, Memory>;
 
 // === DATA STRUCTURES ===
 
@@ -284,11 +279,11 @@ impl Storable for StorableMessage {
         is_fixed_size: false,
     };
 
-    fn to_bytes(&self) -> Cow<[u8]> {
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
         Cow::Owned(candid::encode_one(self).unwrap())
     }
 
-    fn from_bytes(bytes: Cow<[u8]>) -> Self {
+    fn from_bytes(bytes: Cow<'_, [u8]>) -> Self {
         candid::decode_one(&bytes).unwrap()
     }
 }
@@ -341,11 +336,11 @@ impl Storable for StorableConversation {
         is_fixed_size: false,
     };
 
-    fn to_bytes(&self) -> Cow<[u8]> {
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
         Cow::Owned(candid::encode_one(self).unwrap())
     }
 
-    fn from_bytes(bytes: Cow<[u8]>) -> Self {
+    fn from_bytes(bytes: Cow<'_, [u8]>) -> Self {
         candid::decode_one(&bytes).unwrap()
     }
 }
@@ -389,12 +384,261 @@ impl Storable for StorableUserKey {
         is_fixed_size: false,
     };
 
-    fn to_bytes(&self) -> Cow<[u8]> {
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
         Cow::Owned(candid::encode_one(self).unwrap())
     }
 
-    fn from_bytes(bytes: Cow<[u8]>) -> Self {
+    fn from_bytes(bytes: Cow<'_, [u8]>) -> Self {
         candid::decode_one(&bytes).unwrap()
+    }
+}
+
+#[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
+pub struct StorableWebRTCSignal {
+    pub id: String,
+    pub session_id: String,
+    pub sender_id: Principal,
+    pub recipient_id: Principal,
+    pub signal_type: SignalType,
+    pub payload: String,
+    pub timestamp: u64,
+    pub expires_at: u64,
+}
+
+// Conversion from runtime WebRTCSignal → storable version
+impl From<WebRTCSignal> for StorableWebRTCSignal {
+    fn from(signal: WebRTCSignal) -> Self {
+        Self {
+            id: signal.id,
+            session_id: signal.session_id,
+            sender_id: signal.sender_id,
+            recipient_id: signal.recipient_id,
+            signal_type: signal.signal_type,
+            payload: signal.payload,
+            timestamp: signal.timestamp,
+            expires_at: signal.expires_at,
+        }
+    }
+}
+
+// Conversion back: stored → runtime WebRTCSignal
+impl From<StorableWebRTCSignal> for WebRTCSignal {
+    fn from(storable: StorableWebRTCSignal) -> Self {
+        Self {
+            id: storable.id,
+            session_id: storable.session_id,
+            sender_id: storable.sender_id,
+            recipient_id: storable.recipient_id,
+            signal_type: storable.signal_type,
+            payload: storable.payload,
+            timestamp: storable.timestamp,
+            expires_at: storable.expires_at,
+        }
+    }
+}
+
+// Stable storage support
+impl Storable for StorableWebRTCSignal {
+    const BOUND: Bound = Bound::Bounded {
+        max_size: 4096,       // each record limited to 4KB
+        is_fixed_size: false, // variable-size since payload length may vary
+    };
+
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
+        Cow::Owned(
+            candid::encode_one(self)
+                .expect("Failed to encode StorableWebRTCSignal with Candid"),
+        )
+    }
+
+    fn from_bytes(bytes: Cow<'_, [u8]>) -> Self {
+        candid::decode_one(&bytes)
+            .expect("Failed to decode StorableWebRTCSignal with Candid")
+    }
+}
+
+#[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
+pub struct StorableSessionToken {
+    pub token_id: String,
+    pub session_id: String,
+    pub user_id: Principal,
+    pub token_hash: String,
+    pub permissions: Vec<SessionPermission>,
+    pub created_at: u64,
+    pub expires_at: u64,
+    pub is_active: bool,
+}
+
+// Conversion: runtime → storable
+impl From<SessionToken> for StorableSessionToken {
+    fn from(token: SessionToken) -> Self {
+        Self {
+            token_id: token.token_id,
+            session_id: token.session_id,
+            user_id: token.user_id,
+            token_hash: token.token_hash,
+            permissions: token.permissions,
+            created_at: token.created_at,
+            expires_at: token.expires_at,
+            is_active: token.is_active,
+        }
+    }
+}
+
+// Conversion: storable → runtime
+impl From<StorableSessionToken> for SessionToken {
+    fn from(storable: StorableSessionToken) -> Self {
+        Self {
+            token_id: storable.token_id,
+            session_id: storable.session_id,
+            user_id: storable.user_id,
+            token_hash: storable.token_hash,
+            permissions: storable.permissions,
+            created_at: storable.created_at,
+            expires_at: storable.expires_at,
+            is_active: storable.is_active,
+        }
+    }
+}
+
+// Stable structure support
+impl Storable for StorableSessionToken {
+    const BOUND: Bound = Bound::Bounded {
+        max_size: 2048,       // 2KB per token
+        is_fixed_size: false, // variable size (Vec<SessionPermission>)
+    };
+
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
+        Cow::Owned(
+            candid::encode_one(self)
+                .expect("Failed to encode StorableSessionToken with Candid"),
+        )
+    }
+
+    fn from_bytes(bytes: Cow<'_, [u8]>) -> Self {
+        candid::decode_one(&bytes)
+            .expect("Failed to decode StorableSessionToken with Candid")
+    }
+}
+// StorableKeyExchange implementation
+#[derive(CandidType, Deserialize, Serialize, Clone)]
+struct StorableKeyExchange {
+    pub exchange_id: String,
+    pub initiator_id: Principal,
+    pub recipient_id: Principal,
+    pub public_key: String,
+    pub encrypted_shared_secret: String,
+    pub status: KeyExchangeStatus,
+    pub created_at: u64,
+    pub completed_at: Option<u64>,
+}
+
+impl From<KeyExchange> for StorableKeyExchange {
+    fn from(exchange: KeyExchange) -> Self {
+        StorableKeyExchange {
+            exchange_id: exchange.exchange_id,
+            initiator_id: exchange.initiator_id,
+            recipient_id: exchange.recipient_id,
+            public_key: exchange.public_key,
+            encrypted_shared_secret: exchange.encrypted_shared_secret,
+            status: exchange.status,
+            created_at: exchange.created_at,
+            completed_at: exchange.completed_at,
+        }
+    }
+}
+
+impl From<StorableKeyExchange> for KeyExchange {
+    fn from(storable: StorableKeyExchange) -> Self {
+        KeyExchange {
+            exchange_id: storable.exchange_id,
+            initiator_id: storable.initiator_id,
+            recipient_id: storable.recipient_id,
+            public_key: storable.public_key,
+            encrypted_shared_secret: storable.encrypted_shared_secret,
+            status: storable.status,
+            created_at: storable.created_at,
+            completed_at: storable.completed_at,
+        }
+    }
+}
+
+impl Storable for StorableKeyExchange {
+    const BOUND: Bound = Bound::Bounded {
+        max_size: 3072, // 3KB max per key exchange
+        is_fixed_size: false,
+    };
+
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
+        Cow::Owned(candid::encode_one(self).unwrap())
+    }
+
+    fn from_bytes(bytes: Cow<'_, [u8]>) -> Self {
+        candid::decode_one(&bytes).unwrap()
+    }
+}
+
+#[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
+pub struct StorableRTCSession {
+    pub session_id: String,
+    pub participants: Vec<Principal>,
+    pub session_type: RTCSessionType,
+    pub status: RTCSessionStatus,
+    pub created_at: u64,
+    pub started_at: Option<u64>,
+    pub ended_at: Option<u64>,
+    pub metadata: RTCSessionMetadata,
+}
+
+// Conversion: runtime → storable
+impl From<RTCSession> for StorableRTCSession {
+    fn from(session: RTCSession) -> Self {
+        Self {
+            session_id: session.session_id,
+            participants: session.participants,
+            session_type: session.session_type,
+            status: session.status,
+            created_at: session.created_at,
+            started_at: session.started_at,
+            ended_at: session.ended_at,
+            metadata: session.metadata,
+        }
+    }
+}
+
+// Conversion: storable → runtime
+impl From<StorableRTCSession> for RTCSession {
+    fn from(storable: StorableRTCSession) -> Self {
+        Self {
+            session_id: storable.session_id,
+            participants: storable.participants,
+            session_type: storable.session_type,
+            status: storable.status,
+            created_at: storable.created_at,
+            started_at: storable.started_at,
+            ended_at: storable.ended_at,
+            metadata: storable.metadata,
+        }
+    }
+}
+
+// Stable structure support
+impl Storable for StorableRTCSession {
+    const BOUND: Bound = Bound::Bounded {
+        max_size: 4096,       // bumped to 4KB — safer since metadata & participants can grow
+        is_fixed_size: false, // variable size due to Vec and Option
+    };
+
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
+        Cow::Owned(
+            candid::encode_one(self)
+                .expect("Failed to encode StorableRTCSession with Candid"),
+        )
+    }
+
+    fn from_bytes(bytes: Cow<'_, [u8]>) -> Self {
+        candid::decode_one(&bytes)
+            .expect("Failed to decode StorableRTCSession with Candid")
     }
 }
 
@@ -443,7 +687,7 @@ fn generate_next_id() -> u64 {
 
 fn generate_conversation_id(participants: &[Principal]) -> String {
     let mut sorted_participants = participants.to_vec();
-    sorted_participants.sort();
+    sorted_participants.sort_by_key(|p| p.to_text());
     let participants_str = sorted_participants
         .iter()
         .map(|p| p.to_text())

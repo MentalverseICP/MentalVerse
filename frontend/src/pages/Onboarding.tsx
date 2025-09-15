@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useContext } from 'react';
-import { AuthContext } from '../App';
 import { useAuth } from '../hooks/useAuth';
 import { User, Stethoscope, ArrowUpRight, CheckCircle } from 'lucide-react';
 
@@ -37,8 +35,7 @@ interface ValidationErrors {
 
 const Onboarding: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useContext(AuthContext);
-  const { registerUser } = useAuth();
+  const { isAuthenticated, registerUser } = useAuth();
   const [formData, setFormData] = useState<OnboardingFormData>({
     firstName: '',
     lastName: '',
@@ -169,7 +166,7 @@ const Onboarding: React.FC = () => {
     const errors = validateStep(currentStep);
     setValidationErrors(errors);
     if (Object.keys(errors).length > 0) return;
-    if (!formData.role || !user?.authenticated) return;
+    if (!formData.role || !isAuthenticated) return;
     setIsSubmitting(true);
     
     try {

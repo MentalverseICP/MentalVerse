@@ -22,7 +22,7 @@ declare module 'react-jvectormap/core' {
       selected?: {
         fill?: string;
       };
-      selectedHover?: {};
+      selectedHover?: object;
     };
     series?: {
       regions?: Array<{
@@ -31,8 +31,8 @@ declare module 'react-jvectormap/core' {
         normalizeFunction?: string;
       }>;
     };
-    onRegionClick?: (event: any, code: string) => void;
-    onRegionTipShow?: (event: any, el: any, code: string) => void;
+    onRegionClick?: (event: unknown, code: string) => void;
+    onRegionTipShow?: (event: unknown, el: unknown, code: string) => void;
   }
 
   export const VectorMap: ComponentType<VectorMapProps>;

@@ -62,7 +62,6 @@ type ChartDataItem = {
 };
 
 export default function PatientsChart({ className = "" }) {
-  const { theme } = useTheme()
   const [chartData, setChartData] = useState<ChartDataItem[]>([])
   const [loading, setLoading] = useState(true)
   const [lastUpdated, setLastUpdated] = useState(new Date())

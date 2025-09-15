@@ -105,7 +105,6 @@ const mockPatients: Patient[] = [
 
 export default function DoctorPatients() {
   const { state } = useSidebar();
-  const { theme } = useTheme();
   const isCollapsed = state === "collapsed";
   const [patients, setPatients] = useState<Patient[]>(mockPatients);
   const [selectedStatus, setSelectedStatus] = useState<"All" | "Active" | "Inactive" | "Pending">("All");

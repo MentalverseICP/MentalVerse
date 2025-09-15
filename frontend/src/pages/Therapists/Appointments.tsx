@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSidebar } from "@/components/ui/Sidebar";
-import { Calendar, Clock, User, Video, Phone, Plus, Filter, Search, MessageCircle } from 'lucide-react';
+import { Calendar, Clock, User, Video, Phone, Plus, Search, MessageCircle } from 'lucide-react';
 import { useTheme } from '@/components/shared/theme-provider';
 
 interface Appointment {
@@ -93,7 +93,6 @@ const mockAppointments: Appointment[] = [
 
 export default function DoctorAppointments() {
   const { state } = useSidebar();
-  const { theme } = useTheme();
   const isCollapsed = state === "collapsed";
   const [appointments, setAppointments] = useState<Appointment[]>(mockAppointments);
   const [selectedDate, setSelectedDate] = useState<string>("2024-01-22");
@@ -179,14 +178,13 @@ export default function DoctorAppointments() {
   const updateAppointmentStatus = (appointmentId: number, newStatus: string) => {
     setAppointments(prev => 
       prev.map(apt => 
-        apt.id === appointmentId ? { ...apt, status: newStatus as any } : apt
+        apt.id === appointmentId ? { ...apt, status: newStatus as Appointment['status'] } : apt
       )
     );
   };
 
   const todayAppointments = filteredAppointments.filter(apt => apt.date === selectedDate);
   const upcomingAppointments = filteredAppointments.filter(apt => apt.date > selectedDate);
-  const pastAppointments = filteredAppointments.filter(apt => apt.date < selectedDate);
 
   return (
     <>
@@ -232,7 +230,7 @@ export default function DoctorAppointments() {
                 {["All", "Scheduled", "In Progress", "Completed", "Cancelled", "No Show"].map((status) => (
                   <button
                     key={status}
-                    onClick={() => handleStatusFilter(status as any)}
+                    onClick={() => handleStatusFilter(status as "All" | "Scheduled" | "In Progress" | "Completed" | "Cancelled" | "No Show")}
                     className={`px-2 py-1 text-xs transition-colors ${
                       selectedStatus === status
                         ? "bg-[#18E614] text-white"
@@ -248,7 +246,7 @@ export default function DoctorAppointments() {
                 {["All", "Video", "Phone", "In-Person"].map((type) => (
                   <button
                     key={type}
-                    onClick={() => handleTypeFilter(type as any)}
+                    onClick={() => handleTypeFilter(type as "All" | "Video" | "Phone" | "In-Person")}
                     className={`px-2 py-1 text-xs transition-colors ${
                       selectedType === type
                         ? "bg-[#6366F1] text-white"

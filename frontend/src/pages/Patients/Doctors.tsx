@@ -218,8 +218,8 @@ const Doctors: React.FC<DoctorsProps> = ({ bookedDoctors: bookedDoctorsProp = []
             <PaginationContent className="cursor-pointer">
               <PaginationItem>
                 <PaginationPrevious
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1}
+                  onClick={page === 1 ? undefined : () => setPage((p) => Math.max(1, p - 1))}
+                  className={page === 1 ? 'opacity-50 cursor-not-allowed pointer-events-none' : 'cursor-pointer'}
                 />
               </PaginationItem>
               {[...Array(totalPages)].map((_, i) => (
@@ -234,8 +234,8 @@ const Doctors: React.FC<DoctorsProps> = ({ bookedDoctors: bookedDoctorsProp = []
               ))}
               <PaginationItem>
                 <PaginationNext
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={page === totalPages}
+                  onClick={page === totalPages ? undefined : () => setPage((p) => Math.min(totalPages, p + 1))}
+                  className={page === totalPages ? 'opacity-50 cursor-not-allowed pointer-events-none' : 'cursor-pointer'}
                 />
               </PaginationItem>
             </PaginationContent>

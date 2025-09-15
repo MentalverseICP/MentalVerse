@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { X, Send, MessageCircle, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from '@/contexts/AuthContext';
+import { httpClient } from '@/services/httpClient';
+import { icAgent } from '@/services/icAgent';
 
 interface Message {
   id: string;
@@ -26,8 +29,10 @@ const Chatbot: React.FC<ChatbotProps> = ({ className = "" }) => {
   ]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { user, isAuthenticated } = useAuth();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -70,26 +75,33 @@ const Chatbot: React.FC<ChatbotProps> = ({ className = "" }) => {
         },
       ];
 
-      // Get backend URL from environment or use default
-      const backendUrl =
-        import.meta.env.VITE_BACKEND_URL || "http://localhost:3001";
-
-      const response = await fetch(`${backendUrl}/api/chat`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messages: apiMessages,
-        }),
+      // Use HTTP client service with authentication
+      const data = await httpClient.chat({
+        messages: apiMessages,
+        sessionId: sessionId,
+        userPrincipal: user?.toString()
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to get response from AI");
+      // Log interaction if user is authenticated
+      if (isAuthenticated && user) {
+        try {
+          await httpClient.logInteraction({
+            message: inputMessage,
+            emotionalTone: data.analysis?.emotionalTone?.primary || 'neutral',
+            sessionId: sessionId
+          });
+          
+          // Update user stats on IC if available
+          if (icAgent.isInitialized()) {
+            await icAgent.updateUserStats({
+              chatInteractions: 1,
+              lastActivity: new Date().toISOString()
+            });
+          }
+        } catch (logError) {
+          console.warn('Failed to log interaction:', logError);
+        }
       }
-
-      const data = await response.json();
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: data.message.content,
