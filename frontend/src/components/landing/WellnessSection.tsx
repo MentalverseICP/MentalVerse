@@ -11,21 +11,21 @@ export const WellnessSection: React.FC = () => {
   return (
     <section className="py-8 md:py-16 bg-transparent">
       <div className="container mx-auto px-4 md:px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-12 items-center min-h-[400px] lg:h-[500px]">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-12 items-stretch min-h-[400px] lg:min-h-[500px]">
           {/* Left Side - Images */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="flex items-center h-[300px] md:h-[500px] rounded-2xl overflow-hidden"
+            className="flex items-stretch min-h-[300px] md:min-h-[500px] rounded-2xl overflow-hidden"
           >
-            <div className="space-y-4 md:space-y-6 w-full h-[250px] md:h-[400px] flex flex-col justify-center">
+            <div className="space-y-4 md:space-y-6 w-full h-full flex flex-col justify-center bg-secondary/30 dark:bg-secondary/20 backdrop-blur-sm border border-border/10 rounded-2xl p-4 md:p-8">
               {/* Main Image */}
-              <div className="relative flex-1 h-full">
+              <div className="relative flex-1">
                 <img
-                  src="/src/app/Mentalverse images for lP/black-family-posing-studio.jpg"
-                  alt="Family posing"
+                  src="https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+                  alt="Professional mental health counseling session"
                   className="w-full h-full object-cover rounded-2xl shadow-xl"
                 />
 
@@ -48,9 +48,9 @@ export const WellnessSection: React.FC = () => {
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="flex items-center h-auto md:h-[500px]"
+            className="flex items-stretch min-h-[300px] md:min-h-[500px]"
           >
-            <div className="bg-secondary/30 dark:bg-secondary/20 backdrop-blur-sm border border-border/10 rounded-2xl p-4 md:p-8 w-full space-y-4 md:space-y-6">
+            <div className="bg-secondary/30 dark:bg-secondary/20 backdrop-blur-sm border border-border/10 rounded-2xl p-4 md:p-8 w-full flex flex-col justify-center space-y-4 md:space-y-6">
               <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground">
                 We're Making Your Mental Wellness Easy to Achieve
               </h2>
@@ -76,13 +76,13 @@ export const WellnessSection: React.FC = () => {
               {/* Small Images Grid */}
               <div className="grid grid-cols-2 gap-2 md:gap-4">
                 <img
-                  src="/src/app/Mentalverse images for lP/father-carrying-daughter.jpg"
-                  alt="Father and daughter"
+                  src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+                  alt="Mental wellness and mindfulness practice"
                   className="w-full h-24 md:h-32 object-cover rounded-xl shadow-lg"
                 />
                 <img
-                  src="/src/app/Mentalverse images for lP/calm-no-stress.jpg"
-                  alt="Woman meditating"
+                  src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+                  alt="Mindfulness and stress relief"
                   className="w-full h-24 md:h-32 object-cover rounded-xl shadow-lg"
                 />
               </div>

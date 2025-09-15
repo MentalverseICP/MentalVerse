@@ -13,13 +13,13 @@ export const SmilesSection: React.FC = () => {
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="relative min-h-[600px] flex items-center"
+            className="relative flex items-center"
           >
             <div className="relative w-full h-full">
               <img
-                src="/src/app/Mentalverse images for lP/woman-holding-kid.jpg"
-                alt="Happy woman and child"
-                className="w-full h-full object-cover rounded-2xl shadow-2xl"
+                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2088&q=80"
+                alt="Supportive community and mental wellness journey"
+                className="absolute inset-0 w-full h-full object-cover rounded-2xl shadow-2xl"
               />
 
               {/* Overlay Card */}
@@ -58,7 +58,7 @@ export const SmilesSection: React.FC = () => {
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="min-h-[600px] flex items-center"
+            className="flex items-center"
           >
             <div className="bg-secondary/30 dark:bg-secondary/20 backdrop-blur-sm border border-border/5 rounded-2xl p-8 w-full h-full flex flex-col justify-center space-y-8">
               <div>
@@ -78,7 +78,7 @@ export const SmilesSection: React.FC = () => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => scrollToSection('services')}
+                onClick={() => scrollToSection("services")}
                 className="bg-[#18E614] hover:bg-[#18E614]/90 text-white px-8 py-3 rounded-xl flex items-center justify-center space-x-2"
               >
                 <span>Learn More</span>
