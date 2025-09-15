@@ -517,8 +517,8 @@ export class AuthService {
         localStorage.setItem('userRole', userData.userType === 'therapist' ? 'therapist' : 'patient');
         console.log('✅ Registration successful');
         return { success: true, message: 'User registered successfully' };
-      } else {
-        const errorMessage = ('Err' in result && result.Err) ? result.Err : 'Registration failed';
+      } else if ('Err' in result && result.Err) {
+        const errorMessage = result.Err;
         console.error('❌ Backend returned error:', errorMessage);
         
         // Handle "User already registered" case
@@ -555,6 +555,9 @@ export class AuthService {
         }
         
         return { success: false, message: errorMessage };
+      } else {
+        console.error('❌ Unexpected backend response format:', result);
+        return { success: false, message: 'Unexpected response format from backend' };
       }
     } catch (error) {
       console.error('❌ Registration error:', error);
