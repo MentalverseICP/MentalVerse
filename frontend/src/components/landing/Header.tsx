@@ -1,47 +1,52 @@
-import { Menu, X } from "lucide-react";
+import { Menu, X, ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import { scrollToSection } from "./MotionComponent";
-import { useAuth } from "../../contexts/AuthContext";
+import { useContext } from 'react';
+import { AuthContext } from '../../App';
+import { ThemeToggle } from '../shared/theme-toggle';
+import { motion } from 'framer-motion';
 import MentalIcon from "@/images/mental_mobile.svg";
+import { useAuth } from "../../contexts/AuthContext";
 
-interface HeaderProps {
-  onWalletDisconnect?: () => void;
-}
-
-// Simple connect button component
 const SimpleConnectButton = () => {
   const { isAuthenticated, login, logout } = useAuth();
 
   if (isAuthenticated) {
     return (
-      <button
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
         onClick={logout}
-        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
+        className="bg-destructive hover:bg-destructive/90 text-white px-6 py-2 rounded-lg transition-all duration-300 font-medium"
       >
         Disconnect
-      </button>
+      </motion.button>
     );
   }
 
   return (
-    <button
+    <motion.button
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
       onClick={login}
-      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
+      className="bg-[#18E614] hover:bg-[#18E614]/90 text-white px-6 py-2 rounded-lg transition-all duration-300 font-medium"
     >
       Connect Wallet
-    </button>
+    </motion.button>
   );
 };
 
-export const Header: React.FC<HeaderProps> = ({ onWalletDisconnect }) => {
+export const Header: React.FC<{ onWalletDisconnect?: () => void }> = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
-  const ids = [
-    { label: "About", id: "about" },
-    { label: "Technology", id: "technology" },
-    { label: "Testimonials", id: "testimonials" },
-    { label: "Contact", id: "contact" },
+  const navigationItems = [
+    { label: 'Home', id: 'home' },
+    { label: 'Services', id: 'services' },
+    { label: 'Testimonials', id: 'testimonials' },
+    { label: 'Health Guidance', id: 'health-guidance' },
+    { label: 'Book Appointment', id: 'appointment' }
+
   ];
 
   useEffect(() => {
@@ -53,70 +58,100 @@ export const Header: React.FC<HeaderProps> = ({ onWalletDisconnect }) => {
   }, []);
 
   return (
-    <header
+    <motion.header 
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
       className={`fixed w-full z-50 transition-all duration-500 ${
-        isScrolled
-          ? "bg-black/95 backdrop-blur-lg border-b border-green-500/30"
-          : ""
+        isScrolled 
+          ? 'bg-background/90 backdrop-blur-lg border-b border-border shadow-lg' 
+          : 'bg-background/95'
       }`}
     >
-      <div className="container mx-auto px-4 py-4">
+      <div className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <img src={MentalIcon} alt="MentalVerse Logo" />
-            <span className="text-white text-xl font-bold">MentalVerse</span>
-          </div>
+          {/* Logo */}
+          <motion.div 
+            className="flex items-center space-x-3"
+            whileHover={{ scale: 1.05 }}
+          >
+            <div className="w-15 h-15 flex items-center justify-center">
+              <img src={MentalIcon} alt="MentalVerse" className="w-12 h-12" />
+            </div>
+            <span className="text-foreground text-xl font-bold">MentalVerse</span>
+          </motion.div>
+          
+          {/* Desktop Navigation */}
 
           <nav className="hidden lg:flex items-center space-x-8">
-            {ids.map((item) => (
-              <button
+            {navigationItems.map((item) => (
+              <motion.button
                 key={item.id}
-                className="text-gray-300 hover:text-green-400 transition-colors duration-300 relative group"
+                whileHover={{ y: -2 }}
+                className="text-muted-foreground hover:text-foreground transition-colors duration-300 relative group flex items-center space-x-1"
                 onClick={() => scrollToSection(item.id)}
                 type="button"
               >
-                {item.label}
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-400 transition-all duration-300 group-hover:w-full"></span>
-              </button>
+                <span>{item.label}</span>
+                <ChevronDown className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity" />
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
+              </motion.button>
             ))}
           </nav>
+          
+          {/* Desktop Actions */}
 
           <div className="hidden lg:flex items-center space-x-4">
+            <ThemeToggle />
             <SimpleConnectButton />
           </div>
 
-          <button
-            type="button"
-            className="lg:hidden text-white"
+          {/* Mobile Menu Button */}
+          <motion.button 
+            type='button'
+            className="lg:hidden text-foreground"
+
             onClick={() => setIsMenuOpen(!isMenuOpen)}
+            whileTap={{ scale: 0.95 }}
           >
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          </motion.button>
         </div>
+        
+        {/* Mobile Menu */}
 
         {isMenuOpen && (
-          <div className="lg:hidden mt-4 pb-4 bg-black/95 backdrop-blur-lg rounded-lg shadow-lg transition-all duration-300 ease-in-out transform">
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="lg:hidden mt-4 pb-4"
+          >
             <nav className="flex flex-col space-y-4 p-4">
-              {ids.map((item) => (
-                <button
+              {navigationItems.map((item) => (
+                <motion.button
                   key={item.id}
-                  className="text-gray-300 hover:text-green-500 text-left transition-colors"
-                  onClick={() => {
-                    scrollToSection(item.id);
-                    setIsMenuOpen(false);
-                  }}
+                  whileHover={{ x: 5 }}
+                  className="text-muted-foreground hover:text-foreground text-left transition-colors flex items-center justify-between"
+                  onClick={() => { scrollToSection(item.id); setIsMenuOpen(false); }}
+
                   type="button"
                 >
-                  {item.label}
-                </button>
+                  <span>{item.label}</span>
+                  <ChevronDown className="w-4 h-4" />
+                </motion.button>
               ))}
-              <div className="pt-4 border-t border-gray-700 flex justify-center">
-                <SimpleConnectButton />
+              <div className="pt-4 border-t border-border flex flex-col space-y-4">
+                <div className="flex justify-center">
+                  <ThemeToggle />
+                </div>
+                <div className="flex justify-center">
+                  <SimpleConnectButton />
+                </div>
               </div>
             </nav>
-          </div>
+          </motion.div>
         )}
       </div>
-    </header>
+    </motion.header>
   );
 };
