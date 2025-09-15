@@ -16,10 +16,10 @@ sha2.workspace = true
 rand.workspace = true
 base64.workspace = true
 time.workspace = true
-getrandom = { version = "0.2", features = ["custom"] }
+getrandom = { version = "0.2", features = ["js"] }
 hmac = "0.12"
 ring = "0.17"
-uuid = { version = "1.0", features = ["v4", "serde"] }
+uuid = { version = "1.4", features = ["v4", "serde", "js"] }
 chrono = { version = "0.4", features = ["serde"] }
 
 [dependencies.ic-stable-structures]

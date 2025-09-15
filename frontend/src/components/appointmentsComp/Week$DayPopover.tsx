@@ -22,6 +22,17 @@ type EventType =
   | "consultation"
   | "sick";
 
+interface Event {
+  id?: string;
+  title: string;
+  start: Date;
+  end: Date;
+  type: EventType;
+  startTime?: string;
+  endTime?: string;
+  doctor?: string;
+}
+
 type WeekDayPopoverProps = {
   closePopover: () => void;
   popoverPosition: { top: number; left: number };
@@ -34,7 +45,7 @@ type WeekDayPopoverProps = {
   endTime: string;
   setEndTime: (time: string) => void;
   addOrUpdateEvent: () => void;
-  selectedEvent: any;
+  selectedEvent: Event | null;
   deleteEvent: () => void;
   selectedDoctor: string;
   setSelectedDoctor: (doctor: string) => void;

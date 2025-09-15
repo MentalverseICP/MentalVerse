@@ -3,66 +3,35 @@ import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
 import { SidebarProvider } from "@/components/ui/Sidebar"
 import { ThemeProvider } from './components/shared/theme-provider'
 import { SearchProvider } from './contexts/SearchContext'
+import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { AppSidebar } from './components/patients/AppSidebar'
 import { DoctorSidebar } from './components/therapists/DoctorSidebar'
 import { AppRoutes } from './AppRoutes'
 import SearchBar from './components/shared/SearchBar'
 import LandingPage from '@/pages/LandingPage'
 import Onboarding from '@/pages/Onboarding'
-import { AuthClient } from '@dfinity/auth-client'
-import { createContext, useContext } from 'react'
 import Loader from './components/shared/Loader'
 
 interface SubAppProps {
   onSearchChange: (value: string) => void;
 }
 
-interface User {
-  authenticated: boolean;
-}
-
-// Simple auth context
-export const AuthContext = createContext<{ user: User | null; login: () => void; logout: () => void }>({ 
-  user: null, 
-  login: () => {}, 
-  logout: () => {} 
-})
-
 function App() {
-  const [user, setUser] = useState<User | null>(null)
-  
-  const login = async () => {
-    const authClient = await AuthClient.create()
-    await authClient.login({
-      identityProvider: 'https://identity.ic0.app/#authorize',
-      onSuccess: () => {
-        setUser({ authenticated: true })
-      }
-    })
-  }
-  
-  const logout = async () => {
-    const authClient = await AuthClient.create()
-    await authClient.logout()
-    setUser(null)
-  }
-  
   return (
     <ThemeProvider defaultTheme='dark' storageKey='vite-ui-theme'>
       <SearchProvider>
-        <AuthContext.Provider value={{ user, login, logout }}>
+        <AuthProvider>
           <BrowserRouter>
             <AppRouter />
           </BrowserRouter>
-        </AuthContext.Provider>
+        </AuthProvider>
       </SearchProvider>
     </ThemeProvider>
   )
 }
 
 function AppRouter() {
-  const { user } = useContext(AuthContext)
-  const authenticated = !!user
+  const { isAuthenticated, isLoading: authLoading } = useAuth()
   const [isLoading, setIsLoading] = useState(true)
   const [, setSearchTerm] = useState('')
 
@@ -79,7 +48,7 @@ function AppRouter() {
   }, [])
 
   useEffect(() => {
-    if (authenticated) {
+    if (isAuthenticated) {
       setShowLoader(true)
       loaderTimeout.current = setTimeout(() => setShowLoader(false), 2000)
     } else {
@@ -88,7 +57,7 @@ function AppRouter() {
     return () => {
       if (loaderTimeout.current) clearTimeout(loaderTimeout.current)
     }
-  }, [authenticated])
+  }, [isAuthenticated])
 
   const handleWalletDisconnect = () => {
     console.log('Wallet disconnected')
@@ -96,7 +65,7 @@ function AppRouter() {
 
   const handleSearchChange = (value: string) => setSearchTerm(value)
 
-  if (isLoading) return <Loader />
+  if (isLoading || authLoading) return <Loader />
   if (showLoader) return <Loader />
 
   return (
@@ -104,7 +73,7 @@ function AppRouter() {
       <Route
         path="/"
         element={
-          !authenticated ? (
+          !isAuthenticated ? (
             <LandingPage onWalletDisconnect={handleWalletDisconnect} />
           ) : (
             <Navigate to="/onboarding" replace />
@@ -114,7 +83,7 @@ function AppRouter() {
       <Route
         path="/onboarding"
         element={
-          authenticated ? (
+          isAuthenticated ? (
             <Onboarding />
           ) : (
             <Navigate to="/" replace />
@@ -124,7 +93,7 @@ function AppRouter() {
       <Route
         path="/*"
         element={
-          authenticated ? (
+          isAuthenticated ? (
             <SubApp
               onSearchChange={handleSearchChange}
             />

@@ -6,11 +6,12 @@ import { AuthContext } from '../../App';
 import { ThemeToggle } from '../shared/theme-toggle';
 import { motion } from 'framer-motion';
 import MentalIcon from "@/images/mental_mobile.svg";
+import { useAuth } from "../../contexts/AuthContext";
 
 const SimpleConnectButton = () => {
-  const { user, login, logout } = useContext(AuthContext);
-  
-  if (user) {
+  const { isAuthenticated, login, logout } = useAuth();
+
+  if (isAuthenticated) {
     return (
       <motion.button
         whileHover={{ scale: 1.05 }}
@@ -22,7 +23,7 @@ const SimpleConnectButton = () => {
       </motion.button>
     );
   }
-  
+
   return (
     <motion.button
       whileHover={{ scale: 1.05 }}
@@ -45,14 +46,15 @@ export const Header: React.FC<{ onWalletDisconnect?: () => void }> = () => {
     { label: 'Testimonials', id: 'testimonials' },
     { label: 'Health Guidance', id: 'health-guidance' },
     { label: 'Book Appointment', id: 'appointment' }
+
   ];
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
@@ -79,6 +81,7 @@ export const Header: React.FC<{ onWalletDisconnect?: () => void }> = () => {
           </motion.div>
           
           {/* Desktop Navigation */}
+
           <nav className="hidden lg:flex items-center space-x-8">
             {navigationItems.map((item) => (
               <motion.button
@@ -96,15 +99,17 @@ export const Header: React.FC<{ onWalletDisconnect?: () => void }> = () => {
           </nav>
           
           {/* Desktop Actions */}
+
           <div className="hidden lg:flex items-center space-x-4">
             <ThemeToggle />
             <SimpleConnectButton />
           </div>
-          
+
           {/* Mobile Menu Button */}
           <motion.button 
             type='button'
             className="lg:hidden text-foreground"
+
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             whileTap={{ scale: 0.95 }}
           >
@@ -113,6 +118,7 @@ export const Header: React.FC<{ onWalletDisconnect?: () => void }> = () => {
         </div>
         
         {/* Mobile Menu */}
+
         {isMenuOpen && (
           <motion.div 
             initial={{ opacity: 0, y: -20 }}
@@ -127,6 +133,7 @@ export const Header: React.FC<{ onWalletDisconnect?: () => void }> = () => {
                   whileHover={{ x: 5 }}
                   className="text-muted-foreground hover:text-foreground text-left transition-colors flex items-center justify-between"
                   onClick={() => { scrollToSection(item.id); setIsMenuOpen(false); }}
+
                   type="button"
                 >
                   <span>{item.label}</span>

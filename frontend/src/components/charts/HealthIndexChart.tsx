@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react"
-import { Line, LineChart, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Bar, BarChart } from "recharts"
+import { XAxis, YAxis, CartesianGrid, Bar, BarChart } from "recharts"
 import {
   Card,
   CardContent,

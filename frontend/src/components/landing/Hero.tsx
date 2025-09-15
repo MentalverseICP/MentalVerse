@@ -2,12 +2,15 @@ import { AuthContext } from '@/App';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, Star } from 'lucide-react';
 import { useContext } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
+        
 
 // Simple connect button component
 const SimpleConnectButton = () => {
-  const { user, logout, login } = useContext(AuthContext);
+  const { isAuthenticated, login, logout } = useAuth();
+
   
-  if (user) {
+  if (isAuthenticated) {
     return (
       <motion.button
         whileHover={{ scale: 1.05 }}

@@ -4,6 +4,7 @@ import { AuthClient } from '@dfinity/auth-client';
 import { Principal } from '@dfinity/principal';
 
 
+
 // Secure Messaging Service Types
 export interface MessageType {
   text?: null;
@@ -75,7 +76,7 @@ export interface UserKey {
 }
 
 // Candid Interface Definition
-const idlFactory = ({ IDL }: { IDL: any }) => {
+const idlFactory = ({ IDL }: any) => {
   const KeyType = IDL.Variant({
     'rsa': IDL.Null,
     'ed25519': IDL.Null,
@@ -195,7 +196,7 @@ export interface SecureMessagingService {
 }
 
 // Secure Messaging Service Class
-export class SecureMessagingService {
+export class SecureMessagingClient {
   private actor: SecureMessagingService | null = null;
   private canisterId: string;
   private agent: HttpAgent | null = null;
@@ -298,7 +299,63 @@ export class SecureMessagingService {
       default: return { ed25519: null };
     }
   }
+
+  // Implement missing SecureMessagingService methods
+  async register_user_key(publicKey: string, keyType: KeyType): Promise<{ Ok?: UserKey; Err?: string }> {
+    if (!this.actor) throw new Error('SecureMessaging not initialized');
+    return await this.actor.register_user_key(publicKey, keyType);
+  }
+
+  async get_user_key(userId: Principal): Promise<UserKey | null> {
+    if (!this.actor) throw new Error('SecureMessaging not initialized');
+    return await this.actor.get_user_key(userId);
+  }
+
+  async create_conversation(participants: Principal[], conversationType: ConversationType, metadata: ConversationMetadata): Promise<{ Ok?: Conversation; Err?: string }> {
+    if (!this.actor) throw new Error('SecureMessaging not initialized');
+    return await this.actor.create_conversation(participants, conversationType, metadata);
+  }
+
+  async get_user_conversations(): Promise<Conversation[]> {
+    if (!this.actor) throw new Error('SecureMessaging not initialized');
+    return await this.actor.get_user_conversations();
+  }
+
+  async archive_conversation(conversationId: string): Promise<{ Ok?: null; Err?: string }> {
+    if (!this.actor) throw new Error('SecureMessaging not initialized');
+    return await this.actor.archive_conversation(conversationId);
+  }
+
+  async send_message(conversationId: string, recipient: Principal, content: string, messageType: MessageType, replyTo?: bigint, attachments?: Attachment[]): Promise<{ Ok?: Message; Err?: string }> {
+    if (!this.actor) throw new Error('SecureMessaging not initialized');
+    return await this.actor.send_message(conversationId, recipient, content, messageType, replyTo, attachments);
+  }
+
+  async get_conversation_messages(conversationId: string, offset?: bigint, limit?: bigint): Promise<Message[]> {
+    if (!this.actor) throw new Error('SecureMessaging not initialized');
+    return await this.actor.get_conversation_messages(conversationId, offset, limit);
+  }
+
+  async mark_message_read(messageId: bigint): Promise<{ Ok?: null; Err?: string }> {
+    if (!this.actor) throw new Error('SecureMessaging not initialized');
+    return await this.actor.mark_message_read(messageId);
+  }
+
+  async delete_message(messageId: bigint): Promise<{ Ok?: null; Err?: string }> {
+    if (!this.actor) throw new Error('SecureMessaging not initialized');
+    return await this.actor.delete_message(messageId);
+  }
+
+  async health_check(): Promise<string> {
+    if (!this.actor) throw new Error('SecureMessaging not initialized');
+    return await this.actor.health_check();
+  }
+
+  async get_stats(): Promise<Array<[string, bigint]>> {
+    if (!this.actor) throw new Error('SecureMessaging not initialized');
+    return await this.actor.get_stats();
+  }
 }
 
 // Export singleton instance
-export const secureMessagingService = new SecureMessagingService();
+export const secureMessagingService = new SecureMessagingClient();

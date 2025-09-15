@@ -7,5 +7,8 @@
   },
   "mvt_token_canister": {
     "ic": "c7seb-4yaaa-aaaac-a4aoq-cai"
+  },
+  "secure_messaging": {
+    "ic": "jzwty-fqaaa-aaaac-a4goq-cai"
   }
 }

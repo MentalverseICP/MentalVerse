@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import { body, validationResult } from 'express-validator';
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
+import { icMiddleware, icRoutes, initializeIC } from './src/ic-integration/index.js';
 
 // Load environment variables
 dotenv.config();
@@ -108,6 +109,9 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// Initialize IC integration
+initializeIC().catch(console.error);
+
 // Security middleware
 app.use(helmet());
 
@@ -147,6 +151,9 @@ app.use(limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// IC integration middleware
+app.use(icMiddleware);
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({
@@ -156,6 +163,9 @@ app.get('/health', (req, res) => {
     service: 'MentalVerse Backend'
   });
 });
+
+// IC integration routes
+app.use('/api/ic', icRoutes);
 
 // Chat interaction logging endpoint
 app.post('/api/log-interaction',
@@ -175,9 +185,8 @@ app.post('/api/log-interaction',
       }
 
       const { message, emotionalTone, sessionId } = req.body;
+      const userPrincipal = req.headers['x-user-principal'];
       
-      // In a real implementation, this would call the Internet Computer backend
-      // For now, we'll simulate the logging
       const logEntry = {
         id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         message: message,
@@ -187,8 +196,31 @@ app.post('/api/log-interaction',
         status: 'logged'
       };
       
-      // TODO: Integrate with Internet Computer backend
-      // await icBackend.logChatInteraction(message, emotionalTone, sessionId);
+      // IC integration for secure message logging
+      if (req.icAgent && userPrincipal) {
+        try {
+          // Log interaction securely on IC
+          await req.userSession.logSecureMessage(
+            userPrincipal,
+            message,
+            emotionalTone,
+            sessionId
+          );
+          
+          // Update user session stats
+          await req.userSession.updateUserStats(userPrincipal, {
+            totalInteractions: 1,
+            lastActivity: new Date().toISOString()
+          });
+          
+          logEntry.icLogged = true;
+          logEntry.status = 'securely_logged';
+        } catch (icError) {
+          console.warn('IC logging warning:', icError.message);
+          logEntry.icLogged = false;
+          logEntry.icError = icError.message;
+        }
+      }
       
       res.json({
         success: true,
@@ -361,6 +393,28 @@ Remember: You're creating a safe, supportive space for mental health growth and 
       // Generate mental health tip based on emotional tone
       const mentalHealthTip = getMentalHealthTip(emotionalTone);
       
+      // IC integration for user session and token operations
+      const sessionId = req.headers['x-session-id'] || 'anonymous';
+      const userPrincipal = req.headers['x-user-principal'];
+      
+      // Update user session with chat interaction
+      if (req.icAgent && userPrincipal) {
+        try {
+          await req.userSession.updateUserStats(userPrincipal, {
+            chatInteractions: 1,
+            emotionalTone: emotionalTone.primary,
+            lastActivity: new Date().toISOString()
+          });
+          
+          // Award tokens for positive interactions
+          if (emotionalTone.severity !== 'critical') {
+            await req.userSession.awardTokens(userPrincipal, 10, 'chat_interaction');
+          }
+        } catch (icError) {
+          console.warn('IC integration warning:', icError.message);
+        }
+      }
+      
       // Enhanced response with mental health features
       const response = {
         message: {
@@ -371,11 +425,15 @@ Remember: You're creating a safe, supportive space for mental health growth and 
         analysis: {
           emotionalTone: emotionalTone,
           mentalHealthTip: mentalHealthTip,
-          sessionId: req.headers['x-session-id'] || 'anonymous',
+          sessionId: sessionId,
           supportLevel: emotionalTone.severity === 'critical' ? 'crisis' : 
                        emotionalTone.severity === 'elevated' ? 'enhanced' : 'standard'
         },
-        usage: completion.usage
+        usage: completion.usage,
+        tokens: {
+          awarded: emotionalTone.severity !== 'critical' ? 10 : 0,
+          reason: 'chat_interaction'
+        }
       };
       
       // Add crisis resources if needed

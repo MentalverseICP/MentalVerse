@@ -2514,7 +2514,7 @@ declare module 'lucide-react' {
   export const Duotrigintillioning: Icon;
   export const Googol: Icon;
   export const Googolplex: Icon;
-  export const Infinity: Icon;
+  export const InfinityIcon: Icon;
 
   // Default export for the entire module
   const LucideReact: {

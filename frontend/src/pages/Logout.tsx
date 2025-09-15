@@ -1,11 +1,8 @@
-import { useSidebar } from '@/components/ui/Sidebar';
-import { useTheme } from "@/components/shared/theme-provider"
-import { Link } from "react-router-dom"
-import mentalIconMobileLight from "@/images/mental_Icon_mobile_light.svg"
-import mentalIconMobileDark from "@/images/mental_mobile.svg"
-import { useContext } from 'react';
-import { AuthContext } from '../App';
-import { useNavigate } from "react-router-dom";
+import { useTheme } from "@/components/shared/theme-provider";
+import { Link, useNavigate } from "react-router-dom";
+import mentalIconMobileLight from "@/images/mental_Icon_mobile_light.svg";
+import mentalIconMobileDark from "@/images/mental_mobile.svg";
+import { useAuth } from '../contexts/AuthContext';
 import { useState, useEffect } from "react";
 import { Brain } from 'lucide-react';
 
@@ -14,24 +11,24 @@ interface LogoutProps {
 }
 
 const Logout = ({ onWalletDisconnect }: LogoutProps) => {
-  const { state } = useSidebar()
-  const { theme } = useTheme()
-  const isCollapsed = state === "collapsed"
-  
-  const getIcon = () => {
-    return theme === 'dark' ? mentalIconMobileDark : mentalIconMobileLight
-  }
-  
-  const { logout, user } = useContext(AuthContext);
+  const { theme } = useTheme();
+
+  // ✅ pull user from auth context
+  const { logout, isAuthenticated, user } = useAuth();
+
   const navigate = useNavigate();
   const [showLoader, setShowLoader] = useState(false);
 
-  // If user is not authenticated, redirect to landing page
+  const getIcon = () => {
+    return theme === 'dark' ? mentalIconMobileDark : mentalIconMobileLight;
+  };
+
+  // Redirect to landing if not authenticated
   useEffect(() => {
-    if (!user && !showLoader) {
+    if (!isAuthenticated && !showLoader) {
       navigate("/");
     }
-  }, [user, showLoader, navigate]);
+  }, [isAuthenticated, showLoader, navigate]);
 
   const handleDisconnect = async () => {
     try {
@@ -46,7 +43,7 @@ const Logout = ({ onWalletDisconnect }: LogoutProps) => {
       setShowLoader(false);
     }
   };
-  
+
   // Loader component
   const Loader = () => (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
@@ -81,13 +78,12 @@ const Logout = ({ onWalletDisconnect }: LogoutProps) => {
             placeholder="example@mail.com" 
             className="bg-white dark:bg-gray-900 rounded-xl border border-emerald-200 dark:border-gray-700 text-black dark:text-white py-3 px-5 text-base w-full focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all shadow-sm"
           />
-          {/* User Info Display */}
+          {/* ✅ User Info Display */}
           {user && (
             <div className="bg-emerald-50 dark:bg-gray-900 rounded-xl p-4 text-sm shadow border border-emerald-100 dark:border-gray-800">
               <p className="font-semibold text-emerald-500">Connected Wallet:</p>
               <p className="text-gray-600 dark:text-gray-400 truncate">
-                {/* Fix: user.principal does not exist on type 'User'. Use user.walletAddress or user.id if available */}
-                {('Connected').toString()}
+                {user.walletAddress || user.principal}
               </p>
             </div>
           )}
@@ -107,7 +103,7 @@ const Logout = ({ onWalletDisconnect }: LogoutProps) => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Logout
+export default Logout;

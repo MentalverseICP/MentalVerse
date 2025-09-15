@@ -10,13 +10,16 @@
     "build": "echo 'No build step required'"
   },
   "dependencies": {
-    "express": "^4.18.2",
+    "@dfinity/agent": "^3.2.4",
+    "axios": "^1.12.1",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
-    "helmet": "^7.1.0",
+    "express": "^4.18.2",
     "express-rate-limit": "^7.1.5",
-    "openai": "^4.20.1",
-    "express-validator": "^7.0.1"
+    "express-validator": "^7.0.1",
+    "helmet": "^7.1.0",
+    "node-fetch": "^3.3.2",
+    "openai": "^4.20.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"

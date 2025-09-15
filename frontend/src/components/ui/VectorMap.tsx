@@ -1,7 +1,7 @@
 import { VectorMap } from 'react-jvectormap/core';
 import { Card, CardHeader, CardBody, Row, Col } from 'reactstrap';
 
-var mapData = {
+const mapData = {
   AF: 16.63,
   AL: 11.58,
   DZ: 158.97,
