@@ -480,7 +480,7 @@ export class AuthService {
     email: string;
     phoneNumber?: string;
     userType: 'patient' | 'therapist';
-  }): Promise<{ success: boolean; message: string }> {
+  }): Promise<{ success: boolean; message: string; isExistingUser?: boolean; userRole?: string }> {
     console.log('🔍 RegisterUser called with data:', userData);
     console.log('🔍 Actor available:', !!this.actor);
     console.log('🔍 Is authenticated:', this.isAuthenticated);
@@ -513,11 +513,47 @@ export class AuthService {
       
       if ('Ok' in result && result.Ok) {
         this.userRole = userData.userType;
+        // Store user role in localStorage for immediate access
+        localStorage.setItem('userRole', userData.userType === 'therapist' ? 'therapist' : 'patient');
         console.log('✅ Registration successful');
         return { success: true, message: 'User registered successfully' };
       } else {
         const errorMessage = ('Err' in result && result.Err) ? result.Err : 'Registration failed';
         console.error('❌ Backend returned error:', errorMessage);
+        
+        // Handle "User already registered" case
+        if (errorMessage === 'User already registered') {
+          console.log('🔍 User already registered, checking existing user role...');
+          
+          try {
+            // Get the existing user's role
+            const userResult = await this.actor.getCurrentUser();
+            console.log('🔍 Existing user result:', userResult);
+            
+            if ('Ok' in userResult && userResult.Ok) {
+              const existingRole = userResult.Ok.role;
+              this.userRole = existingRole === 'doctor' ? 'therapist' : existingRole;
+              
+              // Store the existing user's role in localStorage
+              localStorage.setItem('userRole', this.userRole);
+              console.log('✅ Existing user found with role:', this.userRole);
+              
+              return { 
+                success: true, 
+                message: 'User already registered', 
+                isExistingUser: true, 
+                userRole: this.userRole 
+              };
+            } else {
+              console.error('❌ Failed to get existing user role');
+              return { success: false, message: 'User already registered but could not retrieve user information' };
+            }
+          } catch (getUserError) {
+            console.error('❌ Error getting existing user:', getUserError);
+            return { success: false, message: 'User already registered but could not retrieve user information' };
+          }
+        }
+        
         return { success: false, message: errorMessage };
       }
     } catch (error) {

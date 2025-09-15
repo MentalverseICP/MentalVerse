@@ -180,10 +180,25 @@ const Onboarding: React.FC = () => {
       });
 
       if (!registrationResult.success) {
+        // Check if this is an existing user
+        if (registrationResult.isExistingUser && registrationResult.userRole) {
+          console.log('✅ User already registered, redirecting to dashboard');
+          // User is already registered, redirect to their dashboard
+          const userRole = registrationResult.userRole;
+          localStorage.setItem('userRole', userRole);
+          
+          // Redirect based on existing user's role
+          if (userRole === 'therapist') {
+            navigate('/therapist/home');
+          } else {
+            navigate('/patients/home');
+          }
+          return;
+        }
         throw new Error(registrationResult.message || 'Failed to register user');
       }
 
-      // Store user data locally for immediate use
+      // Store user data locally for immediate use (new user registration)
       localStorage.setItem('userRole', formData.role);
       localStorage.setItem('userProfile', JSON.stringify(formData));
       
