@@ -11,7 +11,7 @@ import { idlFactory, _SERVICE as MentalverseService } from '../declarations/ment
 // Backend service interface
 export interface BackendService {
   // Authentication
-  initializeUser: (userData: { firstName: string; lastName: string; email: string; phoneNumber?: string; userType: { patient?: null; therapist?: null; admin?: null } }) => Promise<{ Ok?: string; Err?: string }>;
+  initializeUser: (userData: { firstName: string; lastName: string; email: string; phoneNumber: [] | [string]; userType: { patient?: null; therapist?: null; admin?: null } }) => Promise<{ Ok?: string; Err?: string }>;
   completeOnboarding: (userType: { patient?: null; therapist?: null; admin?: null }, additionalData: { bio?: string; profilePicture?: string }) => Promise<{ Ok?: any; Err?: string }>;
   getCurrentUser: () => Promise<{ Ok?: { id: Principal; role: string }; Err?: string }>;
   
@@ -488,7 +488,7 @@ export class AuthService {
         firstName: userData.firstName,
         lastName: userData.lastName,
         email: userData.email,
-        phoneNumber: userData.phoneNumber,
+        phoneNumber: userData.phoneNumber ? [userData.phoneNumber] : [],
         userType: userTypeVariant
       });
       
