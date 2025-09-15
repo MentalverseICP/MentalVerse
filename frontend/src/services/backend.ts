@@ -12,7 +12,7 @@ import { idlFactory, _SERVICE as MentalverseService } from '../declarations/ment
 export interface BackendService {
   // Authentication
   initializeUser: (userData: { firstName: string; lastName: string; email: string; phoneNumber: [] | [string]; userType: { patient?: null; therapist?: null; admin?: null } }) => Promise<{ Ok?: string; Err?: string }>;
-  completeOnboarding: (userType: { patient?: null; therapist?: null; admin?: null }, additionalData: { bio?: string; profilePicture?: string }) => Promise<{ Ok?: any; Err?: string }>;
+  completeOnboarding: (userType: { patient?: null; therapist?: null; admin?: null }, additionalData: { bio?: string; profilePicture?: string }) => Promise<{ Ok?: string; Err?: string }>;
   getCurrentUser: () => Promise<{ Ok?: { id: Principal; role: string }; Err?: string }>;
   
   // Token operations
@@ -511,10 +511,10 @@ export class AuthService {
       
       console.log('🔍 Backend response:', result);
       
-      if ('Ok' in result && result.Ok) {
+      if (('Ok' in result && result.Ok) || ('ok' in result && result.ok)) {
         this.userRole = userData.userType;
         // Store user role in localStorage for immediate access
-        localStorage.setItem('userRole', userData.userType === 'therapist' ? 'therapist' : 'patient');
+        localStorage.setItem('userRole', this.userRole === 'therapist' ? 'therapist' : 'patient');
         console.log('✅ Registration successful');
         return { success: true, message: 'User registered successfully' };
       } else if ('Err' in result && result.Err) {
@@ -531,11 +531,12 @@ export class AuthService {
             console.log('🔍 Existing user result:', userResult);
             
             if ('Ok' in userResult && userResult.Ok) {
-              const existingRole = userResult.Ok.role;
+              const userData = userResult.Ok;
+              const existingRole = userData.role;
               this.userRole = existingRole === 'doctor' ? 'therapist' : existingRole;
               
               // Store the existing user's role in localStorage
-              localStorage.setItem('userRole', this.userRole);
+              localStorage.setItem('userRole', this.userRole!);
               console.log('✅ Existing user found with role:', this.userRole);
               
               return { 
