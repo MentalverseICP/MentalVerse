@@ -170,9 +170,14 @@ const Onboarding: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      // Register user with backend using proper role mapping
-      const backendRole = formData.role === 'therapist' ? 'therapist' : 'patient';
-      const registrationResult = await registerUser(backendRole as 'patient' | 'therapist');
+      // Register user with backend using complete user data
+      const registrationResult = await registerUser({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phoneNumber: formData.phoneNumber,
+        role: formData.role as 'patient' | 'therapist'
+      });
 
       if (!registrationResult.success) {
         throw new Error(registrationResult.message || 'Failed to register user');
