@@ -3,6 +3,7 @@ import { HttpAgent, Actor } from '@dfinity/agent';
 import { AuthClient } from '@dfinity/auth-client';
 import { Principal } from '@dfinity/principal';
 import { secureMessagingService, SecureMessagingService } from './secureMessaging';
+import { idlFactory, _SERVICE as MentalverseService } from '../declarations/mentalverse_backend';
 
 // Import the generated declarations (these will be created after deployment)
 // import { mentalverse_backend } from '../../../declarations/mentalverse_backend';
@@ -10,7 +11,8 @@ import { secureMessagingService, SecureMessagingService } from './secureMessagin
 // Backend service interface
 export interface BackendService {
   // Authentication
-  registerUser: (role: string) => Promise<{ Ok?: string; Err?: string }>;
+  initializeUser: (role: string) => Promise<{ Ok?: string; Err?: string }>;
+  completeOnboarding: (userType: { patient?: null; therapist?: null; admin?: null }, additionalData: { bio?: string; profilePicture?: string }) => Promise<{ Ok?: any; Err?: string }>;
   getCurrentUser: () => Promise<{ Ok?: { id: Principal; role: string }; Err?: string }>;
   
   // Token operations
@@ -419,10 +421,9 @@ export class AuthService {
       await agent.fetchRootKey();
     }
 
-    // Import the idlFactory from generated declarations
-    const { idlFactory } = await import('../declarations/mentalverse_backend');
+    // Use the statically imported idlFactory and type the actor with MentalverseService
     const canisterId = import.meta.env.VITE_CANISTER_MENTALVERSE_BACKEND || 'u6s2n-gx777-77774-qaaba-cai';
-    this.actor = Actor.createActor(idlFactory, { agent, canisterId }) as BackendService;
+    this.actor = Actor.createActor(idlFactory, { agent, canisterId }) as MentalverseService & BackendService;
     
     // Mock actor is no longer needed as we're using the real implementation
     // this.actor = this.createMockActor();
@@ -474,7 +475,7 @@ export class AuthService {
     }
 
     try {
-      const result = await this.actor.registerUser(role);
+      const result = await this.actor.initializeUser(role);
       if ('Ok' in result && result.Ok) {
         this.userRole = role;
         return { success: true, message: result.Ok };
