@@ -176,7 +176,7 @@ const Onboarding: React.FC = () => {
         lastName: formData.lastName,
         email: formData.email,
         phoneNumber: formData.phoneNumber,
-        role: formData.role as 'patient' | 'therapist'
+        userType: formData.role as 'patient' | 'therapist'
       });
 
       if (!registrationResult.success) {

@@ -13,7 +13,7 @@ export interface AuthState {
 export interface AuthActions {
   login: () => Promise<boolean>;
   logout: () => Promise<void>;
-  registerUser: (userData: { firstName: string; lastName: string; email: string; phoneNumber?: string; role: 'patient' | 'therapist' }) => Promise<{ success: boolean; message: string }>;
+  registerUser: (userData: { firstName: string; lastName: string; email: string; phoneNumber?: string; userType: 'patient' | 'therapist' }) => Promise<{ success: boolean; message: string }>;
   refreshAuth: () => Promise<void>;
 }
 
@@ -79,7 +79,7 @@ export const useAuth = (): AuthState & AuthActions => {
     }
   }, [updateAuthState]);
 
-  const registerUser = useCallback(async (userData: { firstName: string; lastName: string; email: string; phoneNumber?: string; role: 'patient' | 'therapist' }): Promise<{ success: boolean; message: string }> => {
+  const registerUser = useCallback(async (userData: { firstName: string; lastName: string; email: string; phoneNumber?: string; userType: 'patient' | 'therapist' }): Promise<{ success: boolean; message: string }> => {
     try {
       const result = await authService.registerUser(userData);
       if (result.success) {

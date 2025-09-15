@@ -11,7 +11,7 @@ import { idlFactory, _SERVICE as MentalverseService } from '../declarations/ment
 // Backend service interface
 export interface BackendService {
   // Authentication
-  initializeUser: (userData: { firstName: string; lastName: string; email: string; phoneNumber?: string; role: 'patient' | 'therapist' }) => Promise<{ Ok?: string; Err?: string }>;
+  initializeUser: (userData: { firstName: string; lastName: string; email: string; phoneNumber?: string; userType: { patient?: null; therapist?: null; admin?: null } }) => Promise<{ Ok?: string; Err?: string }>;
   completeOnboarding: (userType: { patient?: null; therapist?: null; admin?: null }, additionalData: { bio?: string; profilePicture?: string }) => Promise<{ Ok?: any; Err?: string }>;
   getCurrentUser: () => Promise<{ Ok?: { id: Principal; role: string }; Err?: string }>;
   
@@ -474,23 +474,26 @@ export class AuthService {
     lastName: string;
     email: string;
     phoneNumber?: string;
-    role: 'patient' | 'therapist';
+    userType: 'patient' | 'therapist';
   }): Promise<{ success: boolean; message: string }> {
     if (!this.actor) {
       return { success: false, message: 'Not authenticated' };
     }
 
     try {
+      // Convert userType string to Motoko variant format
+    const userTypeVariant = userData.userType === 'therapist' ? { therapist: null } : { patient: null };
+      
       const result = await this.actor.initializeUser({
         firstName: userData.firstName,
         lastName: userData.lastName,
         email: userData.email,
         phoneNumber: userData.phoneNumber,
-        role: userData.role
+        userType: userTypeVariant
       });
       
       if ('Ok' in result && result.Ok) {
-        this.userRole = userData.role;
+        this.userRole = userData.userType;
         return { success: true, message: result.Ok };
       } else {
         const errorMessage = ('Err' in result && result.Err) ? result.Err : 'Registration failed';

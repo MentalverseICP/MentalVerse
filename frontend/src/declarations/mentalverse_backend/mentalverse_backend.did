@@ -919,6 +919,7 @@ service : {
      firstName: text;
      lastName: text;
      phoneNumber: opt text;
+     userType: UserType;
    }) -> (Result_1);
   logChatInteraction: (sessionId: text, messageContent: text, messageType:
    text) -> (Result);

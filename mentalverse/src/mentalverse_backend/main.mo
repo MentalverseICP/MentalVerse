@@ -660,6 +660,7 @@ persistent actor MentalVerseBackend {
     lastName: Text;
     email: Text;
     phoneNumber: ?Text;
+    userType: UserType;
   }) : async Result.Result<UserProfile, Text> {
     let caller = msg.caller;
     
@@ -672,7 +673,7 @@ persistent actor MentalVerseBackend {
         let now = Time.now();
         let newProfile: UserProfile = {
           id = caller;
-          userType = #patient; // Default to patient, can be changed during onboarding
+          userType = userData.userType;
           firstName = userData.firstName;
           lastName = userData.lastName;
           email = userData.email;
@@ -686,8 +687,14 @@ persistent actor MentalVerseBackend {
         };
         
         userProfiles.put(caller, newProfile);
-        // Maintain legacy support
-        userRoles.put(caller, "patient");
+        
+        // Update legacy role mapping
+        let roleText = switch (userData.userType) {
+          case (#patient) "patient";
+          case (#therapist) "doctor";
+          case (#admin) "admin";
+        };
+        userRoles.put(caller, roleText);
         
         #ok(newProfile)
       };

@@ -908,6 +908,7 @@ export const idlFactory = ({ IDL }) => {
     'initializeUser' : IDL.Func(
         [
           IDL.Record({
+            'userType' : UserType,
             'email' : IDL.Text,
             'phoneNumber' : IDL.Opt(IDL.Text),
             'lastName' : IDL.Text,

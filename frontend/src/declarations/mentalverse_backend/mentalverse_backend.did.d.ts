@@ -786,6 +786,7 @@ export interface _SERVICE {
   'initializeUser' : ActorMethod<
     [
       {
+        'userType' : UserType,
         'email' : string,
         'phoneNumber' : [] | [string],
         'lastName' : string,
