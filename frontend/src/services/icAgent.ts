@@ -10,9 +10,14 @@ import { idlFactory as mentalverseIdl, type _SERVICE as MentalverseService } fro
 import { idlFactory as tokenIdl, type _SERVICE as TokenService } from '../declarations/mvt_token_canister';
 import { idlFactory as messagingIdl, type _SERVICE as MessagingService } from '../declarations/secure_messaging';
 
-// Environment detection - prioritize DFX_NETWORK over VITE_IC_NETWORK
-const NETWORK = import.meta.env.DFX_NETWORK ?? import.meta.env.VITE_IC_NETWORK ?? 'local';
-const IC_HOST = NETWORK === 'ic' ? 'https://ic0.app' : (import.meta.env.VITE_IC_HOST ?? 'http://127.0.0.1:4943');
+// Environment detection based on hostname - automatically detects local vs mainnet
+const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+const IC_HOST = isLocal 
+  ? import.meta.env.VITE_IC_HOST ?? 'http://127.0.0.1:4943'
+  : 'https://ic0.app';
+
+const NETWORK = isLocal ? 'local' : 'ic';
 
 // Canister IDs with validation
 const MENTALVERSE_CANISTER = import.meta.env.VITE_CANISTER_MENTALVERSE_BACKEND;
@@ -63,11 +68,12 @@ class ICAgentService {
         identity 
       });
 
-      if (NETWORK !== 'ic') {
+      // Only fetch root key in local development
+      if (NETWORK === 'local') {
         console.log('Fetching root key for local development...');
         await this.state.agent.fetchRootKey();
       } else {
-        console.log('Connecting to IC mainnet - no root key fetch needed');
+        console.log('Mainnet detected, no root key fetch required');
       }
 
       await this.createActors();

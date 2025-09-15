@@ -379,7 +379,7 @@ export class AuthService {
 
     return new Promise((resolve) => {
       this.authClient!.login({
-        identityProvider: import.meta.env.VITE_INTERNET_IDENTITY_URL || 'http://localhost:4943/?canisterId=uxrrr-q7777-77774-qaaaq-cai',
+        identityProvider: import.meta.env.VITE_INTERNET_IDENTITY_URL || 'https://identity.ic0.app/#authorize',
         onSuccess: async () => {
           await this.handleAuthenticated();
           resolve(true);
