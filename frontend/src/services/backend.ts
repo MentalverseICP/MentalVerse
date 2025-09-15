@@ -494,7 +494,7 @@ export class AuthService {
       
       if ('Ok' in result && result.Ok) {
         this.userRole = userData.userType;
-        return { success: true, message: result.Ok };
+        return { success: true, message: 'User registered successfully' };
       } else {
         const errorMessage = ('Err' in result && result.Err) ? result.Err : 'Registration failed';
         return { success: false, message: errorMessage };
