@@ -202,7 +202,7 @@ export class SecureMessagingClient {
   private agent: HttpAgent | null = null;
 
   constructor(canisterId?: string) {
-    this.canisterId = canisterId || import.meta.env.VITE_SECURE_MESSAGING_CANISTER_ID || 'rdmx6-jaaaa-aaaah-qdhzq-cai';
+    this.canisterId = canisterId || import.meta.env.VITE_CANISTER_SECURE_MESSAGING || 'jzwty-fqaaa-aaaac-a4goq-cai';
   }
 
   async init(authClient: AuthClient): Promise<void> {

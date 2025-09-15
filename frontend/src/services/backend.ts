@@ -436,14 +436,19 @@ export class AuthService {
       console.error('Failed to initialize secure messaging:', error);
     }
 
-    // Get user role
+    // Get user role and check if user is already registered
     try {
       const result = await this.actor.getCurrentUser();
       if ('Ok' in result && result.Ok) {
         this.userRole = result.Ok.role;
+        // Store user role in localStorage for routing logic
+        localStorage.setItem('userRole', result.Ok.role === 'doctor' ? 'therapist' : result.Ok.role);
+        console.log('✅ User already registered with role:', result.Ok.role);
       }
     } catch (error) {
-      console.error('Failed to get user role:', error);
+      console.error('Failed to get user role (user may not be registered yet):', error);
+      // Clear any existing role from localStorage if user is not registered
+      localStorage.removeItem('userRole');
     }
   }
 
