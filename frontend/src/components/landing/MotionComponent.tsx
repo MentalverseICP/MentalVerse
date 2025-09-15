@@ -13,7 +13,6 @@ export const Enhanced3DBackground: React.FC = () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     
-    // Blockchain-inspired floating particles
     const particles: Array<{
       x: number;
       y: number;

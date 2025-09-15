@@ -58,7 +58,7 @@ export default {
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
   			},
-  			primary: '#0070f3',
+  			primary: '#1a5f3f',
   		}
   	}
   },

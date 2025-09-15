@@ -1,106 +1,107 @@
-import { FadeInSection, MotionDiv, SlideInSection, scrollToSection } from '@/components/landing/MotionComponent'
-import { Calendar } from 'lucide-react';
+import { AuthContext } from '@/App';
+import { motion } from 'framer-motion';
+import { ArrowUpRight, Star } from 'lucide-react';
+import { useContext } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import MentalIcon from "@/images/mental_mobile.svg";
+        
 
 // Simple connect button component
 const SimpleConnectButton = () => {
   const { isAuthenticated, login, logout } = useAuth();
+
   
   if (isAuthenticated) {
     return (
-      <button
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
         onClick={logout}
-        className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg text-md font-semibold transition-all transform hover:scale-105"
+        className="bg-destructive hover:bg-destructive/90 text-white px-8 py-3 rounded-2xl text-md font-semibold transition-all duration-300 flex items-center space-x-2"
       >
-        Disconnect
-      </button>
+        <span>Disconnect</span>
+        <ArrowUpRight className="w-4 h-4" />
+      </motion.button>
     );
   }
   
   return (
-    <button
+    <motion.button
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
       onClick={login}
-      className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg text-md font-semibold transition-all transform hover:scale-105"
+      className="bg-[#18E614] hover:bg-[#18E614]/90 text-white px-8 py-3 rounded-2xl text-md font-semibold transition-all duration-300 flex items-center space-x-2"
     >
-      Connect Wallet
-    </button>
+      <span>Book Appointment</span>
+      <ArrowUpRight className="w-5 h-5" />
+    </motion.button>
   );
 };
 
-export const Hero: React.FC = () => {
-
+export const Hero = () => {
   return (
-    <section id="about" className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      <div className="container mx-auto px-4 pt-20 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <FadeInSection className="flex flex-col items-center lg:items-start text-center lg:text-left">
-            <div className="inline-block bg-green-600/20 backdrop-blur-sm border border-green-500/30 text-green-300 px-4 py-2 rounded-full text-sm mb-6 animate-pulse">
-              Your Mental Health Journey Starts Here
-            </div>
-            <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
-              Find Peace in
-              <span className="block bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent animate-pulse">Your Mind</span>
-            </h1>
-            <p className="text-gray-300 text-lg mb-8 max-w-md">
-              Connect with licensed therapists, access mental health resources, and take control of your wellbeing with our comprehensive Web3-powered platform.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 items-center sm:items-start">
+    <section id="home" className="relative md:min-h-screen bg-transparent">
+      <div className="mx-auto px-6 pt-24 pb-12">
+        {/* Main Hero Card */}
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="relative bg-card rounded-3xl shadow-2xl overflow-hidden max-w-[90rem] mx-auto min-h-[600px]"
+        >
+          {/* Full Background Image */}
+          <div className="absolute inset-0 w-full h-full">
+            <img 
+              src="https://images.unsplash.com/photo-1544027993-37dbfe43562a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" 
+              alt="Mental wellness and meditation" 
+              className="w-full h-full object-cover"
+            />
+            {/* Gradient overlay for better text readability */}
+            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/30"></div>
+          </div>
+
+          {/* Main Content */}
+          <div className="relative z-10 p-8 lg:p-12 w-full lg:w-3/5 xl:w-1/2 flex flex-col justify-center min-h-[600px]">
+            {/* Badge */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="w-fit flex items-center space-x-2 bg-[#18E614]/10 border border-[#18E614]/30 text-[#3aa03f] px-4 py-2 rounded-full text-sm font-medium mb-8 backdrop-blur-sm"
+            >
+              <Star className="w-4 h-4 fill-current" />
+              <span>24K Happy Customers</span>
+            </motion.div>
+
+            {/* Main Heading */}
+            <motion.h1 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-6 leading-tight"
+            >
+              Revitalize Your Thoughts & Enrich Your Soul Each Day
+            </motion.h1>
+
+            {/* Description */}
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="text-white/80 text-lg mb-8 leading-relaxed max-w-lg"
+            >
+              Our mission is to drive progress and enhance the lives of our customers by delivering superior products and services that exceed expectations.
+            </motion.p>
+
+            {/* CTA Button */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
               <SimpleConnectButton />
-              <button
-                type='button'
-                className="border border-green-500/50 text-green-300 px-8 py-3 rounded-lg text-md font-semibold hover:bg-green-600/20 transition-all transform hover:scale-105"
-                onClick={() => scrollToSection('services')}
-              >
-                Learn More
-              </button>
-            </div>
-          </FadeInSection>
-          
-          <SlideInSection direction="right" className="relative">
-            <div className="relative z-10">
-              <MotionDiv className="bg-black/50 backdrop-blur-xl border border-green-500/30 rounded-3xl p-6 max-w-sm mx-auto shadow-2xl">
-                <div className="text-center mb-6">
-                  <div className="w-16 h-16 flex items-center justify-center mx-auto mb-4 animate-spin-slow">
-                    {/* <Brain className="text-white" size={32} /> */}
-                    <img src={MentalIcon} alt="" />
-                  </div>
-                  <h3 className="text-white font-semibold text-lg">Mental Health Dashboard</h3>
-                  <p className="text-gray-400 text-sm">Track your progress</p>
-                </div>
-                <div className="space-y-4">
-                  <MotionDiv className="bg-gradient-to-r from-green-600/20 to-emerald-600/20 backdrop-blur-sm border border-green-500/30 rounded-xl p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-gray-200 font-medium">Mood Today</span>
-                      <span className="text-green-400 font-semibold">Great</span>
-                    </div>
-                    <div className="flex space-x-1">
-                      {[...Array(5)].map((_, i) => (
-                        <div key={i} className={`h-2 flex-1 rounded transition-all duration-300 ${i < 4 ? 'bg-green-500' : 'bg-gray-600'}`} style={{ animationDelay: `${i * 0.1}s` }}></div>
-                      ))}
-                    </div>
-                  </MotionDiv>
-                  <MotionDiv className="bg-emerald-600/20 backdrop-blur-sm border border-emerald-500/30 rounded-xl p-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-200 font-medium">Next Session</span>
-                      <Calendar className="text-emerald-400 animate-bounce" size={20} />
-                    </div>
-                    <p className="text-emerald-400 font-semibold">Tomorrow at 3:00 PM</p>
-                  </MotionDiv>
-                  <MotionDiv className="bg-teal-600/20 backdrop-blur-sm border border-teal-500/30 rounded-xl p-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-200 font-medium">Weekly Goal</span>
-                      <span className="text-teal-400 font-semibold">85%</span>
-                    </div>
-                    <div className="w-full bg-gray-700 rounded-full h-2 mt-2">
-                      <div className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full transition-all duration-1000 ease-out" style={{width: '85%'}}></div>
-                    </div>
-                  </MotionDiv>
-                </div>
-              </MotionDiv>
-            </div>
-          </SlideInSection>
-        </div>
+            </motion.div>
+          </div>
+        </motion.div>
       </div>
     </section>
   );
