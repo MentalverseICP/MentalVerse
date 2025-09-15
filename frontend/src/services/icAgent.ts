@@ -50,6 +50,13 @@ class ICAgentService {
   async initializeAgent(identity?: Identity): Promise<void> {
     try {
       console.log(`Initializing IC Agent for ${NETWORK} network...`);
+      console.log('IC Host:', IC_HOST);
+      console.log('Canister IDs:', {
+        mentalverse: MENTALVERSE_CANISTER,
+        token: MVT_TOKEN_CANISTER,
+        messaging: SECURE_MESSAGING_CANISTER
+      });
+      console.log('Window hostname:', window.location.hostname);
       
       this.state.agent = new HttpAgent({ 
         host: IC_HOST,
@@ -59,6 +66,8 @@ class ICAgentService {
       if (NETWORK !== 'ic') {
         console.log('Fetching root key for local development...');
         await this.state.agent.fetchRootKey();
+      } else {
+        console.log('Connecting to IC mainnet - no root key fetch needed');
       }
 
       await this.createActors();

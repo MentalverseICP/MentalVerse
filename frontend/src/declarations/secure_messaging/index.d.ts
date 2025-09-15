@@ -7,7 +7,7 @@ import type {
 import type { Principal } from "@dfinity/principal";
 import type { IDL } from "@dfinity/candid";
 
-import { _SERVICE } from './secure_messaging.did';
+export { _SERVICE } from './secure_messaging.did';
 
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const canisterId: string;

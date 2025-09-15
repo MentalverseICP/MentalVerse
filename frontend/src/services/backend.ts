@@ -476,32 +476,53 @@ export class AuthService {
     phoneNumber?: string;
     userType: 'patient' | 'therapist';
   }): Promise<{ success: boolean; message: string }> {
+    console.log('🔍 RegisterUser called with data:', userData);
+    console.log('🔍 Actor available:', !!this.actor);
+    console.log('🔍 Is authenticated:', this.isAuthenticated);
+    
     if (!this.actor) {
+      console.error('❌ No actor available - not authenticated');
       return { success: false, message: 'Not authenticated' };
     }
 
     try {
       // Convert userType string to Motoko variant format
-    const userTypeVariant = userData.userType === 'therapist' ? { therapist: null } : { patient: null };
+      const userTypeVariant = userData.userType === 'therapist' ? { therapist: null } : { patient: null };
       
-      const result = await this.actor.initializeUser({
+      const backendData = {
         firstName: userData.firstName,
         lastName: userData.lastName,
         email: userData.email,
         phoneNumber: userData.phoneNumber ? [userData.phoneNumber] : [],
         userType: userTypeVariant
+      };
+      
+      console.log('🔍 Sending to backend:', backendData);
+      
+      const result = await this.actor.initializeUser({
+        ...backendData,
+        phoneNumber: backendData.phoneNumber.length > 0 ? [backendData.phoneNumber[0]] : []
       });
+      
+      console.log('🔍 Backend response:', result);
       
       if ('Ok' in result && result.Ok) {
         this.userRole = userData.userType;
+        console.log('✅ Registration successful');
         return { success: true, message: 'User registered successfully' };
       } else {
         const errorMessage = ('Err' in result && result.Err) ? result.Err : 'Registration failed';
+        console.error('❌ Backend returned error:', errorMessage);
         return { success: false, message: errorMessage };
       }
     } catch (error) {
-      console.error('Registration error:', error);
-      return { success: false, message: 'Registration failed' };
+      console.error('❌ Registration error:', error);
+      console.error('❌ Error details:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      return { success: false, message: `Registration failed: ${error instanceof Error ? error.message : String(error)}` };
     }
   }
 
