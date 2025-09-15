@@ -1,7 +1,5 @@
-import { AuthContext } from '@/App';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, Star } from 'lucide-react';
-import { useContext } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
         
 

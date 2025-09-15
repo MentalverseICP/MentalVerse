@@ -1,8 +1,6 @@
 import { Menu, X, ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import { scrollToSection } from "./MotionComponent";
-import { useContext } from 'react';
-import { AuthContext } from '../../App';
 import { ThemeToggle } from '../shared/theme-toggle';
 import { motion } from 'framer-motion';
 import MentalIcon from "@/images/mental_mobile.svg";
