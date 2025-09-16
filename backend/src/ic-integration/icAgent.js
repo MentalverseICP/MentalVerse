@@ -2,6 +2,27 @@
 import { HttpAgent, Actor } from '@dfinity/agent';
 import fetch from 'node-fetch';
 
+// Error handling utilities
+const logError = (error, context = {}) => {
+  const timestamp = new Date().toISOString();
+  const errorInfo = {
+    timestamp,
+    message: error.message || error,
+    stack: error.stack,
+    context,
+    severity: context.severity || 'error'
+  };
+  
+  console.error(`[IC Agent Error ${timestamp}]:`, errorInfo);
+  
+  // In production, you might want to send this to a logging service
+  if (process.env.NODE_ENV === 'production') {
+    // TODO: Send to logging service
+  }
+  
+  return errorInfo;
+};
+
 // Mock IDL factories - replace with actual generated declarations
 const mockIdlFactory = ({ IDL }) => {
   return IDL.Service({
@@ -25,16 +46,49 @@ class ICAgentService {
     };
     this.isInitialized = false;
     
-    // Configuration from environment
+    // Default canister IDs for local development
+    this.DEFAULT_CANISTER_IDS = {
+      mentalverse: 'rrkah-fqaaa-aaaaa-aaaaq-cai',
+      token: 'ryjl3-tyaaa-aaaaa-aaaba-cai',
+      messaging: 'rdmx6-jaaaa-aaaaa-aaadq-cai'
+    };
+
+    // Configuration from environment with fallbacks
     this.config = {
       network: process.env.IC_NETWORK || 'local',
       host: process.env.IC_HOST || 'http://localhost:4943',
       canisters: {
-        mentalverse: process.env.MENTALVERSE_BACKEND_CANISTER,
-        token: process.env.MVT_TOKEN_CANISTER,
-        messaging: process.env.SECURE_MESSAGING_CANISTER
+        mentalverse: this.getCanisterId(process.env.MENTALVERSE_BACKEND_CANISTER, 'mentalverse', 'MentalVerse Backend'),
+        token: this.getCanisterId(process.env.MVT_TOKEN_CANISTER, 'token', 'MVT Token'),
+        messaging: this.getCanisterId(process.env.SECURE_MESSAGING_CANISTER, 'messaging', 'Secure Messaging')
       }
     };
+
+    // Log configuration for debugging
+    console.log('Backend IC Configuration:', {
+      network: this.config.network,
+      host: this.config.host,
+      environment: process.env.NODE_ENV || 'development',
+      canisters: this.config.canisters
+    });
+  }
+
+  // Environment-aware canister ID resolution
+  getCanisterId(envVar, canisterName, displayName) {
+    // First priority: Environment variables from .env
+    if (envVar) {
+      console.log(`${displayName} Canister ID (from env): ${envVar}`);
+      return envVar;
+    }
+    
+    // Fallback to development IDs
+    const fallbackId = this.DEFAULT_CANISTER_IDS[canisterName];
+    if (!fallbackId) {
+      throw new Error(`Missing canister ID for ${displayName}. Please set the appropriate environment variable.`);
+    }
+    
+    console.log(`${displayName} Canister ID (fallback): ${fallbackId}`);
+    return fallbackId;
   }
 
   async initialize() {
@@ -50,7 +104,16 @@ class ICAgentService {
 
       // Fetch root key for local development
       if (this.config.network !== 'ic') {
-        await this.agent.fetchRootKey();
+        try {
+          await this.agent.fetchRootKey();
+        } catch (rootKeyError) {
+          logError(rootKeyError, {
+            operation: 'fetch_root_key',
+            network: this.config.network,
+            severity: 'warning'
+          });
+          console.warn('Failed to fetch root key (this is normal for mainnet):', rootKeyError.message);
+        }
       }
 
       // Create actors for each canister
@@ -61,6 +124,10 @@ class ICAgentService {
       
       return true;
     } catch (error) {
+      logError(error, {
+        operation: 'initialize_agent',
+        config: this.config
+      });
       console.error('Failed to initialize IC Agent:', error);
       throw error;
     }
@@ -74,33 +141,64 @@ class ICAgentService {
     try {
       // Create MentalVerse backend actor
       if (this.config.canisters.mentalverse) {
-        this.actors.mentalverse = Actor.createActor(mockIdlFactory, {
-          agent: this.agent,
-          canisterId: this.config.canisters.mentalverse,
-        });
-        console.log('MentalVerse actor created');
+        try {
+          this.actors.mentalverse = Actor.createActor(mockIdlFactory, {
+            agent: this.agent,
+            canisterId: this.config.canisters.mentalverse,
+          });
+          console.log('MentalVerse actor created');
+        } catch (actorError) {
+          logError(actorError, {
+            operation: 'create_actor',
+            canisterName: 'mentalverse',
+            canisterId: this.config.canisters.mentalverse
+          });
+          console.error('Failed to create MentalVerse actor:', actorError);
+        }
       }
 
       // Create MVT Token actor
       if (this.config.canisters.token) {
-        this.actors.token = Actor.createActor(mockIdlFactory, {
-          agent: this.agent,
-          canisterId: this.config.canisters.token,
-        });
-        console.log('Token actor created');
+        try {
+          this.actors.token = Actor.createActor(mockIdlFactory, {
+            agent: this.agent,
+            canisterId: this.config.canisters.token,
+          });
+          console.log('Token actor created');
+        } catch (actorError) {
+          logError(actorError, {
+            operation: 'create_actor',
+            canisterName: 'token',
+            canisterId: this.config.canisters.token
+          });
+          console.error('Failed to create Token actor:', actorError);
+        }
       }
 
       // Create Secure Messaging actor
       if (this.config.canisters.messaging) {
-        this.actors.messaging = Actor.createActor(mockIdlFactory, {
-          agent: this.agent,
-          canisterId: this.config.canisters.messaging,
-        });
-        console.log('Messaging actor created');
+        try {
+          this.actors.messaging = Actor.createActor(mockIdlFactory, {
+            agent: this.agent,
+            canisterId: this.config.canisters.messaging,
+          });
+          console.log('Messaging actor created');
+        } catch (actorError) {
+          logError(actorError, {
+            operation: 'create_actor',
+            canisterName: 'messaging',
+            canisterId: this.config.canisters.messaging
+          });
+          console.error('Failed to create Messaging actor:', actorError);
+        }
       }
 
       console.log('All available actors created successfully');
     } catch (error) {
+      logError(error, {
+        operation: 'create_actors',
+        config: this.config
+      });
       console.error('Failed to create actors:', error);
       throw error;
     }
@@ -129,6 +227,12 @@ class ICAgentService {
       
       return result;
     } catch (error) {
+      logError(error, {
+        operation: 'call_canister_method',
+        actorName,
+        methodName,
+        argsCount: args.length
+      });
       console.error(`Failed to call ${actorName}.${methodName}:`, error);
       throw error;
     }

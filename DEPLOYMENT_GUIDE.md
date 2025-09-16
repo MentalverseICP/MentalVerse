@@ -1,325 +1,491 @@
-# MentalVerse Phase 1 Deployment Guide
+# MentalVerse Deployment Guide
 
-This guide provides step-by-step instructions for deploying the MentalVerse healthcare platform with Phase 1 core infrastructure implemented.
+This guide provides comprehensive instructions for deploying MentalVerse to production environments.
 
-## 🏗️ Phase 1 Implementation Overview
+## Table of Contents
 
-### ✅ Completed Features
+1. [Prerequisites](#prerequisites)
+2. [Environment Setup](#environment-setup)
+3. [Local Development Deployment](#local-development-deployment)
+4. [Production Deployment](#production-deployment)
+5. [Post-Deployment Verification](#post-deployment-verification)
+6. [Monitoring and Maintenance](#monitoring-and-maintenance)
+7. [Troubleshooting](#troubleshooting)
 
-1. **Expanded Motoko Backend** (`main.mo`)
-   - Comprehensive data models for patients, doctors, appointments, and medical records
-   - Role-based authentication and authorization
-   - Secure storage with upgrade-safe state management
-   - HIPAA-compliant security features
+## Prerequisites
 
-2. **Internet Identity Integration**
-   - Passwordless authentication using ICP's Internet Identity
-   - Session management with automatic expiration
-   - Principal-based user identification
-   - Security utilities and audit logging
+### Required Software
 
-3. **Core Data Models**
-   - Patient profiles with medical history
-   - Doctor profiles with credentials and verification
-   - Appointment scheduling with status tracking
-   - Medical records with access control
-   - Secure messaging system
+- **Node.js**: v18.0.0 or higher
+- **npm**: v8.0.0 or higher
+- **DFX**: Latest version (Internet Computer SDK)
+- **Git**: For version control
 
-4. **Frontend Integration**
-   - TypeScript service layer for backend communication
-   - React hooks for authentication and data management
-   - Internet Computer agent configuration
-   - Type-safe interfaces matching Motoko backend
+### Required Accounts
 
-## 🚀 Deployment Prerequisites
-
-### System Requirements
-- Node.js 18+ and npm
-- DFX SDK 0.15.0+
-- Internet Computer local replica
-- Git for version control
+- **Internet Computer**: For canister deployment
+- **OpenAI**: For AI features (API key required)
+- **Hosting Service**: For backend deployment (Railway, Heroku, AWS, etc.)
+- **Frontend Hosting**: For frontend deployment (Vercel, Netlify, etc.)
 
 ### Installation
 
 ```bash
-# Install DFX SDK
+# Install DFX
 sh -ci "$(curl -fsSL https://sdk.dfinity.org/install.sh)"
 
-# Verify installation
+# Verify installations
+node --version
+npm --version
 dfx --version
+```
 
-# Install Node.js dependencies
+## Environment Setup
+
+### 1. Clone and Setup Repository
+
+```bash
+git clone <repository-url>
+cd MentalVerse
+
+# Use automated setup
+node setup-env.js
+
+# Or manual setup
+cp frontend/.env.example frontend/.env.local
+cp backend/.env.example backend/.env
+```
+
+### 2. Configure Environment Variables
+
+#### Development Environment
+
+**Frontend (.env.local)**:
+```env
+VITE_IC_NETWORK=local
+VITE_IC_HOST=http://localhost:4943
+VITE_CANISTER_ID_MENTALVERSE=rrkah-fqaaa-aaaaa-aaaaq-cai
+VITE_CANISTER_ID_MVT_TOKEN=ryjl3-tyaaa-aaaaa-aaaba-cai
+VITE_CANISTER_ID_SECURE_MESSAGING=rdmx6-jaaaa-aaaaa-aaadq-cai
+VITE_INTERNET_IDENTITY_URL=http://localhost:4943/?canisterId=rdmx6-jaaaa-aaaaa-aaadq-cai
+VITE_API_BASE_URL=http://localhost:3001
+NODE_ENV=development
+```
+
+**Backend (.env)**:
+```env
+PORT=3001
+NODE_ENV=development
+OPENAI_API_KEY=your-openai-api-key
+FRONTEND_URL=http://localhost:5173
+IC_NETWORK=local
+IC_HOST=http://localhost:4943
+CANISTER_ID_MENTALVERSE=rrkah-fqaaa-aaaaa-aaaaq-cai
+CANISTER_ID_MVT_TOKEN=ryjl3-tyaaa-aaaaa-aaaba-cai
+CANISTER_ID_SECURE_MESSAGING=rdmx6-jaaaa-aaaaa-aaadq-cai
+SESSION_SECRET=your-secure-session-secret
+```
+
+#### Production Environment
+
+**Frontend (.env.production)**:
+```env
+VITE_IC_NETWORK=ic
+VITE_IC_HOST=https://ic0.app
+VITE_CANISTER_ID_MENTALVERSE=your-production-canister-id
+VITE_CANISTER_ID_MVT_TOKEN=your-production-token-canister-id
+VITE_CANISTER_ID_SECURE_MESSAGING=your-production-messaging-canister-id
+VITE_INTERNET_IDENTITY_URL=https://identity.ic0.app
+VITE_API_BASE_URL=https://your-backend-domain.com
+NODE_ENV=production
+```
+
+**Backend (.env.production)**:
+```env
+PORT=3001
+NODE_ENV=production
+OPENAI_API_KEY=your-production-openai-api-key
+FRONTEND_URL=https://your-frontend-domain.com
+IC_NETWORK=ic
+IC_HOST=https://ic0.app
+CANISTER_ID_MENTALVERSE=your-production-canister-id
+CANISTER_ID_MVT_TOKEN=your-production-token-canister-id
+CANISTER_ID_SECURE_MESSAGING=your-production-messaging-canister-id
+SESSION_SECRET=your-production-session-secret
+```
+
+## Local Development Deployment
+
+### 1. Start Local IC Replica
+
+```bash
+# Start the local Internet Computer replica
+dfx start --background
+
+# Verify it's running
+dfx ping
+```
+
+### 2. Deploy Canisters
+
+```bash
+# Deploy all canisters
+dfx deploy
+
+# Or deploy individually
+dfx deploy mentalverse
+dfx deploy mvt_token
+dfx deploy secure_messaging
+
+# Check deployment status
+dfx canister status --all
+```
+
+### 3. Update Environment Variables
+
+```bash
+# Get canister IDs
+dfx canister id mentalverse
+dfx canister id mvt_token
+dfx canister id secure_messaging
+
+# Update .env files with actual canister IDs
+```
+
+### 4. Install Dependencies and Start Services
+
+```bash
+# Install all dependencies
+npm run install:all
+
+# Start backend (in one terminal)
+cd backend
+npm run dev
+
+# Start frontend (in another terminal)
 cd frontend
-npm install
+npm run dev
 ```
 
-## 🔧 Local Development Setup
+### 5. Verify Local Deployment
 
-### 1. Start Local Internet Computer Replica
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:3001
+- IC Dashboard: http://localhost:4943/_/dashboard
+
+## Production Deployment
+
+### Phase 1: Internet Computer Deployment
+
+#### 1. Prepare for IC Mainnet
 
 ```bash
-# Navigate to the mentalverse directory
-cd mentalverse
+# Ensure you have cycles for deployment
+dfx wallet balance
 
-# Start clean local replica
-dfx start --clean
+# If needed, get cycles from the cycles faucet or exchange
 ```
 
-### 2. Deploy Internet Identity
+#### 2. Deploy to IC Mainnet
 
 ```bash
-# Deploy Internet Identity canister
-dfx deploy internet_identity
-
-# Note the canister ID for frontend configuration
-echo "Internet Identity Canister ID: $(dfx canister id internet_identity)"
-```
-
-### 3. Deploy Backend Canister
-
-```bash
-# Build and deploy the Motoko backend
-dfx deploy mentalverse_backend
-
-# Verify deployment
-dfx canister call mentalverse_backend healthCheck
-```
-
-### 4. Build and Deploy Frontend
-
-```bash
-# Build the React frontend
-cd ../frontend
-npm run build
-
-# Return to mentalverse directory and deploy
-cd ../mentalverse
-dfx deploy mentalverse_frontend
-```
-
-### 5. Access the Application
-
-```bash
-# Get the frontend URL
-echo "Frontend URL: http://localhost:4943/?canisterId=$(dfx canister id mentalverse_frontend)"
-
-# Get the Internet Identity URL
-echo "Internet Identity URL: http://localhost:4943/?canisterId=$(dfx canister id internet_identity)"
-```
-
-## 🌐 Production Deployment (IC Mainnet)
-
-### 1. Configure for Mainnet
-
-```bash
-# Add cycles to your account (required for mainnet deployment)
-dfx ledger account-id
-
-# Top up with cycles (visit https://faucet.dfinity.org for testnet cycles)
-```
-
-### 2. Deploy to Mainnet
-
-```bash
-# Deploy all canisters to IC mainnet
+# Deploy to mainnet
 dfx deploy --network ic
 
 # Verify deployment
-dfx canister --network ic call mentalverse_backend healthCheck
+dfx canister status --all --network ic
+
+# Get production canister IDs
+dfx canister id mentalverse --network ic
+dfx canister id mvt_token --network ic
+dfx canister id secure_messaging --network ic
 ```
 
-### 3. Configure Frontend for Production
-
-Update environment variables in `frontend/.env.production`:
-
-```env
-REACT_APP_IC_HOST=https://ic0.app
-REACT_APP_INTERNET_IDENTITY_URL=https://identity.ic0.app
-REACT_APP_BACKEND_CANISTER_ID=your_backend_canister_id
-```
-
-## 🧪 Testing the Deployment
-
-### 1. Backend Health Check
+#### 3. Update Production Environment Files
 
 ```bash
-# Test backend health
-dfx canister call mentalverse_backend healthCheck
-
-# Expected output:
-# (record { status = "healthy"; timestamp = 1_234_567_890; version = "1.0.0" })
+# Update frontend/.env.production with actual canister IDs
+# Update backend/.env.production with actual canister IDs
 ```
 
-### 2. System Statistics
+### Phase 2: Backend Deployment
+
+#### Option A: Railway Deployment
+
+1. **Create Railway Account**: Sign up at railway.app
+2. **Connect Repository**: Link your GitHub repository
+3. **Configure Environment Variables**:
+   ```
+   PORT=3001
+   NODE_ENV=production
+   OPENAI_API_KEY=your-api-key
+   FRONTEND_URL=https://your-frontend-domain.com
+   IC_NETWORK=ic
+   IC_HOST=https://ic0.app
+   CANISTER_ID_MENTALVERSE=your-canister-id
+   CANISTER_ID_MVT_TOKEN=your-token-canister-id
+   CANISTER_ID_SECURE_MESSAGING=your-messaging-canister-id
+   SESSION_SECRET=your-secure-session-secret
+   ```
+4. **Deploy**: Railway will automatically deploy from your repository
+
+#### Option B: Heroku Deployment
 
 ```bash
-# Get system stats
-dfx canister call mentalverse_backend getSystemStats
+# Install Heroku CLI
+# Create Heroku app
+heroku create your-app-name
 
-# Expected output:
-# (record { totalPatients = 0; totalDoctors = 0; totalAppointments = 0; totalMedicalRecords = 0; totalMessages = 0 })
+# Set environment variables
+heroku config:set NODE_ENV=production
+heroku config:set OPENAI_API_KEY=your-api-key
+heroku config:set FRONTEND_URL=https://your-frontend-domain.com
+heroku config:set IC_NETWORK=ic
+heroku config:set IC_HOST=https://ic0.app
+heroku config:set CANISTER_ID_MENTALVERSE=your-canister-id
+heroku config:set CANISTER_ID_MVT_TOKEN=your-token-canister-id
+heroku config:set CANISTER_ID_SECURE_MESSAGING=your-messaging-canister-id
+heroku config:set SESSION_SECRET=your-secure-session-secret
+
+# Deploy
+git push heroku main
 ```
 
-### 3. User Registration Test
+### Phase 3: Frontend Deployment
+
+#### Option A: Vercel Deployment
+
+1. **Install Vercel CLI**:
+   ```bash
+   npm install -g vercel
+   ```
+
+2. **Configure Environment Variables**:
+   - Go to Vercel dashboard
+   - Add environment variables from `.env.production`
+
+3. **Deploy**:
+   ```bash
+   cd frontend
+   vercel --prod
+   ```
+
+#### Option B: Netlify Deployment
+
+1. **Build the Frontend**:
+   ```bash
+   cd frontend
+   cp .env.production .env.local
+   npm run build
+   ```
+
+2. **Deploy to Netlify**:
+   - Drag and drop the `dist/` folder to Netlify
+   - Or connect your GitHub repository
+   - Configure environment variables in Netlify dashboard
+
+### Phase 4: DNS and SSL Configuration
+
+1. **Configure Custom Domains**:
+   - Frontend: Configure your domain to point to Vercel/Netlify
+   - Backend: Configure your domain to point to Railway/Heroku
+
+2. **SSL Certificates**:
+   - Most hosting services provide automatic SSL
+   - Verify HTTPS is working for both frontend and backend
+
+## Post-Deployment Verification
+
+### 1. Functional Testing
+
+Use the comprehensive testing guide (`TESTING_GUIDE.md`):
 
 ```bash
-# Test user registration (replace with your principal)
-dfx canister call mentalverse_backend registerUser '("patient")'
-
-# Expected output:
-# (variant { Ok = "User registered successfully with role: patient" })
+# Run the testing checklist
+# ✅ Authentication flow
+# ✅ Secure messaging
+# ✅ Token operations
+# ✅ Error handling
+# ✅ Cross-browser compatibility
 ```
 
-### 4. Frontend Integration Test
+### 2. Performance Testing
 
-1. Open the frontend URL in your browser
-2. Click "Login with Internet Identity"
-3. Complete the Internet Identity authentication
-4. Verify successful login and role assignment
+```bash
+# Check canister performance
+dfx canister status --all --network ic
 
-## 🔒 Security Configuration
+# Monitor response times
+# Test with multiple concurrent users
+# Verify error rates are acceptable
+```
 
-### 1. Internet Identity Setup
+### 3. Security Verification
 
-- Internet Identity provides passwordless authentication
-- Users authenticate using biometrics, security keys, or device authentication
-- No passwords or personal information stored
+- ✅ All API keys are secure and not exposed
+- ✅ HTTPS is enforced
+- ✅ CORS is properly configured
+- ✅ Session security is implemented
+- ✅ Input validation is working
 
-### 2. Access Control
-
-- Role-based permissions (patient/doctor/admin)
-- Function-level authorization checks
-- Resource-level access control for medical records
-
-### 3. Data Protection
-
-- All messages encrypted by default
-- Medical records with granular access permissions
-- Audit trails for sensitive operations
-- HIPAA-compliant data handling
-
-## 📊 Monitoring and Maintenance
+## Monitoring and Maintenance
 
 ### 1. Canister Monitoring
 
 ```bash
-# Check canister status
-dfx canister status mentalverse_backend
+# Check canister cycles
+dfx canister status mentalverse --network ic
+dfx canister status mvt_token --network ic
+dfx canister status secure_messaging --network ic
 
-# Monitor cycles balance
-dfx canister status mentalverse_backend --network ic
+# Top up cycles if needed
+dfx canister deposit-cycles <amount> <canister-id> --network ic
 ```
 
-### 2. Upgrade Procedures
+### 2. Application Monitoring
+
+- **Error Rates**: Monitor application error logs
+- **Response Times**: Track API response times
+- **User Activity**: Monitor authentication and messaging activity
+- **Resource Usage**: Monitor server resources and costs
+
+### 3. Regular Maintenance
 
 ```bash
-# Upgrade backend canister (preserves state)
-dfx deploy mentalverse_backend --mode upgrade
+# Update dependencies regularly
+npm audit
+npm update
 
-# Upgrade frontend
-cd ../frontend
-npm run build
-cd ../mentalverse
-dfx deploy mentalverse_frontend
+# Update DFX
+dfx upgrade
+
+# Backup important data
+# Monitor security advisories
 ```
 
-### 3. Backup and Recovery
+## Troubleshooting
 
-- State is automatically preserved during canister upgrades
-- Stable variables ensure data persistence
-- Regular monitoring of cycles balance required
+### Common Deployment Issues
 
-## 🚨 Troubleshooting
+#### 1. Canister Deployment Failures
 
-### Common Issues
+**Problem**: Deployment fails with cycle errors
 
-1. **"Cannot find module" errors in frontend**
-   ```bash
-   cd frontend
-   npm install
-   npm run build
-   ```
+**Solution**:
+```bash
+# Check wallet balance
+dfx wallet balance
 
-2. **Internet Identity not working**
-   - Ensure Internet Identity canister is deployed
-   - Check the canister ID in frontend configuration
-   - Verify local replica is running
+# Get cycles from faucet or exchange
+# Retry deployment
+dfx deploy --network ic
+```
 
-3. **Backend deployment fails**
-   ```bash
-   # Check Motoko syntax
-   dfx build mentalverse_backend
-   
-   # View detailed error logs
-   dfx deploy mentalverse_backend --verbose
-   ```
+#### 2. Environment Variable Issues
 
-4. **Frontend not loading**
-   - Ensure frontend is built before deployment
-   - Check canister ID configuration
-   - Verify assets are properly uploaded
+**Problem**: Configuration not loading correctly
 
-### Debug Commands
+**Solutions**:
+- Verify all environment variables are set
+- Check variable names match exactly
+- Restart services after changes
+- Use the setup script: `node setup-env.js`
+
+#### 3. CORS Issues
+
+**Problem**: Frontend can't connect to backend
+
+**Solutions**:
+- Verify FRONTEND_URL in backend environment
+- Check CORS configuration in backend
+- Ensure both services use HTTPS in production
+
+#### 4. Authentication Issues
+
+**Problem**: Internet Identity login fails
+
+**Solutions**:
+- Verify Internet Identity URL is correct
+- Check canister IDs are accurate
+- Clear browser cache and localStorage
+- Verify IC network configuration
+
+### Emergency Procedures
+
+#### 1. Service Outage
+
+1. Check service status dashboards
+2. Verify canister status: `dfx canister status --all --network ic`
+3. Check hosting service status
+4. Review error logs
+5. Implement rollback if necessary
+
+#### 2. Security Incident
+
+1. Immediately rotate API keys and secrets
+2. Review access logs
+3. Update security configurations
+4. Notify users if necessary
+5. Document incident and response
+
+## Rollback Procedures
+
+### 1. Canister Rollback
 
 ```bash
-# View canister logs
-dfx canister logs mentalverse_backend
+# Stop current canister
+dfx canister stop <canister-id> --network ic
 
-# Check canister info
-dfx canister info mentalverse_backend
+# Deploy previous version
+# (Ensure you have the previous code version)
+dfx deploy <canister-name> --network ic
 
-# Test specific functions
-dfx canister call mentalverse_backend greet '("World")'
+# Verify rollback
+dfx canister status <canister-id> --network ic
 ```
 
-## 📈 Performance Optimization
+### 2. Application Rollback
 
-### 1. Query vs Update Calls
+- **Frontend**: Revert to previous deployment in Vercel/Netlify
+- **Backend**: Revert to previous deployment in Railway/Heroku
+- **Database**: Restore from backup if necessary
 
-- Use query calls for read-only operations (faster, no consensus)
-- Use update calls for state-changing operations
-- Properly marked functions in the backend
+## Best Practices
 
-### 2. Data Structure Optimization
+### 1. Deployment Checklist
 
-- HashMap-based storage for O(1) lookups
-- Efficient filtering and pagination
-- Minimal memory footprint with stable variables
+- [ ] All tests pass
+- [ ] Environment variables configured
+- [ ] Security review completed
+- [ ] Performance testing done
+- [ ] Monitoring configured
+- [ ] Rollback plan prepared
+- [ ] Documentation updated
 
-### 3. Frontend Optimization
+### 2. Security Best Practices
 
-- Lazy loading of components
-- Efficient state management
-- Proper caching of backend responses
+- Use strong, unique secrets for production
+- Regularly rotate API keys and secrets
+- Monitor for security vulnerabilities
+- Keep dependencies updated
+- Use HTTPS everywhere
+- Implement proper error handling
 
-## 🔮 Next Steps (Phase 2+)
+### 3. Performance Best Practices
 
-After successful Phase 1 deployment, consider implementing:
+- Monitor canister cycles usage
+- Optimize API calls and responses
+- Implement caching where appropriate
+- Monitor and optimize bundle sizes
+- Use CDN for static assets
 
-1. **Advanced Features**
-   - Real-time notifications
-   - File upload for medical documents
-   - Video calling for telemedicine
-   - AI-powered health insights
+## Support and Resources
 
-2. **Integration**
-   - External medical systems
-   - Insurance providers
-   - Pharmacy networks
-   - Laboratory services
+- **Internet Computer Documentation**: https://internetcomputer.org/docs
+- **DFX Documentation**: https://sdk.dfinity.org/docs
+- **Project Issues**: GitHub Issues
+- **Community Support**: IC Developer Discord
 
-3. **Mobile Support**
-   - React Native mobile app
-   - Push notifications
-   - Offline capabilities
+---
 
-## 📞 Support
-
-For technical support:
-- Check the backend README: `mentalverse/src/mentalverse_backend/README.md`
-- Review Internet Computer documentation: https://internetcomputer.org/docs
-- Motoko language guide: https://internetcomputer.org/docs/current/motoko/intro
-
-## 📄 License
-
-This project is part of the MentalVerse healthcare platform. All rights reserved.
+**Note**: This deployment guide should be updated as the project evolves. Always test deployments in a staging environment before production deployment.

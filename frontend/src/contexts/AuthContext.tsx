@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { AuthClient } from '@dfinity/auth-client';
 import { Identity } from '@dfinity/agent';
 import { icAgent } from '../services/icAgent';
+import { handleAuthError } from '../utils/errorHandler';
 
 // Define User type
 interface User {
@@ -54,8 +55,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           disableIdle: true,
           disableDefaultIdleCallback: true,
         },
-        // Add storage options for better session persistence
-        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
       });
       
       setAuthClient(client);
@@ -75,7 +74,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
           }
         } catch (error) {
-          console.warn(`Auth check attempt ${retryCount + 1} failed:`, error);
+          handleAuthError(error as Error, 'auth_check_retry', {
+            operation: 'auth_init',
+            additionalData: { retryCount: retryCount + 1, maxRetries }
+          });
         }
         retryCount++;
       }
@@ -98,7 +100,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             await icAgent.initializeAgent(userIdentity);
             console.log('User authenticated and IC agent initialized:', userPrincipal);
           } catch (agentError) {
-            console.error('Failed to initialize IC agent:', agentError);
+            handleAuthError(agentError as Error, 'ic_agent_init', {
+              operation: 'auth_init',
+              userId: userPrincipal
+            });
             // Don't fail auth if agent init fails, but log the error
           }
         } else {
@@ -114,7 +119,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         await icAgent.initializeAgent();
       }
     } catch (error) {
-      console.error('Failed to initialize auth:', error);
+      handleAuthError(error as Error, 'auth_initialization', {
+        operation: 'auth_init'
+      });
       setIsAuthenticated(false);
       setIdentity(undefined);
       setPrincipal(undefined);
@@ -126,7 +133,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (): Promise<void> => {
     if (!authClient) {
-      throw new Error('AuthClient not initialized');
+      const error = handleAuthError('AuthClient not initialized', 'login_no_client', {
+        operation: 'login'
+      });
+      throw new Error(error.userMessage || 'AuthClient not initialized');
     }
 
     try {
@@ -149,7 +159,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           try {
             await icAgent.updateIdentity(existingIdentity);
           } catch (agentError) {
-            console.error('Failed to initialize IC agent on existing auth:', agentError);
+            handleAuthError(agentError as Error, 'ic_agent_update', {
+              operation: 'login',
+              userId: userPrincipal
+            });
           }
           
           return;
@@ -161,7 +174,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           identityProvider: INTERNET_IDENTITY_URL,
           maxTimeToLive: MAX_TIME_TO_LIVE,
           onSuccess: () => resolve(),
-          onError: (error) => reject(error),
+          onError: (error) => {
+            handleAuthError(error || 'Login failed', 'login_internet_identity', {
+              operation: 'login'
+            });
+            reject(error);
+          },
         });
       });
 
@@ -181,19 +199,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           await icAgent.updateIdentity(userIdentity);
           console.log('Login successful and IC agent initialized:', userPrincipal);
         } catch (agentError) {
-          console.error('Failed to initialize IC agent after login:', agentError);
+          handleAuthError(agentError as Error, 'ic_agent_init', {
+            operation: 'login',
+            userId: userPrincipal
+          });
           // Don't fail login if agent init fails
         }
       } else {
-        console.error('Invalid identity received after login');
+        const error = handleAuthError('Invalid identity received after login', 'login_invalid_identity', {
+          operation: 'login'
+        });
         setIsAuthenticated(false);
         setIdentity(undefined);
         setPrincipal(undefined);
         setUser(null);
-        throw new Error('Invalid identity received after login');
+        throw new Error(error.userMessage || 'Invalid identity received after login');
       }
     } catch (error) {
-      console.error('Login failed:', error);
+      handleAuthError(error as Error, 'login_process', {
+        operation: 'login'
+      });
       setIsAuthenticated(false);
       setIdentity(undefined);
       setPrincipal(undefined);
@@ -206,11 +231,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async (): Promise<void> => {
     if (!authClient) {
-      throw new Error('AuthClient not initialized');
+      const error = handleAuthError('AuthClient not initialized', 'logout_no_client', {
+        operation: 'logout'
+      });
+      throw new Error(error.userMessage || 'AuthClient not initialized');
     }
 
     try {
       setIsLoading(true);
+      
+      const currentUserId = principal;
       
       // Clear authentication state immediately to prevent UI issues
       setIsAuthenticated(false);
@@ -231,12 +261,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Reinitialize IC agents for anonymous calls
         await icAgent.initializeAgent();
       } catch (agentError) {
-        console.warn('Failed to reset IC agent during logout:', agentError);
+        handleAuthError(agentError as Error, 'ic_agent_reset', {
+          operation: 'logout',
+          userId: currentUserId
+        });
       }
       
       console.log('Logout successful');
     } catch (error) {
-      console.error('Logout failed:', error);
+      handleAuthError(error as Error, 'logout_process', {
+        operation: 'logout',
+        userId: principal
+      });
       // Ensure state is cleared even if logout fails
       setIsAuthenticated(false);
       setIdentity(undefined);
