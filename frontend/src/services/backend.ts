@@ -22,15 +22,15 @@ export interface BackendService {
   unstakeTokens: (amount: number) => Promise<{ Ok?: string; Err?: string }>;
   claimStakingRewards: () => Promise<{ Ok?: number; Err?: string }>;
   getUserStake: () => Promise<{ Ok?: StakeInfo; Err?: string }>;
-  getTransactionHistory: (startIndex: number, limit: number) => Promise<Transaction[]>;
-  getUserEarningHistory: () => Promise<EarningRecord[]>;
-  getUserSpendingHistory: () => Promise<SpendingRecord[]>;
+  getTransactionHistory: (startIndex: number, limit: number) => Promise<{ Ok?: Transaction[]; Err?: string }>;
+  getUserEarningHistory: () => Promise<{ Ok?: EarningRecord[]; Err?: string }>;
+  getUserSpendingHistory: () => Promise<{ Ok?: SpendingRecord[]; Err?: string }>;
   earnTokens: (amount: number, reason: string) => Promise<{ Ok?: string; Err?: string }>;
   spendTokens: (amount: number, reason: string) => Promise<{ Ok?: string; Err?: string }>;
   
   // Faucet operations
   getFaucetStats: () => Promise<{ Ok?: FaucetStats; Err?: string }>;
-  getFaucetClaimHistory: () => Promise<FaucetClaim[]>;
+  getFaucetClaimHistory: () => Promise<{ Ok?: FaucetClaim[]; Err?: string }>;
   claimFaucetTokens: () => Promise<{ Ok?: string; Err?: string }>;
   
   // Patient management
@@ -39,32 +39,32 @@ export interface BackendService {
   
   // Doctor management
   createDoctorProfile: (doctorData: DoctorData) => Promise<{ Ok?: Doctor; Err?: string }>;
-  getAllDoctors: () => Promise<Doctor[]>;
+  getAllDoctors: () => Promise<{ Ok?: Doctor[]; Err?: string }>;
   getDoctorById: (doctorId: string) => Promise<{ Ok?: Doctor; Err?: string }>;
   
   // Appointment management
   createAppointment: (appointmentData: AppointmentData) => Promise<{ Ok?: Appointment; Err?: string }>;
   updateAppointmentStatus: (appointmentId: string, status: AppointmentStatus) => Promise<{ Ok?: Appointment; Err?: string }>;
-  getPatientAppointments: () => Promise<Appointment[]>;
-  getDoctorAppointments: () => Promise<Appointment[]>;
+  getPatientAppointments: () => Promise<{ Ok?: Appointment[]; Err?: string }>;
+  getDoctorAppointments: () => Promise<{ Ok?: Appointment[]; Err?: string }>;
   
   // Medical records
   createMedicalRecord: (recordData: MedicalRecordData) => Promise<{ Ok?: MedicalRecord; Err?: string }>;
-  getPatientMedicalRecords: () => Promise<MedicalRecord[]>;
+  getPatientMedicalRecords: (patientId?: Principal) => Promise<{ Ok?: MedicalRecord[]; Err?: string }>;
   getMedicalRecordById: (recordId: string) => Promise<{ Ok?: MedicalRecord; Err?: string }>;
   createSessionNote: (patientId: Principal, content: string, sessionId?: string) => Promise<{ Ok?: string; Err?: string }>;
-  getSessionNotes: (patientId?: Principal) => Promise<SessionNote[]>;
+  getSessionNotes: (patientId?: Principal) => Promise<{ Ok?: SessionNote[]; Err?: string }>;
   createPrescription: (patientId: Principal, medication: string, dosage: string, instructions: string, duration: string) => Promise<{ Ok?: string; Err?: string }>;
-  getPrescriptions: (patientId?: Principal) => Promise<Prescription[]>;
+  getPrescriptions: (patientId?: Principal) => Promise<{ Ok?: Prescription[]; Err?: string }>;
   createTreatmentSummary: (patientId: Principal, summary: string, recommendations: string[], nextAppointment?: string) => Promise<{ Ok?: string; Err?: string }>;
-  getTreatmentSummaries: (patientId?: Principal) => Promise<TreatmentSummary[]>;
+  getTreatmentSummaries: (patientId?: Principal) => Promise<{ Ok?: TreatmentSummary[]; Err?: string }>;
   grantMedicalRecordAccess: (recordId: string, userId: Principal, accessLevel: string) => Promise<{ Ok?: string; Err?: string }>;
   revokeMedicalRecordAccess: (recordId: string, userId: Principal) => Promise<{ Ok?: string; Err?: string }>;
   getAuditLogs: (recordTypeOpt?: { [key: string]: null }[], recordIdOpt?: string[], limitOpt?: bigint[]) => Promise<{ ok?: AuditLog[]; err?: string }>;
   
   // Messaging
   sendMessage: (receiverId: Principal, content: string, messageType: string) => Promise<{ Ok?: Message; Err?: string }>;
-  getMessages: (otherUserId: Principal) => Promise<Message[]>;
+  getMessages: (otherUserId: Principal) => Promise<{ Ok?: Message[]; Err?: string }>;
   markMessageAsRead: (messageId: string) => Promise<{ Ok?: string; Err?: string }>;
   
   // Secure messaging
@@ -76,8 +76,8 @@ export interface BackendService {
   getSecureMessagingHealth: () => Promise<{ status: string; timestamp: bigint }>;
   
   // System
-  healthCheck: () => Promise<{ status: string; timestamp: bigint; version: string }>;
-  getSystemStats: () => Promise<SystemStats>;
+  healthCheck: () => Promise<{ Ok?: { status: string; timestamp: bigint }; Err?: string }>;
+  getSystemStats: () => Promise<{ Ok?: SystemStats; Err?: string }>;
 }
 
 // Token-related type definitions
@@ -595,7 +595,14 @@ export class AuthService {
     }
 
     try {
-      return await this.actor.getTransactionHistory(0, 50);
+      const result = await this.actor.getTransactionHistory(0, 50);
+      if (result.Ok) {
+        return result.Ok;
+      } else if (result.Err) {
+        throw new Error(`Failed to get transaction history: ${result.Err}`);
+      } else {
+        throw new Error('Failed to get transaction history');
+      }
     } catch (error) {
       console.error('Get transaction history error:', error);
       throw error;
@@ -628,7 +635,7 @@ export class AuthService {
     try {
       const result = await this.actor.stakeTokens(amount, lockPeriod);
       if ('Err' in result && result.Err) {
-        throw new Error(result.Err);
+        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
       }
     } catch (error) {
       console.error('Stake tokens error:', error);
@@ -644,7 +651,7 @@ export class AuthService {
     try {
       const result = await this.actor.unstakeTokens(amount);
       if ('Err' in result && result.Err) {
-        throw new Error(result.Err);
+        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
       }
     } catch (error) {
       console.error('Unstake tokens error:', error);
@@ -661,10 +668,158 @@ export class AuthService {
       const toPrincipal = Principal.fromText(to);
       const result = await this.actor.transferTokens(toPrincipal, amount);
       if ('Err' in result && result.Err) {
-        throw new Error(result.Err);
+        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
       }
     } catch (error) {
       console.error('Transfer tokens error:', error);
+      throw error;
+    }
+  }
+
+  async claimStakingRewards(): Promise<number> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+
+    try {
+      const result = await this.actor.claimStakingRewards();
+      if ('Ok' in result && result.Ok !== undefined) {
+        return result.Ok;
+      } else if ('Err' in result && result.Err) {
+        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
+      } else {
+        throw new Error('Failed to claim staking rewards');
+      }
+    } catch (error) {
+      console.error('Claim staking rewards error:', error);
+      throw error;
+    }
+  }
+
+  async getUserEarningHistory(): Promise<EarningRecord[]> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+
+    try {
+      const result = await this.actor.getUserEarningHistory();
+      if (result.Ok) {
+        return result.Ok;
+      } else if (result.Err) {
+        throw new Error(`Failed to get user earning history: ${result.Err}`);
+      } else {
+        throw new Error('Failed to get user earning history');
+      }
+    } catch (error) {
+      console.error('Get user earning history error:', error);
+      throw error;
+    }
+  }
+
+  async getUserSpendingHistory(): Promise<SpendingRecord[]> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+
+    try {
+      const result = await this.actor.getUserSpendingHistory();
+      if (result.Ok) {
+        return result.Ok;
+      } else if (result.Err) {
+        throw new Error(`Failed to get user spending history: ${result.Err}`);
+      } else {
+        throw new Error('Failed to get user spending history');
+      }
+    } catch (error) {
+      console.error('Get user spending history error:', error);
+      throw error;
+    }
+  }
+
+  async earnTokens(amount: number, reason: string): Promise<void> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+
+    try {
+      const result = await this.actor.earnTokens(amount, reason);
+      if ('Err' in result && result.Err) {
+        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
+      }
+    } catch (error) {
+      console.error('Earn tokens error:', error);
+      throw error;
+    }
+  }
+
+  async spendTokens(amount: number, reason: string): Promise<void> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+
+    try {
+      const result = await this.actor.spendTokens(amount, reason);
+      if ('Err' in result && result.Err) {
+        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
+      }
+    } catch (error) {
+      console.error('Spend tokens error:', error);
+      throw error;
+    }
+  }
+
+  async getFaucetStats(): Promise<FaucetStats> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+
+    try {
+      const result = await this.actor.getFaucetStats();
+      if ('Ok' in result && result.Ok) {
+        return result.Ok;
+      } else if ('Err' in result && result.Err) {
+        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
+      } else {
+        throw new Error('Failed to get faucet stats');
+      }
+    } catch (error) {
+      console.error('Get faucet stats error:', error);
+      throw error;
+    }
+  }
+
+  async getFaucetClaimHistory(): Promise<FaucetClaim[]> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+
+    try {
+      const result = await this.actor.getFaucetClaimHistory();
+      if (result.Ok) {
+        return result.Ok;
+      } else if (result.Err) {
+        throw new Error(`Failed to get faucet claim history: ${result.Err}`);
+      } else {
+        throw new Error('Failed to get faucet claim history');
+      }
+    } catch (error) {
+      console.error('Get faucet claim history error:', error);
+      throw error;
+    }
+  }
+
+  async claimFaucetTokens(): Promise<void> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+
+    try {
+      const result = await this.actor.claimFaucetTokens();
+      if ('Err' in result && result.Err) {
+        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
+      }
+    } catch (error) {
+      console.error('Claim faucet tokens error:', error);
       throw error;
     }
   }
@@ -684,7 +839,7 @@ export class AuthService {
       if ('ok' in result) {
         return result.ok;
       } else {
-        throw new Error(result.err);
+        throw new Error(typeof result.err === 'string' ? result.err : JSON.stringify(result.err) || 'Unknown error');
       }
     } catch (error) {
       console.error('Error creating therapy conversation:', error);
@@ -709,7 +864,7 @@ export class AuthService {
       if ('ok' in result) {
         return result.ok;
       } else {
-        throw new Error(result.err);
+        throw new Error(typeof result.err === 'string' ? result.err : JSON.stringify(result.err) || 'Unknown error');
       }
     } catch (error) {
       console.error('Error sending secure message:', error);
@@ -769,7 +924,7 @@ export class AuthService {
       if ('ok' in result) {
         return result.ok;
       } else {
-        throw new Error(result.err);
+        throw new Error(typeof result.err === 'string' ? result.err : JSON.stringify(result.err) || 'Unknown error');
       }
     } catch (error) {
       console.error('Error registering encryption key:', error);
@@ -788,6 +943,362 @@ export class AuthService {
       return result;
     } catch (error) {
       console.error('Error getting secure messaging health:', error);
+      throw error;
+    }
+  }
+
+  // === PATIENT PROFILE MANAGEMENT ===
+  
+  async createPatientProfile(patientData: PatientData): Promise<Patient> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const result = await this.actor.createPatientProfile(patientData);
+      if ('Ok' in result && result.Ok) {
+        return result.Ok;
+      } else if ('Err' in result && result.Err) {
+        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
+      } else {
+        throw new Error('Failed to create patient profile');
+      }
+    } catch (error) {
+      console.error('Error creating patient profile:', error);
+      throw error;
+    }
+  }
+  
+  async getPatientProfile(): Promise<Patient> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const result = await this.actor.getPatientProfile();
+      if ('Ok' in result && result.Ok) {
+        return result.Ok;
+      } else if ('Err' in result && result.Err) {
+        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
+      } else {
+        throw new Error('Failed to get patient profile');
+      }
+    } catch (error) {
+      console.error('Error getting patient profile:', error);
+      throw error;
+    }
+  }
+
+  // === DOCTOR/THERAPIST PROFILE MANAGEMENT ===
+  
+  async createDoctorProfile(doctorData: DoctorData): Promise<Doctor> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const result = await this.actor.createDoctorProfile(doctorData);
+      if ('Ok' in result && result.Ok) {
+        return result.Ok;
+      } else if ('Err' in result && result.Err) {
+        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
+      } else {
+        throw new Error('Failed to create doctor profile');
+      }
+    } catch (error) {
+      console.error('Error creating doctor profile:', error);
+      throw error;
+    }
+  }
+  
+  async getAllDoctors(): Promise<Doctor[]> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const result = await this.actor.getAllDoctors();
+      if ('Ok' in result && result.Ok) {
+        return result.Ok;
+      } else if ('Err' in result && result.Err) {
+        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
+      } else {
+        throw new Error('Failed to get all doctors');
+      }
+    } catch (error) {
+      console.error('Error getting all doctors:', error);
+      throw error;
+    }
+  }
+  
+  async getDoctorById(doctorId: string): Promise<Doctor> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const result = await this.actor.getDoctorById(doctorId);
+      if ('Ok' in result && result.Ok) {
+        return result.Ok;
+      } else if ('Err' in result && result.Err) {
+        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
+      } else {
+        throw new Error('Failed to get doctor by ID');
+      }
+    } catch (error) {
+      console.error('Error getting doctor by ID:', error);
+      throw error;
+    }
+  }
+
+  // === APPOINTMENT MANAGEMENT ===
+  
+  async createAppointment(appointmentData: AppointmentData): Promise<Appointment> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const result = await this.actor.createAppointment(appointmentData);
+      if ('Ok' in result && result.Ok) {
+        return result.Ok;
+      } else if ('Err' in result && result.Err) {
+        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
+      } else {
+        throw new Error('Failed to create appointment');
+      }
+    } catch (error) {
+      console.error('Error creating appointment:', error);
+      throw error;
+    }
+  }
+  
+  async updateAppointmentStatus(appointmentId: string, status: AppointmentStatus): Promise<Appointment> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const result = await this.actor.updateAppointmentStatus(appointmentId, status);
+      if ('Ok' in result && result.Ok) {
+        return result.Ok;
+      } else if ('Err' in result && result.Err) {
+        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
+      } else {
+        throw new Error('Failed to update appointment status');
+      }
+    } catch (error) {
+      console.error('Error updating appointment status:', error);
+      throw error;
+    }
+  }
+  
+  async getPatientAppointments(): Promise<Appointment[]> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const result = await this.actor.getPatientAppointments();
+      if ('Ok' in result && result.Ok) {
+        return result.Ok;
+      } else if ('Err' in result && result.Err) {
+        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
+      } else {
+        throw new Error('Failed to get patient appointments');
+      }
+    } catch (error) {
+      console.error('Error getting patient appointments:', error);
+      throw error;
+    }
+  }
+  
+  async getDoctorAppointments(): Promise<Appointment[]> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const result = await this.actor.getDoctorAppointments();
+      if ('Ok' in result && result.Ok) {
+        return result.Ok;
+      } else if ('Err' in result && result.Err) {
+        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
+      } else {
+        throw new Error('Failed to get doctor appointments');
+      }
+    } catch (error) {
+      console.error('Error getting doctor appointments:', error);
+      throw error;
+    }
+  }
+
+  // === MEDICAL RECORDS MANAGEMENT ===
+  
+  async createMedicalRecord(recordData: MedicalRecordData): Promise<MedicalRecord> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const result = await this.actor.createMedicalRecord(recordData);
+      if ('Ok' in result && result.Ok) {
+        return result.Ok;
+      } else if ('Err' in result && result.Err) {
+        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
+      } else {
+        throw new Error('Failed to create medical record');
+      }
+    } catch (error) {
+      console.error('Error creating medical record:', error);
+      throw error;
+    }
+  }
+  
+  async getPatientMedicalRecords(patientId?: string): Promise<MedicalRecord[]> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const result = patientId 
+        ? await this.actor.getPatientMedicalRecords(Principal.fromText(patientId))
+        : await this.actor.getPatientMedicalRecords();
+      if ('Ok' in result && result.Ok) {
+        return result.Ok;
+      } else if ('Err' in result && result.Err) {
+        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
+      } else {
+        throw new Error('Failed to get patient medical records');
+      }
+    } catch (error) {
+      console.error('Error getting patient medical records:', error);
+      throw error;
+    }
+  }
+  
+  async getMedicalRecordById(recordId: string): Promise<MedicalRecord> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const result = await this.actor.getMedicalRecordById(recordId);
+      if ('Ok' in result && result.Ok) {
+        return result.Ok;
+      } else if ('Err' in result && result.Err) {
+        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
+      } else {
+        throw new Error('Failed to get medical record by ID');
+      }
+    } catch (error) {
+      console.error('Error getting medical record by ID:', error);
+      throw error;
+    }
+  }
+
+  // === MESSAGING SYSTEM ===
+  
+  async sendMessage(messageData: { receiverId: Principal; content: string; messageType: string }): Promise<Message> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const result = await this.actor.sendMessage(messageData.receiverId, messageData.content, messageData.messageType);
+      if ('Ok' in result && result.Ok) {
+        return result.Ok;
+      } else if ('Err' in result && result.Err) {
+        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
+      } else {
+        throw new Error('Failed to send message');
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      throw error;
+    }
+  }
+  
+  async getMessages(conversationId?: string): Promise<Message[]> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const result = conversationId 
+        ? await this.actor.getMessages(Principal.fromText(conversationId))
+        : await this.actor.getMessages(Principal.anonymous());
+      if ('Ok' in result && result.Ok) {
+        return result.Ok;
+      } else if ('Err' in result && result.Err) {
+        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
+      } else {
+        throw new Error('Failed to get messages');
+      }
+    } catch (error) {
+      console.error('Error getting messages:', error);
+      throw error;
+    }
+  }
+  
+  async markMessageAsRead(messageId: string): Promise<boolean> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const result = await this.actor.markMessageAsRead(messageId);
+      if ('Ok' in result && result.Ok) {
+        return true;
+      } else if ('Err' in result && result.Err) {
+        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
+      } else {
+        throw new Error('Failed to mark message as read');
+      }
+    } catch (error) {
+      console.error('Error marking message as read:', error);
+      throw error;
+    }
+  }
+
+  // === SYSTEM METHODS ===
+  
+  async healthCheck(): Promise<{ status: string; timestamp: bigint }> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const result = await this.actor.healthCheck();
+      if ('Ok' in result && result.Ok) {
+        return result.Ok;
+      } else if ('Err' in result && result.Err) {
+        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
+      } else {
+        throw new Error('Failed to perform health check');
+      }
+    } catch (error) {
+      console.error('Error performing health check:', error);
+      throw error;
+    }
+  }
+  
+  async getSystemStats(): Promise<SystemStats> {
+    if (!this.actor) {
+      throw new Error('Not authenticated');
+    }
+    
+    try {
+      const result = await this.actor.getSystemStats();
+      if ('Ok' in result && result.Ok) {
+        return result.Ok;
+      } else if ('Err' in result && result.Err) {
+        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
+      } else {
+        throw new Error('Failed to get system stats');
+      }
+    } catch (error) {
+      console.error('Error getting system stats:', error);
       throw error;
     }
   }
@@ -811,7 +1322,7 @@ export class AuthService {
       if ('Ok' in result) {
         return result.Ok;
       } else {
-        throw new Error(result.Err);
+        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
       }
     } catch (error) {
       console.error('Error creating session note:', error);
@@ -827,7 +1338,13 @@ export class AuthService {
     
     try {
       const result = await this.actor.getSessionNotes(patientId);
-      return result;
+      if ('Ok' in result && result.Ok) {
+        return result.Ok;
+      } else if ('Err' in result && result.Err) {
+        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
+      } else {
+        throw new Error('Failed to get session notes');
+      }
     } catch (error) {
       console.error('Error getting session notes:', error);
       throw error;
@@ -858,7 +1375,7 @@ export class AuthService {
       if ('Ok' in result) {
         return result;
       } else {
-        throw new Error(result.Err);
+        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
       }
     } catch (error) {
       console.error('Error creating prescription:', error);
@@ -874,7 +1391,11 @@ export class AuthService {
     
     try {
       const result = await this.actor.getPrescriptions(patientId);
-      return result;
+      if ('Ok' in result) {
+        return result.Ok!;
+      } else {
+        throw new Error(result.Err || 'Failed to get prescriptions');
+      }
     } catch (error) {
       console.error('Error getting prescriptions:', error);
       throw error;
@@ -903,7 +1424,7 @@ export class AuthService {
       if ('Ok' in result) {
         return result;
       } else {
-        throw new Error(result.Err);
+        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
       }
     } catch (error) {
       console.error('Error creating treatment summary:', error);
@@ -919,7 +1440,11 @@ export class AuthService {
     
     try {
       const result = await this.actor.getTreatmentSummaries(patientId);
-      return result;
+      if ('Ok' in result) {
+        return result.Ok!;
+      } else {
+        throw new Error(result.Err || 'Failed to get treatment summaries');
+      }
     } catch (error) {
       console.error('Error getting treatment summaries:', error);
       throw error;
@@ -946,7 +1471,7 @@ export class AuthService {
       if ('Ok' in result) {
         return result;
       } else {
-        throw new Error(result.Err);
+        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
       }
     } catch (error) {
       console.error('Error granting medical record access:', error);
@@ -972,7 +1497,7 @@ export class AuthService {
       if ('Ok' in result) {
         return result;
       } else {
-        throw new Error(result.Err);
+        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
       }
     } catch (error) {
       console.error('Error revoking medical record access:', error);

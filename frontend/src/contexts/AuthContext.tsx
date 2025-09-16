@@ -47,37 +47,78 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const initializeAuth = async () => {
     try {
       setIsLoading(true);
+      
+      // Create AuthClient with improved configuration for reconnects
       const client = await AuthClient.create({
         idleOptions: {
           disableIdle: true,
           disableDefaultIdleCallback: true,
         },
+        // Add storage options for better session persistence
+        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
       });
       
       setAuthClient(client);
       
-      const authenticated = await client.isAuthenticated();
+      // Check if user is already authenticated with retry logic
+      let authenticated = false;
+      let retryCount = 0;
+      const maxRetries = 3;
+      
+      while (!authenticated && retryCount < maxRetries) {
+        try {
+          authenticated = await client.isAuthenticated();
+          if (authenticated) break;
+          
+          // Wait before retry to handle network issues
+          if (retryCount < maxRetries - 1) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+          }
+        } catch (error) {
+          console.warn(`Auth check attempt ${retryCount + 1} failed:`, error);
+        }
+        retryCount++;
+      }
+      
       setIsAuthenticated(authenticated);
       
       if (authenticated) {
         const userIdentity = client.getIdentity();
-        const userPrincipal = userIdentity.getPrincipal().toString();
         
-        setIdentity(userIdentity);
-        setPrincipal(userPrincipal);
-        setUser({ principal: userPrincipal });
-        
-        // Initialize IC agents with the authenticated identity
-        await icAgent.initializeAgent(userIdentity);
-        
-        console.log('User authenticated with principal:', userPrincipal);
+        // Validate identity before proceeding
+        if (userIdentity && userIdentity.getPrincipal && !userIdentity.getPrincipal().isAnonymous()) {
+          const userPrincipal = userIdentity.getPrincipal().toString();
+          
+          setIdentity(userIdentity);
+          setPrincipal(userPrincipal);
+          setUser({ principal: userPrincipal });
+          
+          // Initialize IC agents with the authenticated identity
+          try {
+            await icAgent.initializeAgent(userIdentity);
+            console.log('User authenticated and IC agent initialized:', userPrincipal);
+          } catch (agentError) {
+            console.error('Failed to initialize IC agent:', agentError);
+            // Don't fail auth if agent init fails, but log the error
+          }
+        } else {
+          console.warn('Invalid or anonymous identity detected, treating as unauthenticated');
+          setIsAuthenticated(false);
+          setIdentity(undefined);
+          setPrincipal(undefined);
+          setUser(null);
+        }
       } else {
+        console.log('User is not authenticated after retries');
         // Initialize IC agents without identity for anonymous calls
         await icAgent.initializeAgent();
       }
     } catch (error) {
       console.error('Failed to initialize auth:', error);
       setIsAuthenticated(false);
+      setIdentity(undefined);
+      setPrincipal(undefined);
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
@@ -91,6 +132,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       
+      // Check if already authenticated to prevent duplicate login attempts
+      const isAlreadyAuth = await authClient.isAuthenticated();
+      if (isAlreadyAuth) {
+        const existingIdentity = authClient.getIdentity();
+        if (existingIdentity && !existingIdentity.getPrincipal().isAnonymous()) {
+          console.log('User already authenticated, skipping login');
+          const userPrincipal = existingIdentity.getPrincipal().toString();
+          
+          setIsAuthenticated(true);
+          setIdentity(existingIdentity);
+          setPrincipal(userPrincipal);
+          setUser({ principal: userPrincipal });
+          
+          // Ensure IC agent is initialized
+          try {
+            await icAgent.updateIdentity(existingIdentity);
+          } catch (agentError) {
+            console.error('Failed to initialize IC agent on existing auth:', agentError);
+          }
+          
+          return;
+        }
+      }
+      
       await new Promise<void>((resolve, reject) => {
         authClient.login({
           identityProvider: INTERNET_IDENTITY_URL,
@@ -101,19 +166,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
 
       const userIdentity = authClient.getIdentity();
-      const userPrincipal = userIdentity.getPrincipal().toString();
       
-      setIsAuthenticated(true);
-      setIdentity(userIdentity);
-      setPrincipal(userPrincipal);
-      setUser({ principal: userPrincipal });
-      
-      // Update IC agents with the new identity
-      await icAgent.updateIdentity(userIdentity);
-      
-      console.log('Login successful, principal:', userPrincipal);
+      // Validate identity before setting state
+      if (userIdentity && userIdentity.getPrincipal && !userIdentity.getPrincipal().isAnonymous()) {
+        const userPrincipal = userIdentity.getPrincipal().toString();
+        
+        setIsAuthenticated(true);
+        setIdentity(userIdentity);
+        setPrincipal(userPrincipal);
+        setUser({ principal: userPrincipal });
+        
+        // Update IC agents with the new identity
+        try {
+          await icAgent.updateIdentity(userIdentity);
+          console.log('Login successful and IC agent initialized:', userPrincipal);
+        } catch (agentError) {
+          console.error('Failed to initialize IC agent after login:', agentError);
+          // Don't fail login if agent init fails
+        }
+      } else {
+        console.error('Invalid identity received after login');
+        setIsAuthenticated(false);
+        setIdentity(undefined);
+        setPrincipal(undefined);
+        setUser(null);
+        throw new Error('Invalid identity received after login');
+      }
     } catch (error) {
       console.error('Login failed:', error);
+      setIsAuthenticated(false);
+      setIdentity(undefined);
+      setPrincipal(undefined);
+      setUser(null);
       throw error;
     } finally {
       setIsLoading(false);
@@ -128,22 +212,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       
-      await authClient.logout();
-      
+      // Clear authentication state immediately to prevent UI issues
       setIsAuthenticated(false);
       setIdentity(undefined);
       setPrincipal(undefined);
       setUser(null);
       
-      // Reset IC agents
-      icAgent.reset();
+      // Clear any stored user data and session information
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('userOnboardingComplete');
       
-      // Reinitialize IC agents for anonymous calls
-      await icAgent.initializeAgent();
+      // Logout from AuthClient
+      await authClient.logout();
+      
+      // Reset IC agents
+      try {
+        icAgent.reset();
+        // Reinitialize IC agents for anonymous calls
+        await icAgent.initializeAgent();
+      } catch (agentError) {
+        console.warn('Failed to reset IC agent during logout:', agentError);
+      }
       
       console.log('Logout successful');
     } catch (error) {
       console.error('Logout failed:', error);
+      // Ensure state is cleared even if logout fails
+      setIsAuthenticated(false);
+      setIdentity(undefined);
+      setPrincipal(undefined);
+      setUser(null);
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('userOnboardingComplete');
       throw error;
     } finally {
       setIsLoading(false);
@@ -161,19 +261,44 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (authenticated !== isAuthenticated) {
         if (authenticated) {
           const userIdentity = authClient.getIdentity();
-          const userPrincipal = userIdentity.getPrincipal().toString();
           
-          setIsAuthenticated(true);
-          setIdentity(userIdentity);
-          setPrincipal(userPrincipal);
-          setUser({ principal: userPrincipal });
-          
-          await icAgent.updateIdentity(userIdentity);
+          // Validate identity before updating state
+          if (userIdentity && userIdentity.getPrincipal && !userIdentity.getPrincipal().isAnonymous()) {
+            const userPrincipal = userIdentity.getPrincipal().toString();
+            
+            setIsAuthenticated(true);
+            setIdentity(userIdentity);
+            setPrincipal(userPrincipal);
+            setUser({ principal: userPrincipal });
+            
+            // Update IC agent with refreshed identity
+            try {
+              await icAgent.updateIdentity(userIdentity);
+              console.log('Auth refreshed successfully:', userPrincipal);
+            } catch (agentError) {
+              console.error('Failed to update IC agent during refresh:', agentError);
+              // Don't fail refresh if agent update fails
+            }
+          } else {
+            console.warn('Invalid identity during refresh, logging out');
+            setIsAuthenticated(false);
+            setIdentity(undefined);
+            setPrincipal(undefined);
+            setUser(null);
+            // Clear potentially corrupted session data
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userOnboardingComplete');
+          }
         } else {
+          console.log('User no longer authenticated during refresh');
           setIsAuthenticated(false);
           setIdentity(undefined);
           setPrincipal(undefined);
           setUser(null);
+          
+          // Clear session data when auth is lost
+          localStorage.removeItem('userRole');
+          localStorage.removeItem('userOnboardingComplete');
           
           icAgent.reset();
           await icAgent.initializeAgent();
@@ -181,6 +306,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     } catch (error) {
       console.error('Failed to refresh auth:', error);
+      setIsAuthenticated(false);
+      setIdentity(undefined);
+      setPrincipal(undefined);
+      setUser(null);
+      // Clear potentially corrupted session data
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('userOnboardingComplete');
     }
   };
 
