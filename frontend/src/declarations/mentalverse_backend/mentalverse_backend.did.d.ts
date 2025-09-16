@@ -153,6 +153,21 @@ export interface Doctor {
   'firstName' : string,
 }
 export type DoctorId = string;
+export interface EncryptedPHI {
+  'dataType' : PHIDataType,
+  'nonce' : Uint8Array | number[],
+  'timestamp' : bigint,
+  'keyId' : string,
+  'encryptedData' : Uint8Array | number[],
+}
+export interface EncryptedPatientPHI {
+  'patientId' : UserId,
+  'encryptedCurrentMedications' : [] | [EncryptedPHI],
+  'lastUpdated' : bigint,
+  'encryptedMedicalHistory' : [] | [EncryptedPHI],
+  'encryptedAllergies' : [] | [EncryptedPHI],
+  'encryptedPersonalInfo' : [] | [EncryptedPHI],
+}
 export type EncryptionLevel = { 'high' : null } |
   { 'none' : null } |
   { 'maximum' : null } |
@@ -196,10 +211,12 @@ export interface MedicalRecord {
   'description' : string,
   'recordType' : string,
   'updatedAt' : bigint,
+  'encryptedAttachments' : [] | [EncryptedPHI],
   'isConfidential' : boolean,
   'accessPermissions' : Array<UserId>,
   'attachments' : Array<string>,
   'appointmentId' : [] | [AppointmentId],
+  'encryptedDescription' : [] | [EncryptedPHI],
 }
 export interface Message {
   'id' : bigint,
@@ -231,6 +248,13 @@ export interface Message__1 {
   'attachments' : Array<string>,
   'senderId' : UserId,
 }
+export type PHIDataType = { 'labResults' : null } |
+  { 'sessionNotes' : null } |
+  { 'medications' : null } |
+  { 'medicalHistory' : null } |
+  { 'personalInfo' : null } |
+  { 'allergies' : null } |
+  { 'diagnostics' : null };
 export interface Patient {
   'id' : UserId,
   'timezone' : [] | [string],
@@ -239,6 +263,7 @@ export interface Patient {
   'dateOfBirth' : string,
   'createdAt' : bigint,
   'emergencyContact' : string,
+  'encryptedPhoneNumber' : [] | [EncryptedPHI],
   'email' : string,
   'emergencyContactRelation' : [] | [string],
   'updatedAt' : bigint,
@@ -246,7 +271,9 @@ export interface Patient {
   'gender' : string,
   'phoneNumber' : string,
   'lastName' : string,
+  'encryptedDateOfBirth' : [] | [EncryptedPHI],
   'allergies' : Array<string>,
+  'encryptedEmergencyContact' : [] | [EncryptedPHI],
   'currentMedications' : Array<string>,
   'firstName' : string,
 }
@@ -325,19 +352,21 @@ export type Result_10 = { 'ok' : AccessControlRule } |
   { 'err' : string };
 export type Result_11 = { 'ok' : Array<Conversation> } |
   { 'err' : string };
-export type Result_12 = { 'ok' : Array<PaymentTransaction> } |
+export type Result_12 = { 'ok' : UserType } |
   { 'err' : string };
-export type Result_13 = { 'ok' : Array<PaymentPlan> } |
+export type Result_13 = { 'ok' : Array<PaymentTransaction> } |
   { 'err' : string };
-export type Result_14 = { 'ok' : Array<EscrowContract> } |
+export type Result_14 = { 'ok' : Array<PaymentPlan> } |
   { 'err' : string };
-export type Result_15 = { 'ok' : Array<ChatInteraction> } |
+export type Result_15 = { 'ok' : Array<EscrowContract> } |
   { 'err' : string };
-export type Result_16 = { 'ok' : Array<AccessControlRule> } |
+export type Result_16 = { 'ok' : Array<ChatInteraction> } |
   { 'err' : string };
-export type Result_17 = { 'ok' : Array<TreatmentSummary> } |
+export type Result_17 = { 'ok' : Array<AccessControlRule> } |
   { 'err' : string };
-export type Result_18 = {
+export type Result_18 = { 'ok' : Array<TreatmentSummary> } |
+  { 'err' : string };
+export type Result_19 = {
     'ok' : {
       'ai_insights_cost' : bigint,
       'premium_consultation_cost' : bigint,
@@ -346,7 +375,9 @@ export type Result_18 = {
     }
   } |
   { 'err' : string };
-export type Result_19 = {
+export type Result_2 = { 'ok' : SessionRequest } |
+  { 'err' : string };
+export type Result_20 = {
     'ok' : {
       'pending_feedback' : Array<AppointmentId>,
       'upcoming_appointments' : Array<AppointmentId>,
@@ -354,17 +385,15 @@ export type Result_19 = {
     }
   } |
   { 'err' : string };
-export type Result_2 = { 'ok' : SessionRequest } |
+export type Result_21 = { 'ok' : Therapist } |
   { 'err' : string };
-export type Result_20 = { 'ok' : Therapist } |
+export type Result_22 = { 'ok' : Array<SessionNote> } |
   { 'err' : string };
-export type Result_21 = { 'ok' : Array<SessionNote> } |
+export type Result_23 = { 'ok' : Array<Message> } |
   { 'err' : string };
-export type Result_22 = { 'ok' : Array<Message> } |
+export type Result_24 = { 'ok' : Array<Prescription> } |
   { 'err' : string };
-export type Result_23 = { 'ok' : Array<Prescription> } |
-  { 'err' : string };
-export type Result_24 = {
+export type Result_25 = {
     'ok' : {
       'refundedTransactions' : bigint,
       'activePaymentPlans' : bigint,
@@ -375,31 +404,47 @@ export type Result_24 = {
     }
   } |
   { 'err' : string };
-export type Result_25 = { 'ok' : Patient } |
+export type Result_26 = { 'ok' : Patient } |
   { 'err' : string };
-export type Result_26 = { 'ok' : MedicalRecord } |
+export type Result_27 = { 'ok' : MedicalRecord } |
   { 'err' : string };
-export type Result_27 = { 'ok' : Doctor } |
+export type Result_28 = { 'ok' : EncryptedPatientPHI } |
   { 'err' : string };
-export type Result_28 = { 'ok' : { 'id' : UserId, 'role' : string } } |
-  { 'err' : string };
-export type Result_29 = {
-    'ok' : { 'totalInteractions' : bigint, 'uniqueUsers' : bigint }
-  } |
+export type Result_29 = { 'ok' : Doctor } |
   { 'err' : string };
 export type Result_3 = { 'ok' : ConsentRecord } |
   { 'err' : string };
-export type Result_30 = { 'ok' : Array<AuditLog> } |
+export type Result_30 = { 'ok' : { 'id' : UserId, 'role' : string } } |
   { 'err' : string };
-export type Result_31 = { 'ok' : TreatmentSummary } |
+export type Result_31 = {
+    'ok' : { 'totalInteractions' : bigint, 'uniqueUsers' : bigint }
+  } |
   { 'err' : string };
-export type Result_32 = { 'ok' : Conversation } |
+export type Result_32 = {
+    'ok' : {
+      'recentCriticalEvents' : Array<AuditLog>,
+      'totalEvents' : bigint,
+      'medicalRecordAccess' : bigint,
+      'securityEvents' : bigint,
+      'userRegistrations' : bigint,
+      'unauthorizedAttempts' : bigint,
+      'roleChanges' : bigint,
+    }
+  } |
   { 'err' : string };
-export type Result_33 = { 'ok' : SessionNote } |
+export type Result_33 = { 'ok' : Array<AuditLog> } |
   { 'err' : string };
-export type Result_34 = { 'ok' : Prescription } |
+export type Result_34 = { 'ok' : Array<Principal> } |
   { 'err' : string };
-export type Result_35 = { 'ok' : AppointmentId } |
+export type Result_35 = { 'ok' : TreatmentSummary } |
+  { 'err' : string };
+export type Result_36 = { 'ok' : Conversation } |
+  { 'err' : string };
+export type Result_37 = { 'ok' : SessionNote } |
+  { 'err' : string };
+export type Result_38 = { 'ok' : Prescription } |
+  { 'err' : string };
+export type Result_39 = { 'ok' : AppointmentId } |
   { 'err' : string };
 export type Result_4 = { 'ok' : Appointment } |
   { 'err' : string };
@@ -547,6 +592,7 @@ export type VerificationStatus = { 'verified' : null } |
   { 'rejected' : null } |
   { 'suspended' : null };
 export interface _SERVICE {
+  'assignUserRole' : ActorMethod<[Principal, UserType], Result>,
   'bookPremiumConsultation' : ActorMethod<
     [
       DoctorId,
@@ -558,7 +604,7 @@ export interface _SERVICE {
         'notes' : string,
       },
     ],
-    Result_35
+    Result_39
   >,
   'bookPriorityAppointment' : ActorMethod<
     [
@@ -571,8 +617,9 @@ export interface _SERVICE {
         'notes' : string,
       },
     ],
-    Result_35
+    Result_39
   >,
+  'checkOnboarding' : ActorMethod<[], boolean>,
   'claimFaucetTokens' : ActorMethod<[], Result>,
   'completeAppointmentWithTokens' : ActorMethod<[AppointmentId], Result>,
   'completeDoctorConsultation' : ActorMethod<[AppointmentId, string], Result>,
@@ -609,7 +656,7 @@ export interface _SERVICE {
         'firstName' : string,
       },
     ],
-    Result_27
+    Result_29
   >,
   'createEscrowContract' : ActorMethod<
     [Principal, bigint, string, string, Array<string>, bigint],
@@ -627,7 +674,7 @@ export interface _SERVICE {
         'appointmentId' : [] | [AppointmentId],
       },
     ],
-    Result_26
+    Result_27
   >,
   'createPatientProfile' : ActorMethod<
     [
@@ -641,7 +688,7 @@ export interface _SERVICE {
         'gender' : string,
       },
     ],
-    Result_25
+    Result_26
   >,
   'createPaymentPlan' : ActorMethod<[bigint, bigint, string, boolean], Result>,
   'createPaymentTransaction' : ActorMethod<
@@ -660,7 +707,7 @@ export interface _SERVICE {
       Array<string>,
       Array<string>,
     ],
-    Result_34
+    Result_38
   >,
   'createSession' : ActorMethod<
     [
@@ -678,7 +725,7 @@ export interface _SERVICE {
   >,
   'createSessionNote' : ActorMethod<
     [string, UserId, string, EncryptionLevel, Array<string>, boolean],
-    Result_33
+    Result_37
   >,
   'createSessionRequest' : ActorMethod<
     [UserId, string, string, string, [] | [string]],
@@ -699,9 +746,9 @@ export interface _SERVICE {
         'consultationFee' : bigint,
       },
     ],
-    Result_20
+    Result_21
   >,
-  'createTherapyConversation' : ActorMethod<[Principal, string], Result_32>,
+  'createTherapyConversation' : ActorMethod<[Principal, string], Result_36>,
   'createTreatmentSummary' : ActorMethod<
     [
       UserId,
@@ -716,35 +763,43 @@ export interface _SERVICE {
       [] | [string],
       [] | [string],
     ],
-    Result_31
+    Result_35
   >,
+  'exportAuditLogs' : ActorMethod<
+    [[] | [bigint], [] | [bigint], string],
+    Result
+  >,
+  'generateUserPHIKey' : ActorMethod<[], Result>,
+  'getAdminUsers' : ActorMethod<[], Result_34>,
   'getAllDoctors' : ActorMethod<[], Array<Doctor>>,
   'getAllTherapists' : ActorMethod<[], Array<Therapist>>,
   'getAuditLogs' : ActorMethod<
     [[] | [string], [] | [string], [] | [UserId], [] | [bigint]],
-    Result_30
+    Result_33
   >,
-  'getChatAnalytics' : ActorMethod<[], Result_29>,
+  'getAuditSummary' : ActorMethod<[[] | [bigint]], Result_32>,
+  'getChatAnalytics' : ActorMethod<[], Result_31>,
   'getChatEndpoint' : ActorMethod<[], string>,
-  'getCurrentUser' : ActorMethod<[], Result_28>,
+  'getCurrentUser' : ActorMethod<[], Result_30>,
   'getCurrentUserProfile' : ActorMethod<[], Result_1>,
   'getDoctorAppointments' : ActorMethod<[], Array<Appointment>>,
-  'getDoctorById' : ActorMethod<[DoctorId], Result_27>,
+  'getDoctorById' : ActorMethod<[DoctorId], Result_29>,
+  'getEncryptedPatientPHI' : ActorMethod<[UserId], Result_28>,
   'getFaucetClaimHistory' : ActorMethod<[], Array<FaucetClaim>>,
   'getFaucetStats' : ActorMethod<[], FaucetStats>,
-  'getMedicalRecordById' : ActorMethod<[RecordId], Result_26>,
+  'getMedicalRecordById' : ActorMethod<[RecordId], Result_27>,
   'getMessages' : ActorMethod<[UserId], Array<Message__1>>,
   'getPatientAppointments' : ActorMethod<[], Array<Appointment>>,
   'getPatientMedicalRecords' : ActorMethod<[], Array<MedicalRecord>>,
-  'getPatientProfile' : ActorMethod<[], Result_25>,
-  'getPaymentStatistics' : ActorMethod<[], Result_24>,
-  'getPrescriptions' : ActorMethod<[UserId], Result_23>,
+  'getPatientProfile' : ActorMethod<[], Result_26>,
+  'getPaymentStatistics' : ActorMethod<[], Result_25>,
+  'getPrescriptions' : ActorMethod<[UserId], Result_24>,
   'getSecureConversationMessages' : ActorMethod<
     [string, [] | [bigint], [] | [bigint]],
-    Result_22
+    Result_23
   >,
   'getSecureMessagingHealth' : ActorMethod<[], Result>,
-  'getSessionNotes' : ActorMethod<[UserId], Result_21>,
+  'getSessionNotes' : ActorMethod<[UserId], Result_22>,
   'getSystemStats' : ActorMethod<
     [],
     {
@@ -760,18 +815,19 @@ export interface _SERVICE {
     [[] | [UserId]],
     Array<TherapistAvailability>
   >,
-  'getTherapistById' : ActorMethod<[string], Result_20>,
+  'getTherapistById' : ActorMethod<[string], Result_21>,
   'getTherapistPricing' : ActorMethod<[[] | [UserId]], Array<SessionPricing>>,
-  'getTherapistProfile' : ActorMethod<[], Result_20>,
-  'getTokenEarningOpportunities' : ActorMethod<[], Result_19>,
-  'getTokenSpendingOptions' : ActorMethod<[], Result_18>,
-  'getTreatmentSummaries' : ActorMethod<[UserId], Result_17>,
-  'getUserAccessPermissions' : ActorMethod<[], Result_16>,
-  'getUserChatHistory' : ActorMethod<[[] | [string]], Result_15>,
+  'getTherapistProfile' : ActorMethod<[], Result_21>,
+  'getTokenEarningOpportunities' : ActorMethod<[], Result_20>,
+  'getTokenSpendingOptions' : ActorMethod<[], Result_19>,
+  'getTreatmentSummaries' : ActorMethod<[UserId], Result_18>,
+  'getUserAccessPermissions' : ActorMethod<[], Result_17>,
+  'getUserChatHistory' : ActorMethod<[[] | [string]], Result_16>,
   'getUserConsentRecords' : ActorMethod<[], Array<ConsentRecord>>,
-  'getUserEscrowContracts' : ActorMethod<[], Result_14>,
-  'getUserPaymentPlans' : ActorMethod<[], Result_13>,
-  'getUserPaymentTransactions' : ActorMethod<[], Result_12>,
+  'getUserEscrowContracts' : ActorMethod<[], Result_15>,
+  'getUserPaymentPlans' : ActorMethod<[], Result_14>,
+  'getUserPaymentTransactions' : ActorMethod<[], Result_13>,
+  'getUserRole' : ActorMethod<[[] | [Principal]], Result_12>,
   'getUserSecureConversations' : ActorMethod<[], Result_11>,
   'getUserSessionRequests' : ActorMethod<[], Array<SessionRequest>>,
   'grantAccess' : ActorMethod<
@@ -797,13 +853,16 @@ export interface _SERVICE {
   >,
   'logChatInteraction' : ActorMethod<[string, string, string], Result>,
   'markMessageAsRead' : ActorMethod<[string], Result>,
+  'markOnboardingComplete' : ActorMethod<[], Result>,
   'processAutomaticRefund' : ActorMethod<[string, RefundReason], Result>,
   'processPayment' : ActorMethod<[string], Result>,
   'processPaymentPlanInstallment' : ActorMethod<[string], Result>,
   'recordDailyPlatformUsage' : ActorMethod<[], Result>,
   'registerUserEncryptionKey' : ActorMethod<[string, KeyType], Result_9>,
   'releaseEscrowFunds' : ActorMethod<[string, string], Result>,
+  'removeAdminPrivileges' : ActorMethod<[Principal], Result>,
   'revokeAccess' : ActorMethod<[string, string, UserId], Result>,
+  'rotateUserPHIKey' : ActorMethod<[], Result>,
   'sendMessage' : ActorMethod<[UserId, string, string], Result_8>,
   'sendSecureMessage' : ActorMethod<
     [string, Principal, string, MessageType],
@@ -816,6 +875,10 @@ export interface _SERVICE {
   'setTherapistAvailability' : ActorMethod<
     [bigint, string, string, boolean],
     Result_5
+  >,
+  'storeEncryptedPatientPHI' : ActorMethod<
+    [UserId, PHIDataType, Uint8Array | number[]],
+    Result
   >,
   'submitFeedbackWithTokens' : ActorMethod<
     [AppointmentId, bigint, string],

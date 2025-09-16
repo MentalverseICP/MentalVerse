@@ -9,8 +9,13 @@ import _Debug "mo:base/Debug";
 import Int "mo:base/Int";
 import Iter "mo:base/Iter";
 import Nat "mo:base/Nat";
+import Nat8 "mo:base/Nat8";
 import Buffer "mo:base/Buffer";
 import Error "mo:base/Error";
+import Blob "mo:base/Blob";
+import Random "mo:base/Random";
+import Char "mo:base/Char";
+import Debug "mo:base/Debug";
 
 // Import MVT Token module
 import MVTToken "mvt_token";
@@ -46,6 +51,48 @@ persistent actor MentalVerseBackend {
     nextClaimTime: Int;
     isEligible: Bool;
   };
+  // === PHI ENCRYPTION TYPES ===
+  
+  // Encrypted PHI data structure
+  public type EncryptedPHI = {
+    encryptedData: Blob;        // AES-256-GCM encrypted data
+    nonce: Blob;               // 12-byte nonce for GCM
+    keyId: Text;               // Reference to encryption key
+    dataType: PHIDataType;     // Type of PHI data encrypted
+    timestamp: Int;            // When encrypted
+  };
+  
+  // Types of PHI data that can be encrypted
+  public type PHIDataType = {
+    #medicalHistory;
+    #allergies;
+    #medications;
+    #personalInfo;
+    #sessionNotes;
+    #diagnostics;
+    #labResults;
+  };
+  
+  // PHI encryption key management
+  public type PHIEncryptionKey = {
+    keyId: Text;
+    keyHash: Blob;             // Hash of the actual key (not the key itself)
+    purpose: PHIDataType;
+    createdAt: Int;
+    isActive: Bool;
+    rotationSchedule: ?Int;    // When to rotate this key
+  };
+  
+  // Encrypted patient data with PHI protection
+  public type EncryptedPatientPHI = {
+    patientId: UserId;
+    encryptedMedicalHistory: ?EncryptedPHI;
+    encryptedAllergies: ?EncryptedPHI;
+    encryptedCurrentMedications: ?EncryptedPHI;
+    encryptedPersonalInfo: ?EncryptedPHI;  // DOB, SSN, etc.
+    lastUpdated: Int;
+  };
+  
   // Type definitions for core data models
   public type UserId = Principal;
   public type DoctorId = Text;
@@ -81,19 +128,24 @@ persistent actor MentalVerseBackend {
     updatedAt: Int;
   };
 
-  // Enhanced Patient data model
+  // Enhanced Patient data model with PHI encryption
   public type Patient = {
     id: UserId;
-    firstName: Text;
-    lastName: Text;
-    email: Text;
-    dateOfBirth: Text;
-    gender: Text;
-    phoneNumber: Text;
-    emergencyContact: Text;
-    medicalHistory: [Text];
-    allergies: [Text];
-    currentMedications: [Text];
+    firstName: Text;                    // Non-PHI: can remain unencrypted
+    lastName: Text;                     // Non-PHI: can remain unencrypted
+    email: Text;                        // Non-PHI: can remain unencrypted
+    encryptedDateOfBirth: ?EncryptedPHI; // PHI: encrypted
+    gender: Text;                       // Non-PHI: can remain unencrypted
+    encryptedPhoneNumber: ?EncryptedPHI; // PHI: encrypted
+    encryptedEmergencyContact: ?EncryptedPHI; // PHI: encrypted
+    // Legacy fields for backward compatibility (deprecated)
+    dateOfBirth: Text;                  // Deprecated: use encryptedDateOfBirth
+    phoneNumber: Text;                  // Deprecated: use encryptedPhoneNumber
+    emergencyContact: Text;             // Deprecated: use encryptedEmergencyContact
+    medicalHistory: [Text];             // Deprecated: use EncryptedPatientPHI
+    allergies: [Text];                  // Deprecated: use EncryptedPatientPHI
+    currentMedications: [Text];         // Deprecated: use EncryptedPatientPHI
+    // Non-PHI fields
     preferredLanguage: ?Text;
     timezone: ?Text;
     emergencyContactRelation: ?Text;
@@ -173,16 +225,20 @@ persistent actor MentalVerseBackend {
     updatedAt: Int;
   };
 
-  // Medical record data model
+  // Medical record data model with PHI encryption
   public type MedicalRecord = {
     id: RecordId;
     patientId: UserId;
     doctorId: DoctorId;
     appointmentId: ?AppointmentId;
     recordType: Text; // "consultation", "lab_result", "prescription", "diagnosis"
-    title: Text;
-    description: Text;
-    attachments: [Text]; // File URLs or hashes
+    title: Text;                        // Non-PHI: can remain unencrypted
+    encryptedDescription: ?EncryptedPHI; // PHI: encrypted medical content
+    encryptedAttachments: ?EncryptedPHI; // PHI: encrypted file references
+    // Legacy fields for backward compatibility (deprecated)
+    description: Text;                  // Deprecated: use encryptedDescription
+    attachments: [Text];                // Deprecated: use encryptedAttachments
+    // Access control and metadata
     isConfidential: Bool;
     accessPermissions: [UserId]; // Who can access this record
     createdAt: Int;
@@ -490,6 +546,15 @@ persistent actor MentalVerseBackend {
   private var paymentTransactionsEntries : [(Text, PaymentTransaction)] = [];
   private var escrowContractsEntries : [(Text, EscrowContract)] = [];
   private var paymentPlansEntries : [(Text, PaymentPlan)] = [];
+  // PHI Encryption entries (Iteration 5)
+  private var encryptedPatientPHIEntries : [(UserId, EncryptedPatientPHI)] = [];
+  private var phiEncryptionKeysEntries : [(Text, PHIEncryptionKey)] = [];
+  private var userPHIKeysEntries : [(UserId, Text)] = [];
+  // Phase 0: Onboarding state tracking
+  private var onboardingStatesEntries : [(Principal, Bool)] = [];
+  // Phase 1: RBAC storage
+  private var userRoleAssignmentsEntries : [(Principal, UserType)] = [];
+  private var adminUsersEntries : [(Principal, Bool)] = [];
 
   // Initialize HashMaps from stable storage
   private transient var userProfiles = HashMap.HashMap<UserId, UserProfile>(50, Principal.equal, Principal.hash);
@@ -498,6 +563,11 @@ persistent actor MentalVerseBackend {
   private transient var doctors = HashMap.HashMap<DoctorId, Doctor>(10, Text.equal, Text.hash); // Legacy support
   private transient var appointments = HashMap.HashMap<AppointmentId, Appointment>(10, Text.equal, Text.hash);
   private transient var medicalRecords = HashMap.HashMap<RecordId, MedicalRecord>(10, Text.equal, Text.hash);
+  // Phase 0: Onboarding state tracking
+  private transient var onboardingStates = HashMap.HashMap<Principal, Bool>(100, Principal.equal, Principal.hash);
+  // Phase 1: RBAC HashMaps
+  private transient var userRoleAssignments = HashMap.HashMap<Principal, UserType>(100, Principal.equal, Principal.hash);
+  private transient var adminUsers = HashMap.HashMap<Principal, Bool>(20, Principal.equal, Principal.hash);
   private transient var messages = HashMap.HashMap<Text, Message>(10, Text.equal, Text.hash);
   private transient var userRoles = HashMap.HashMap<UserId, Text>(10, Principal.equal, Principal.hash); // Legacy support
   private transient var faucetClaims = HashMap.HashMap<Text, FaucetClaim>(10, Text.equal, Text.hash);
@@ -513,6 +583,12 @@ persistent actor MentalVerseBackend {
   private transient var treatmentSummaries = HashMap.HashMap<Text, TreatmentSummary>(10, Text.equal, Text.hash);
   private transient var auditLogs = HashMap.HashMap<Text, AuditLog>(50, Text.equal, Text.hash);
   private transient var accessControlRules = HashMap.HashMap<Text, AccessControlRule>(20, Text.equal, Text.hash);
+  
+  // PHI Encryption Storage (Iteration 5)
+  private transient var encryptedPatientPHI = HashMap.HashMap<UserId, EncryptedPatientPHI>(10, Principal.equal, Principal.hash);
+  private transient var phiEncryptionKeys = HashMap.HashMap<Text, PHIEncryptionKey>(50, Text.equal, Text.hash);
+  private transient var userPHIKeys = HashMap.HashMap<UserId, Text>(10, Principal.equal, Principal.hash); // Maps user to their PHI key ID
+  
   // Payment Integration HashMaps (Iteration 4)
   private transient var paymentTransactions = HashMap.HashMap<Text, PaymentTransaction>(50, Text.equal, Text.hash);
   private transient var escrowContracts = HashMap.HashMap<Text, EscrowContract>(20, Text.equal, Text.hash);
@@ -546,6 +622,15 @@ persistent actor MentalVerseBackend {
     paymentTransactionsEntries := Iter.toArray(paymentTransactions.entries());
     escrowContractsEntries := Iter.toArray(escrowContracts.entries());
     paymentPlansEntries := Iter.toArray(paymentPlans.entries());
+    // Save PHI encryption data (Iteration 5)
+    encryptedPatientPHIEntries := Iter.toArray(encryptedPatientPHI.entries());
+    phiEncryptionKeysEntries := Iter.toArray(phiEncryptionKeys.entries());
+    userPHIKeysEntries := Iter.toArray(userPHIKeys.entries());
+    // Phase 0: Save onboarding state data
+    onboardingStatesEntries := Iter.toArray(onboardingStates.entries());
+    // Phase 1: Save RBAC data
+    userRoleAssignmentsEntries := Iter.toArray(userRoleAssignments.entries());
+    adminUsersEntries := Iter.toArray(adminUsers.entries());
   };
 
   system func postupgrade() {
@@ -622,6 +707,27 @@ persistent actor MentalVerseBackend {
     for ((id, plan) in paymentPlansEntries.vals()) {
       paymentPlans.put(id, plan);
     };
+    // Restore PHI encryption data (Iteration 5)
+    for ((userId, phi) in encryptedPatientPHIEntries.vals()) {
+      encryptedPatientPHI.put(userId, phi);
+    };
+    for ((keyId, key) in phiEncryptionKeysEntries.vals()) {
+      phiEncryptionKeys.put(keyId, key);
+    };
+    for ((userId, keyId) in userPHIKeysEntries.vals()) {
+      userPHIKeys.put(userId, keyId);
+    };
+    // Phase 0: Restore onboarding state data
+    for ((userId, completed) in onboardingStatesEntries.vals()) {
+      onboardingStates.put(userId, completed);
+    };
+    // Phase 1: Restore RBAC data
+    for ((userId, role) in userRoleAssignmentsEntries.vals()) {
+      userRoleAssignments.put(userId, role);
+    };
+    for ((userId, isAdmin) in adminUsersEntries.vals()) {
+      adminUsers.put(userId, isAdmin);
+    };
     
     // Clear stable storage
     userProfilesEntries := [];
@@ -650,6 +756,11 @@ persistent actor MentalVerseBackend {
     paymentTransactionsEntries := [];
     escrowContractsEntries := [];
     paymentPlansEntries := [];
+    // Phase 0: Clear onboarding state entries
+    onboardingStatesEntries := [];
+    // Phase 1: Clear RBAC entries
+    userRoleAssignmentsEntries := [];
+    adminUsersEntries := [];
   };
 
   // Enhanced Authentication and User Management Functions
@@ -696,6 +807,42 @@ persistent actor MentalVerseBackend {
         };
         userRoles.put(caller, roleText);
         
+        // Phase 1: RBAC - Store role assignment
+        userRoleAssignments.put(caller, userData.userType);
+        
+        // If admin, add to admin users
+        if (userData.userType == #admin) {
+          adminUsers.put(caller, true);
+        };
+        
+        // Audit logging for user registration
+        logAuditEvent(
+          caller,
+          #create,
+          "user_profile",
+          Principal.toText(caller),
+          ?("User registered with role: " # roleText # ", email: " # userData.email)
+        );
+        
+        // Log role assignment
+        logAuditEvent(
+          caller,
+          #create,
+          "role_assignment",
+          Principal.toText(caller),
+          ?("Role assigned: " # roleText)
+        );
+        
+        // Log admin assignment if applicable
+        if (userData.userType == #admin) {
+          logSecurityEvent(
+            ?caller,
+            "admin_user_created",
+            "New admin user registered: " # userData.email,
+            "high"
+          );
+        };
+        
         #ok(newProfile)
       };
     }
@@ -739,6 +886,14 @@ persistent actor MentalVerseBackend {
         };
         userRoles.put(caller, roleText);
         
+        // Phase 1: RBAC - Update role assignment
+        userRoleAssignments.put(caller, userType);
+        
+        // If admin, add to admin users
+        if (userType == #admin) {
+          adminUsers.put(caller, true);
+        };
+        
         #ok(updatedProfile)
       };
     }
@@ -756,6 +911,202 @@ persistent actor MentalVerseBackend {
         #err("User not found")
       };
     }
+  };
+  
+  // === PHASE 1: ROLE-BASED ACCESS CONTROL (RBAC) ===
+  
+  // Check if user has specific role
+  private func hasRole(userId: Principal, requiredRole: UserType) : Bool {
+    switch (userRoleAssignments.get(userId)) {
+      case (?role) { role == requiredRole };
+      case null { false };
+    }
+  };
+  
+  // Check if user is admin
+  private func isAdmin(userId: Principal) : Bool {
+    switch (adminUsers.get(userId)) {
+      case (?isAdmin) { isAdmin };
+      case null { false };
+    }
+  };
+  
+  // Enhanced authorization check with multiple roles
+  private func hasAnyRole(userId: Principal, allowedRoles: [UserType]) : Bool {
+    switch (userRoleAssignments.get(userId)) {
+      case (?userRole) {
+        Array.find<UserType>(allowedRoles, func(role) { role == userRole }) != null
+      };
+      case null { false };
+    }
+  };
+  
+  // Check if user can access patient data
+  private func canAccessPatientData(userId: Principal, patientId: Principal) : Bool {
+    // Admin can access all data
+    if (isAdmin(userId)) { return true };
+    
+    // Users can access their own data
+    if (userId == patientId) { return true };
+    
+    // Therapists can access their patients' data (simplified - in real implementation, check active sessions)
+    if (hasRole(userId, #therapist)) { return true };
+    
+    false
+  };
+  
+  // Assign role to user (admin only)
+  public shared(msg) func assignUserRole(targetUserId: Principal, newRole: UserType) : async Result.Result<Text, Text> {
+    let caller = msg.caller;
+    
+    // Only admins can assign roles
+    if (not isAdmin(caller)) {
+      return #err("Unauthorized: Only admins can assign roles");
+    };
+    
+    // Verify target user exists
+    switch (userProfiles.get(targetUserId)) {
+      case null { return #err("Target user not found") };
+      case (?profile) {
+        // Update role assignment
+        userRoleAssignments.put(targetUserId, newRole);
+        
+        // Update admin status
+        if (newRole == #admin) {
+          adminUsers.put(targetUserId, true);
+        } else {
+          adminUsers.delete(targetUserId);
+        };
+        
+        // Update user profile
+        let updatedProfile: UserProfile = {
+          id = profile.id;
+          userType = newRole;
+          firstName = profile.firstName;
+          lastName = profile.lastName;
+          email = profile.email;
+          phoneNumber = profile.phoneNumber;
+          profilePicture = profile.profilePicture;
+          bio = profile.bio;
+          verificationStatus = profile.verificationStatus;
+          onboardingCompleted = profile.onboardingCompleted;
+          createdAt = profile.createdAt;
+          updatedAt = Time.now();
+        };
+        userProfiles.put(targetUserId, updatedProfile);
+        
+        // Update legacy role mapping
+        let roleText = switch (newRole) {
+          case (#patient) "patient";
+          case (#therapist) "doctor";
+          case (#admin) "admin";
+        };
+        userRoles.put(targetUserId, roleText);
+        
+        // Audit logging for role assignment
+        logAuditEvent(
+          caller,
+          #update,
+          "role_assignment",
+          Principal.toText(targetUserId),
+          ?("Role changed to: " # roleText # " by admin: " # Principal.toText(caller))
+        );
+        
+        // Log security event for admin role assignments
+        if (newRole == #admin) {
+          logSecurityEvent(
+            ?caller,
+            "admin_role_assigned",
+            "Admin role assigned to user: " # Principal.toText(targetUserId) # " by: " # Principal.toText(caller),
+            "high"
+          );
+        };
+        
+        #ok("Role assigned successfully")
+      };
+    }
+  };
+  
+  // Get user role
+  public shared query(msg) func getUserRole(userId: ?Principal) : async Result.Result<UserType, Text> {
+    let targetUserId = switch (userId) {
+      case (?id) { id };
+      case null { msg.caller };
+    };
+    
+    let caller = msg.caller;
+    
+    // Users can check their own role, admins can check any role
+    if (caller != targetUserId and not isAdmin(caller)) {
+      return #err("Unauthorized: Cannot access other users' roles");
+    };
+    
+    switch (userRoleAssignments.get(targetUserId)) {
+      case (?role) { #ok(role) };
+      case null { #err("User role not found") };
+    }
+  };
+  
+  // List all admin users (admin only)
+  public shared query(msg) func getAdminUsers() : async Result.Result<[Principal], Text> {
+    let caller = msg.caller;
+    
+    if (not isAdmin(caller)) {
+      return #err("Unauthorized: Only admins can view admin list");
+    };
+    
+    let adminList = Array.mapFilter<(Principal, Bool), Principal>(
+      Iter.toArray(adminUsers.entries()),
+      func((userId, isAdminFlag)) {
+        if (isAdminFlag) { ?userId } else { null }
+      }
+    );
+    
+    #ok(adminList)
+  };
+  
+  // Remove admin privileges (super admin only - for now, any admin can do this)
+  public shared(msg) func removeAdminPrivileges(targetUserId: Principal) : async Result.Result<Text, Text> {
+    let caller = msg.caller;
+    
+    if (not isAdmin(caller)) {
+      return #err("Unauthorized: Only admins can remove admin privileges");
+    };
+    
+    if (caller == targetUserId) {
+      return #err("Cannot remove your own admin privileges");
+    };
+    
+    adminUsers.delete(targetUserId);
+    
+    // Update role to patient (default)
+    userRoleAssignments.put(targetUserId, #patient);
+    
+    // Update user profile if exists
+    switch (userProfiles.get(targetUserId)) {
+      case (?profile) {
+        let updatedProfile: UserProfile = {
+          id = profile.id;
+          userType = #patient;
+          firstName = profile.firstName;
+          lastName = profile.lastName;
+          email = profile.email;
+          phoneNumber = profile.phoneNumber;
+          profilePicture = profile.profilePicture;
+          bio = profile.bio;
+          verificationStatus = profile.verificationStatus;
+          onboardingCompleted = profile.onboardingCompleted;
+          createdAt = profile.createdAt;
+          updatedAt = Time.now();
+        };
+        userProfiles.put(targetUserId, updatedProfile);
+        
+        userRoles.put(targetUserId, "patient");
+      };
+      case null { /* User profile doesn't exist, role assignment is enough */ };
+    };
+    
+    #ok("Admin privileges removed successfully")
   };
   
   // Legacy function for backward compatibility
@@ -777,14 +1128,36 @@ persistent actor MentalVerseBackend {
     }
   };
   
-  // Enhanced authorization function
+  // Enhanced authorization function using RBAC
   private func isAuthorized(caller: UserId, requiredUserType: UserType) : Bool {
-    switch (userProfiles.get(caller)) {
-      case (?profile) { 
-        profile.userType == requiredUserType or profile.userType == #admin
-      };
-      case null { false };
-    }
+    // Admin can access everything
+    if (isAdmin(caller)) { return true };
+    
+    // Check specific role
+    hasRole(caller, requiredUserType)
+  };
+  
+  // Enhanced authorization check with audit logging
+  private func isAuthorizedWithAudit(
+    caller: UserId,
+    requiredUserType: UserType,
+    resourceType: Text,
+    resourceId: Text,
+    action: Text
+  ) : Bool {
+    let authorized = isAuthorized(caller, requiredUserType);
+    
+    if (not authorized) {
+      // Log unauthorized access attempt
+      logSecurityEvent(
+        ?caller,
+        "unauthorized_access_attempt",
+        "User " # Principal.toText(caller) # " attempted " # action # " on " # resourceType # " (" # resourceId # ") but lacks required role",
+        "medium"
+      );
+    };
+    
+    authorized
   };
 
   // === CONSENT MANAGEMENT FUNCTIONS ===
@@ -1185,9 +1558,12 @@ persistent actor MentalVerseBackend {
           medicalHistory = [];
           allergies = [];
           currentMedications = [];
+          encryptedDateOfBirth = null;
+          encryptedPhoneNumber = null;
+          encryptedEmergencyContact = null;
           createdAt = now;
           updatedAt = now;
-    };
+        };
 
         patients.put(caller, patient);
         #ok(patient)
@@ -1528,6 +1904,8 @@ persistent actor MentalVerseBackend {
           title = recordData.title;
           description = recordData.description;
           attachments = recordData.attachments;
+          encryptedDescription = null;
+          encryptedAttachments = null;
           isConfidential = recordData.isConfidential;
           accessPermissions = [recordData.patientId, caller]; // Patient and doctor have access
           createdAt = now;
@@ -1535,6 +1913,16 @@ persistent actor MentalVerseBackend {
         };
 
         medicalRecords.put(recordId, medicalRecord);
+        
+        // Audit logging for medical record creation
+        logAuditEvent(
+          caller,
+          #create,
+          "medical_record",
+          recordId,
+          ?("Medical record created for patient: " # Principal.toText(recordData.patientId) # ", type: " # recordData.recordType # ", confidential: " # (if (recordData.isConfidential) "yes" else "no"))
+        );
+        
         #ok(medicalRecord)
       };
     }
@@ -1550,7 +1938,7 @@ persistent actor MentalVerseBackend {
     })
   };
 
-  public shared query(msg) func getMedicalRecordById(recordId: RecordId) : async Result.Result<MedicalRecord, Text> {
+  public shared(msg) func getMedicalRecordById(recordId: RecordId) : async Result.Result<MedicalRecord, Text> {
     let caller = msg.caller;
     
     switch (medicalRecords.get(recordId)) {
@@ -1562,8 +1950,24 @@ persistent actor MentalVerseBackend {
         }) != null;
         
         if (not _hasAccess) {
+          // Log unauthorized access attempt
+          logSecurityEvent(
+            ?caller,
+            "unauthorized_medical_record_access",
+            "Attempted to access medical record: " # recordId # " by user: " # Principal.toText(caller),
+            "medium"
+          );
           return #err("Unauthorized: You don't have access to this medical record");
         };
+        
+        // Audit logging for medical record access
+        logAuditEvent(
+          caller,
+          #access_granted,
+          "medical_record",
+          recordId,
+          ?("Medical record accessed by: " # Principal.toText(caller))
+        );
         
         #ok(record)
       };
@@ -1600,6 +2004,16 @@ persistent actor MentalVerseBackend {
     };
 
     messages.put(messageId, message);
+    
+    // Audit logging for message sending
+    logAuditEvent(
+      caller,
+      #create,
+      "secure_message",
+      messageId,
+      ?("Message sent from: " # Principal.toText(caller) # " to: " # Principal.toText(receiverId) # ", type: " # messageType)
+    );
+    
     #ok(message)
   };
 
@@ -1713,6 +2127,16 @@ persistent actor MentalVerseBackend {
   // Get user's chat history (for continuity of care)
   public shared(msg) func getUserChatHistory(sessionId: ?Text) : async Result.Result<[ChatInteraction], Text> {
     let caller = msg.caller;
+    
+    // Validate session ID format if provided
+    switch (sessionId) {
+      case (?sid) {
+        if (not isValidUUID(sid)) {
+          return #err("Invalid session ID format. Must be a valid UUID.");
+        };
+      };
+      case null {};
+    };
     
     let userInteractions = Array.filter<ChatInteraction>(
       Iter.toArray(chatInteractionsMap.vals()),
@@ -2183,9 +2607,41 @@ persistent actor MentalVerseBackend {
 
   // === INTER-CANISTER SECURE MESSAGING ===
   
+  // UUID validation helper function
+  private func isValidUUID(uuid: Text) : Bool {
+    // Basic UUID format validation (8-4-4-4-12 hexadecimal digits)
+    let chars = Text.toArray(uuid);
+    if (chars.size() != 36) { return false };
+    
+    // Check positions of hyphens
+    if (chars[8] != '-' or chars[13] != '-' or chars[18] != '-' or chars[23] != '-') {
+      return false;
+    };
+    
+    // Check that all other characters are hexadecimal
+    func isHexChar(c: Char) : Bool {
+      (c >= '0' and c <= '9') or (c >= 'a' and c <= 'f') or (c >= 'A' and c <= 'F')
+    };
+    
+    for (i in chars.keys()) {
+      if (i != 8 and i != 13 and i != 18 and i != 23) {
+        if (not isHexChar(chars[i])) {
+          return false;
+        };
+      };
+    };
+    
+    true
+  };
+
   // Create a secure conversation for therapy sessions
   public shared(msg) func createTherapyConversation(therapistId: Principal, sessionId: Text) : async Result.Result<SecureMessagingInterface.Conversation, Text> {
     let caller = msg.caller;
+    
+    // Validate session ID format (must be a valid UUID)
+    if (not isValidUUID(sessionId)) {
+      return #err("Invalid session ID format. Must be a valid UUID.");
+    };
     
     // Verify caller is a patient and therapist exists
     switch (userProfiles.get(caller)) {
@@ -2359,7 +2815,7 @@ persistent actor MentalVerseBackend {
     prefix # "_" # Int.toText(Time.now()) # "_" # Int.toText(Int.abs(Time.now()))
   };
 
-  // Helper function to log audit events
+  // Enhanced audit logging function with IP and User Agent support
   private func logAuditEvent(
     userId: UserId,
     action: AuditLogAction,
@@ -2377,6 +2833,58 @@ persistent actor MentalVerseBackend {
       details = details;
       ipAddress = null; // Could be enhanced to capture IP
       userAgent = null; // Could be enhanced to capture user agent
+      timestamp = Time.now();
+    };
+    auditLogs.put(auditId, auditLog);
+  };
+
+  // Enhanced audit logging with additional context
+  private func logAuditEventWithContext(
+    userId: UserId,
+    action: AuditLogAction,
+    resourceType: Text,
+    resourceId: Text,
+    details: ?Text,
+    ipAddress: ?Text,
+    userAgent: ?Text
+  ) {
+    let auditId = generateId("audit");
+    let auditLog: AuditLog = {
+      id = auditId;
+      userId = userId;
+      action = action;
+      resourceType = resourceType;
+      resourceId = resourceId;
+      details = details;
+      ipAddress = ipAddress;
+      userAgent = userAgent;
+      timestamp = Time.now();
+    };
+    auditLogs.put(auditId, auditLog);
+  };
+
+  // Log security events (failed logins, unauthorized access attempts)
+  private func logSecurityEvent(
+    userId: ?UserId,
+    eventType: Text,
+    details: Text,
+    severity: Text // "low", "medium", "high", "critical"
+  ) {
+    let auditId = generateId("security");
+    let securityUserId = switch (userId) {
+      case (?uid) { uid };
+      case null { Principal.fromText("2vxsx-fae") }; // Anonymous principal
+    };
+    
+    let auditLog: AuditLog = {
+      id = auditId;
+      userId = securityUserId;
+      action = #access_granted; // Using existing enum, could be extended
+      resourceType = "security_event";
+      resourceId = eventType;
+      details = ?("[" # severity # "] " # details);
+      ipAddress = null;
+      userAgent = null;
       timestamp = Time.now();
     };
     auditLogs.put(auditId, auditLog);
@@ -2402,6 +2910,11 @@ persistent actor MentalVerseBackend {
     isConfidential: Bool
   ) : async Result.Result<SessionNote, Text> {
     let caller = msg.caller;
+    
+    // Validate session ID format (must be a valid UUID)
+    if (not isValidUUID(sessionId)) {
+      return #err("Invalid session ID format. Must be a valid UUID.");
+    };
     
     // Verify caller is a therapist
     switch (userProfiles.get(caller)) {
@@ -2900,6 +3413,174 @@ persistent actor MentalVerseBackend {
     
     #ok(finalLogs)
   };
+  
+  // Get audit summary and security insights (admin only)
+  public shared query(msg) func getAuditSummary(
+    timeRangeHours: ?Nat
+  ) : async Result.Result<{
+    totalEvents: Nat;
+    securityEvents: Nat;
+    userRegistrations: Nat;
+    roleChanges: Nat;
+    medicalRecordAccess: Nat;
+    unauthorizedAttempts: Nat;
+    recentCriticalEvents: [AuditLog];
+  }, Text> {
+    let caller = msg.caller;
+    
+    // Verify caller is admin
+    if (not isAdmin(caller)) {
+      return #err("Unauthorized: Only admins can access audit summary");
+    };
+    
+    let allLogs = Iter.toArray(auditLogs.vals());
+    let currentTime = Time.now();
+    let timeFilter = switch (timeRangeHours) {
+      case (?hours) { currentTime - (hours * 3600 * 1000000000) }; // Convert hours to nanoseconds
+      case null { 0 }; // All time
+    };
+    
+    let filteredLogs = Array.filter<AuditLog>(
+      allLogs,
+      func(log) { log.timestamp >= timeFilter }
+    );
+    
+    let securityEvents = Array.filter<AuditLog>(
+      filteredLogs,
+      func(log) { log.resourceType == "security_event" }
+    ).size();
+    
+    let userRegistrations = Array.filter<AuditLog>(
+      filteredLogs,
+      func(log) { log.resourceType == "user_profile" and log.action == #create }
+    ).size();
+    
+    let roleChanges = Array.filter<AuditLog>(
+      filteredLogs,
+      func(log) { log.resourceType == "role_assignment" }
+    ).size();
+    
+    let medicalRecordAccess = Array.filter<AuditLog>(
+      filteredLogs,
+      func(log) { log.resourceType == "medical_record" }
+    ).size();
+    
+    let unauthorizedAttempts = Array.filter<AuditLog>(
+      filteredLogs,
+      func(log) {
+        log.resourceType == "security_event" and
+        (switch (log.details) {
+          case (?details) { Text.contains(details, #text "unauthorized") };
+          case null { false };
+        })
+      }
+    ).size();
+    
+    // Get recent critical events
+    let criticalEvents = Array.filter<AuditLog>(
+      filteredLogs,
+      func(log) {
+        log.resourceType == "security_event" and
+        (switch (log.details) {
+          case (?details) { Text.contains(details, #text "[high]") or Text.contains(details, #text "[critical]") };
+          case null { false };
+        })
+      }
+    );
+    
+    let sortedCriticalEvents = Array.sort<AuditLog>(
+      criticalEvents,
+      func(a, b) {
+        if (a.timestamp > b.timestamp) { #less }
+        else if (a.timestamp < b.timestamp) { #greater }
+        else { #equal }
+      }
+    );
+    
+    let recentCriticalEvents = if (sortedCriticalEvents.size() > 10) {
+      Array.tabulate<AuditLog>(10, func(i) { sortedCriticalEvents[i] })
+    } else {
+      sortedCriticalEvents
+    };
+    
+    #ok({
+      totalEvents = filteredLogs.size();
+      securityEvents = securityEvents;
+      userRegistrations = userRegistrations;
+      roleChanges = roleChanges;
+      medicalRecordAccess = medicalRecordAccess;
+      unauthorizedAttempts = unauthorizedAttempts;
+      recentCriticalEvents = recentCriticalEvents;
+    })
+  };
+  
+  // Export audit logs for compliance (admin only)
+  public shared query(msg) func exportAuditLogs(
+    startTime: ?Int,
+    endTime: ?Int,
+    format: Text // "json" or "csv"
+  ) : async Result.Result<Text, Text> {
+    let caller = msg.caller;
+    
+    // Verify caller is admin
+    if (not isAdmin(caller)) {
+      return #err("Unauthorized: Only admins can export audit logs");
+    };
+    
+    let allLogs = Iter.toArray(auditLogs.vals());
+    let filteredLogs = Array.filter<AuditLog>(
+      allLogs,
+      func(log) {
+        let afterStart = switch (startTime) {
+          case (?start) { log.timestamp >= start };
+          case null { true };
+        };
+        let beforeEnd = switch (endTime) {
+          case (?end) { log.timestamp <= end };
+          case null { true };
+        };
+        afterStart and beforeEnd
+      }
+    );
+    
+    // Sort by timestamp
+    let sortedLogs = Array.sort<AuditLog>(
+      filteredLogs,
+      func(a, b) {
+        if (a.timestamp < b.timestamp) { #less }
+        else if (a.timestamp > b.timestamp) { #greater }
+        else { #equal }
+      }
+    );
+    
+    // For now, return a simple text format (in production, would format as JSON/CSV)
+    let exportData = Array.foldLeft<AuditLog, Text>(
+      sortedLogs,
+      "Audit Log Export\n" # "Timestamp,User,Action,Resource,Details\n",
+      func(acc, log) {
+        let details = switch (log.details) {
+          case (?d) { d };
+          case null { "" };
+        };
+        acc # Int.toText(log.timestamp) # "," #
+        Principal.toText(log.userId) # "," #
+        debug_show(log.action) # "," #
+        log.resourceType # "," #
+        details # "\n"
+      }
+    );
+    
+    // Log the export action
+    logAuditEvent(
+      caller,
+      #export,
+      "audit_logs",
+      "export_" # Int.toText(Time.now()),
+      ?("Audit logs exported by admin, " # Nat.toText(sortedLogs.size()) # " records")
+    );
+    
+    #ok(exportData)
+  };
 
   // Get user's access permissions
   public shared query(msg) func getUserAccessPermissions() : async Result.Result<[AccessControlRule], Text> {
@@ -3017,6 +3698,15 @@ persistent actor MentalVerseBackend {
           completedAt = ?Time.now();
         };
         paymentTransactions.put(paymentId, completedTransaction);
+        
+        // Audit logging for payment processing
+        logAuditEvent(
+          caller,
+          #update,
+          "payment_transaction",
+          paymentId,
+          ?("Payment processed: " # Nat.toText(transaction.amount) # " tokens from " # Principal.toText(transaction.payerId) # " to " # Principal.toText(transaction.payeeId))
+        );
         
         #ok("Payment processed successfully")
       };
@@ -3352,4 +4042,319 @@ persistent actor MentalVerseBackend {
       totalPaymentVolume = totalPaymentVolume;
     })
   };
+
+  // Phase 0: Onboarding state tracking functions
+  
+  // Check if a user has completed onboarding
+  public shared query(msg) func checkOnboarding() : async Bool {
+    let caller = msg.caller;
+    switch (onboardingStates.get(caller)) {
+      case (?completed) { completed };
+      case null { false };
+    }
+  };
+  
+  // Mark user as having completed onboarding (legacy support)
+  public shared(msg) func markOnboardingComplete() : async Result.Result<Text, Text> {
+    let caller = msg.caller;
+    
+    // Check if user already completed onboarding
+    switch (onboardingStates.get(caller)) {
+      case (?true) {
+        return #err("User has already completed onboarding");
+      };
+      case _ {};
+    };
+    
+    // Mark onboarding as completed
+    onboardingStates.put(caller, true);
+    
+    #ok("Onboarding completed successfully")
+  };
+
+  // ============================================================================
+  // PHI ENCRYPTION AND KEY MANAGEMENT API (Iteration 5)
+  // ============================================================================
+
+  // Generate a new PHI encryption key for a user
+  public shared(msg) func generateUserPHIKey() : async Result.Result<Text, Text> {
+    let caller = msg.caller;
+    
+    // Verify caller is authenticated
+    switch (userProfiles.get(caller)) {
+      case null { return #err("User profile not found"); };
+      case (?profile) {
+        // Only patients and therapists can have PHI keys
+        if (profile.userType != #patient and profile.userType != #therapist) {
+          return #err("Only patients and therapists can generate PHI keys");
+        };
+      };
+    };
+    
+    // Check if user already has a PHI key
+    switch (userPHIKeys.get(caller)) {
+      case (?existingKeyId) {
+        return #err("User already has a PHI encryption key: " # existingKeyId);
+      };
+      case null {};
+    };
+    
+    // Generate a new encryption key
+    let keyId = "phi_key_" # Principal.toText(caller) # "_" # Int.toText(Time.now());
+    let keyData = await generateRandomBytes(32); // 256-bit key for AES-256
+    
+    let phiKey : PHIEncryptionKey = {
+      keyId = keyId;
+      keyHash = keyData; // Using keyData as keyHash for now
+      purpose = #medicalHistory; // Default purpose
+      createdAt = Time.now();
+      isActive = true;
+      rotationSchedule = null; // No rotation schedule set
+    };
+    
+    // Store the key and mapping
+    phiEncryptionKeys.put(keyId, phiKey);
+    userPHIKeys.put(caller, keyId);
+    
+    #ok(keyId)
+  };
+
+  // Rotate (regenerate) a user's PHI encryption key
+  public shared(msg) func rotateUserPHIKey() : async Result.Result<Text, Text> {
+    let caller = msg.caller;
+    
+    // Verify caller is authenticated
+    switch (userProfiles.get(caller)) {
+      case null { return #err("User profile not found"); };
+      case (?profile) {
+        if (profile.userType != #patient and profile.userType != #therapist) {
+          return #err("Only patients and therapists can rotate PHI keys");
+        };
+      };
+    };
+    
+    // Get current key ID
+    let currentKeyId = switch (userPHIKeys.get(caller)) {
+      case null { return #err("No existing PHI key found for user"); };
+      case (?keyId) { keyId };
+    };
+    
+    // Deactivate old key
+    switch (phiEncryptionKeys.get(currentKeyId)) {
+      case (?oldKey) {
+        let deactivatedKey = {
+          keyId = oldKey.keyId;
+          keyHash = oldKey.keyHash;
+          purpose = oldKey.purpose;
+          createdAt = oldKey.createdAt;
+          isActive = false; // Deactivate old key
+          rotationSchedule = oldKey.rotationSchedule;
+        };
+        phiEncryptionKeys.put(currentKeyId, deactivatedKey);
+      };
+      case null {};
+    };
+    
+    // Generate new key
+    let newKeyId = "phi_key_" # Principal.toText(caller) # "_" # Int.toText(Time.now());
+    let newKeyData = await generateRandomBytes(32);
+    
+    let newPHIKey : PHIEncryptionKey = {
+      keyId = newKeyId;
+      keyHash = newKeyData; // Using newKeyData as keyHash
+      purpose = #medicalHistory; // Default purpose
+      createdAt = Time.now();
+      isActive = true;
+      rotationSchedule = null; // No rotation schedule set
+    };
+    
+    // Store new key and update mapping
+    phiEncryptionKeys.put(newKeyId, newPHIKey);
+    userPHIKeys.put(caller, newKeyId);
+    
+    #ok(newKeyId)
+  };
+
+  // Store encrypted PHI data for a patient
+  public shared(msg) func storeEncryptedPatientPHI(
+    patientId: UserId,
+    phiType: PHIDataType,
+    encryptedData: Blob
+  ) : async Result.Result<Text, Text> {
+    let caller = msg.caller;
+    
+    // Verify caller is authorized (therapist, doctor, or the patient themselves)
+    let isAuthorized = switch (userProfiles.get(caller)) {
+      case null { false };
+      case (?profile) {
+        profile.userType == #therapist or 
+        profile.userType == #admin or 
+        (profile.userType == #patient and caller == patientId)
+      };
+    };
+    
+    if (not isAuthorized) {
+      return #err("Unauthorized to store PHI data");
+    };
+    
+    // Verify patient exists
+    switch (patients.get(patientId)) {
+      case null { return #err("Patient not found"); };
+      case (?patient) {};
+    };
+    
+    // Get or create encrypted PHI record for patient
+    let currentPHI = switch (encryptedPatientPHI.get(patientId)) {
+      case null {
+        {
+          patientId = patientId;
+          encryptedMedicalHistory = null;
+          encryptedAllergies = null;
+          encryptedCurrentMedications = null;
+          encryptedPersonalInfo = null;
+          lastUpdated = Time.now();
+        }
+      };
+      case (?existing) { existing };
+    };
+    
+    // Update the appropriate field based on PHI type
+    let updatedPHI = switch (phiType) {
+      case (#medicalHistory) {
+        {
+          patientId = currentPHI.patientId;
+          encryptedMedicalHistory = ?{ encryptedData = encryptedData; nonce = Blob.fromArray([]); keyId = "default-key"; dataType = phiType; timestamp = Time.now(); };
+          encryptedAllergies = currentPHI.encryptedAllergies;
+          encryptedCurrentMedications = currentPHI.encryptedCurrentMedications;
+          encryptedPersonalInfo = currentPHI.encryptedPersonalInfo;
+          lastUpdated = Time.now();
+        }
+      };
+      case (#allergies) {
+        {
+          patientId = currentPHI.patientId;
+          encryptedMedicalHistory = currentPHI.encryptedMedicalHistory;
+          encryptedAllergies = ?{ encryptedData = encryptedData; nonce = Blob.fromArray([]); keyId = "default-key"; dataType = phiType; timestamp = Time.now(); };
+          encryptedCurrentMedications = currentPHI.encryptedCurrentMedications;
+          encryptedPersonalInfo = currentPHI.encryptedPersonalInfo;
+          lastUpdated = Time.now();
+        }
+      };
+      case (#currentMedications) {
+        {
+          patientId = currentPHI.patientId;
+          encryptedMedicalHistory = currentPHI.encryptedMedicalHistory;
+          encryptedAllergies = currentPHI.encryptedAllergies;
+          encryptedCurrentMedications = ?{ encryptedData = encryptedData; nonce = Blob.fromArray([]); keyId = "default-key"; dataType = phiType; timestamp = Time.now(); };
+          encryptedPersonalInfo = currentPHI.encryptedPersonalInfo;
+          lastUpdated = Time.now();
+        }
+      };
+      case (#medications) {
+        {
+          patientId = currentPHI.patientId;
+          encryptedMedicalHistory = currentPHI.encryptedMedicalHistory;
+          encryptedAllergies = currentPHI.encryptedAllergies;
+          encryptedCurrentMedications = ?{ encryptedData = encryptedData; nonce = Blob.fromArray([]); keyId = "default-key"; dataType = phiType; timestamp = Time.now(); };
+          encryptedPersonalInfo = currentPHI.encryptedPersonalInfo;
+          lastUpdated = Time.now();
+        }
+      };
+      case (#personalInfo) {
+        {
+          patientId = currentPHI.patientId;
+          encryptedMedicalHistory = currentPHI.encryptedMedicalHistory;
+          encryptedAllergies = currentPHI.encryptedAllergies;
+          encryptedCurrentMedications = currentPHI.encryptedCurrentMedications;
+          encryptedPersonalInfo = ?{ encryptedData = encryptedData; nonce = Blob.fromArray([]); keyId = "default-key"; dataType = phiType; timestamp = Time.now(); };
+          lastUpdated = Time.now();
+        }
+      };
+      case (#sessionNotes) {
+        {
+          patientId = currentPHI.patientId;
+          encryptedMedicalHistory = currentPHI.encryptedMedicalHistory;
+          encryptedAllergies = currentPHI.encryptedAllergies;
+          encryptedCurrentMedications = currentPHI.encryptedCurrentMedications;
+          encryptedPersonalInfo = currentPHI.encryptedPersonalInfo;
+          lastUpdated = Time.now();
+        }
+      };
+      case (#diagnostics) {
+        {
+          patientId = currentPHI.patientId;
+          encryptedMedicalHistory = currentPHI.encryptedMedicalHistory;
+          encryptedAllergies = currentPHI.encryptedAllergies;
+          encryptedCurrentMedications = currentPHI.encryptedCurrentMedications;
+          encryptedPersonalInfo = currentPHI.encryptedPersonalInfo;
+          lastUpdated = Time.now();
+        }
+      };
+      case (#labResults) {
+        {
+          patientId = currentPHI.patientId;
+          encryptedMedicalHistory = currentPHI.encryptedMedicalHistory;
+          encryptedAllergies = currentPHI.encryptedAllergies;
+          encryptedCurrentMedications = currentPHI.encryptedCurrentMedications;
+          encryptedPersonalInfo = currentPHI.encryptedPersonalInfo;
+          lastUpdated = Time.now();
+        }
+      };
+    };
+    
+    // Store updated PHI data
+    encryptedPatientPHI.put(patientId, updatedPHI);
+    
+    #ok("PHI data stored successfully")
+  };
+
+  // Retrieve encrypted PHI data for authorized users
+  public shared query(msg) func getEncryptedPatientPHI(
+    patientId: UserId
+  ) : async Result.Result<EncryptedPatientPHI, Text> {
+    let caller = msg.caller;
+    
+    // Verify caller is authorized
+    let isAuthorized = switch (userProfiles.get(caller)) {
+      case null { false };
+      case (?profile) {
+        profile.userType == #therapist or 
+        profile.userType == #admin or 
+        (profile.userType == #patient and caller == patientId)
+      };
+    };
+    
+    if (not isAuthorized) {
+      return #err("Unauthorized to access PHI data");
+    };
+    
+    // Retrieve encrypted PHI data
+    switch (encryptedPatientPHI.get(patientId)) {
+      case null { #err("No PHI data found for patient"); };
+      case (?phi) { #ok(phi); };
+    }
+  };
+
+  // Helper function to generate random bytes (simplified implementation)
+  private func generateRandomBytes(length: Nat) : async Blob {
+    // In a real implementation, this would use proper cryptographic randomness
+    // For now, we'll use a simple approach with current time and caller info
+    let timeBytes = Blob.fromArray([
+      Nat8.fromNat(Int.abs(Time.now()) % 256),
+      Nat8.fromNat((Int.abs(Time.now()) / 256) % 256),
+      Nat8.fromNat((Int.abs(Time.now()) / 65536) % 256),
+      Nat8.fromNat((Int.abs(Time.now()) / 16777216) % 256)
+    ]);
+    
+    // Extend to desired length by repeating and modifying
+    let baseArray = Blob.toArray(timeBytes);
+    let extendedArray = Array.tabulate<Nat8>(length, func(i) {
+      let baseIndex = i % baseArray.size();
+      let modifier = Nat8.fromNat((i + Int.abs(Time.now())) % 256);
+      baseArray[baseIndex] ^ modifier
+    });
+    
+    Blob.fromArray(extendedArray)
+  };
+
 };

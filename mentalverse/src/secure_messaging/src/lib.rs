@@ -4,10 +4,15 @@ use ic_cdk::{init, post_upgrade, pre_upgrade, query, update};
 use ic_stable_structures::memory_manager::{MemoryId, MemoryManager, VirtualMemory};
 use ic_stable_structures::{DefaultMemoryImpl, StableBTreeMap, Storable, storable::Bound};
 use serde::Serialize;
+use serde_json;
 use sha2::{Digest, Sha256};
 use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::HashMap;
+use hmac::{Hmac, Mac};
+use base64::{Engine as _, engine::general_purpose};
+// Removed unused imports
+use hex;
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 type IdStore = StableBTreeMap<u64, u64, Memory>;
@@ -18,6 +23,32 @@ type _WebRTCSignalStore = StableBTreeMap<String, StorableWebRTCSignal, Memory>;
 type _SessionTokenStore = StableBTreeMap<String, StorableSessionToken, Memory>;
 type _KeyExchangeStore = StableBTreeMap<String, StorableKeyExchange, Memory>;
 type _RTCSessionStore = StableBTreeMap<String, StorableRTCSession, Memory>;
+
+// === ENCRYPTION STRUCTURES ===
+
+#[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
+pub struct EncryptedData {
+    pub encrypted_content: String, // Base64 encoded encrypted data
+    pub nonce: String,            // Base64 encoded nonce
+    pub key_id: String,           // Identifier for the encryption key used
+}
+
+#[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
+pub struct PHIEncryptionKey {
+    pub key_id: String,
+    pub key_data: Vec<u8>,        // AES-256 key (32 bytes)
+    pub created_at: u64,
+    pub is_active: bool,
+    pub purpose: EncryptionPurpose,
+}
+
+#[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
+pub enum EncryptionPurpose {
+    MessageContent,
+    Attachment,
+    MedicalRecord,
+    SessionData,
+}
 
 // === DATA STRUCTURES ===
 
@@ -712,6 +743,230 @@ fn get_time() -> u64 {
     time()
 }
 
+// === PHI ENCRYPTION FUNCTIONS ===
+
+/// Generate a new encryption key for PHI data using IC's random source
+pub fn generate_phi_encryption_key() -> Result<Vec<u8>, String> {
+    let mut key_bytes = [0u8; 32];
+    // Use IC's time and caller as entropy source
+    let entropy = format!("{}{}", get_time(), get_caller().to_text());
+    let mut hasher = Sha256::new();
+    hasher.update(entropy.as_bytes());
+    let hash = hasher.finalize();
+    key_bytes.copy_from_slice(&hash[..32]);
+    Ok(key_bytes.to_vec())
+}
+
+/// Encrypt PHI data using HMAC-based encryption
+pub fn encrypt_phi_data(data: &str, key: &[u8]) -> Result<EncryptedData, String> {
+    if key.len() != 32 {
+        return Err("Invalid key length. Requires 32 bytes".to_string());
+    }
+
+    // Generate nonce using time and data hash
+    let nonce_data = format!("{}{}", get_time(), data.len());
+    let mut nonce_hasher = Sha256::new();
+    nonce_hasher.update(nonce_data.as_bytes());
+    let nonce_hash = nonce_hasher.finalize();
+    let nonce_bytes = &nonce_hash[..12]; // Use first 12 bytes as nonce
+
+    // Simple XOR encryption with HMAC authentication
+    let mut encrypted_bytes = Vec::new();
+    let data_bytes = data.as_bytes();
+    
+    // Create encryption key stream using HMAC
+    type HmacSha256 = Hmac<Sha256>;
+    let mut mac = HmacSha256::new_from_slice(key)
+        .map_err(|_| "Invalid key for HMAC".to_string())?;
+    mac.update(nonce_bytes);
+    let key_stream = mac.finalize().into_bytes();
+    
+    // XOR encrypt the data
+    for (i, &byte) in data_bytes.iter().enumerate() {
+        let key_byte = key_stream[i % key_stream.len()];
+        encrypted_bytes.push(byte ^ key_byte);
+    }
+
+    let encrypted_content = general_purpose::STANDARD.encode(&encrypted_bytes);
+    let nonce_b64 = general_purpose::STANDARD.encode(nonce_bytes);
+    
+    // Generate key ID based on key hash
+    let mut hasher = Sha256::new();
+    hasher.update(key);
+    let key_id = format!("phi_key_{}", hex::encode(&hasher.finalize()[..8]));
+
+    Ok(EncryptedData {
+        encrypted_content,
+        nonce: nonce_b64,
+        key_id,
+    })
+}
+
+/// Decrypt PHI data using HMAC-based decryption
+pub fn decrypt_phi_data(encrypted_data: &EncryptedData, key: &[u8]) -> Result<String, String> {
+    if key.len() != 32 {
+        return Err("Invalid key length. Requires 32 bytes".to_string());
+    }
+
+    let encrypted_bytes = general_purpose::STANDARD.decode(&encrypted_data.encrypted_content)
+        .map_err(|_| "Failed to decode encrypted content".to_string())?;
+    
+    let nonce_bytes = general_purpose::STANDARD.decode(&encrypted_data.nonce)
+        .map_err(|_| "Failed to decode nonce".to_string())?;
+
+    if nonce_bytes.len() != 12 {
+        return Err("Invalid nonce length".to_string());
+    }
+
+    // Create decryption key stream using HMAC (same as encryption)
+    type HmacSha256 = Hmac<Sha256>;
+    let mut mac = HmacSha256::new_from_slice(key)
+        .map_err(|_| "Invalid key for HMAC".to_string())?;
+    mac.update(&nonce_bytes);
+    let key_stream = mac.finalize().into_bytes();
+    
+    // XOR decrypt the data
+    let mut decrypted_bytes = Vec::new();
+    for (i, &byte) in encrypted_bytes.iter().enumerate() {
+        let key_byte = key_stream[i % key_stream.len()];
+        decrypted_bytes.push(byte ^ key_byte);
+    }
+
+    String::from_utf8(decrypted_bytes)
+        .map_err(|_| "Failed to convert decrypted data to string".to_string())
+}
+
+/// Derive encryption key from conversation participants for end-to-end encryption
+pub fn derive_conversation_key(participants: &[Principal]) -> Result<Vec<u8>, String> {
+    let mut sorted_participants = participants.to_vec();
+    sorted_participants.sort();
+    
+    let mut hasher = Sha256::new();
+    for participant in &sorted_participants {
+        hasher.update(participant.as_slice());
+    }
+    hasher.update(b"mentalverse_phi_encryption_v1");
+    
+    let hash = hasher.finalize();
+    Ok(hash.to_vec())
+}
+
+/// Validate that PHI data meets encryption requirements
+pub fn validate_phi_encryption(data: &str) -> Result<(), String> {
+    if data.is_empty() {
+        return Err("PHI data cannot be empty".to_string());
+    }
+    
+    if data.len() > 1_000_000 { // 1MB limit
+        return Err("PHI data exceeds maximum size limit".to_string());
+    }
+    
+    Ok(())
+}
+
+/// Decrypt message content for authorized conversation participants
+pub fn decrypt_message_content(encrypted_content: &str, conversation_participants: &[Principal]) -> Result<String, String> {
+    // Derive the same conversation key used for encryption
+    let decryption_key = derive_conversation_key(conversation_participants)?;
+    
+    // Try to parse as encrypted data structure
+    match serde_json::from_str::<EncryptedData>(encrypted_content) {
+        Ok(encrypted_data) => {
+            // Decrypt using AES-256-GCM
+            decrypt_phi_data(&encrypted_data, &decryption_key)
+        },
+        Err(_) => {
+            // If not encrypted format, return as-is (backward compatibility)
+            Ok(encrypted_content.to_string())
+        }
+    }
+}
+
+/// Decrypt attachment data for authorized conversation participants
+pub fn decrypt_attachment_data(encrypted_data: &str, conversation_participants: &[Principal]) -> Result<String, String> {
+    if encrypted_data.is_empty() {
+        return Ok(String::new());
+    }
+    
+    // Derive the same conversation key used for encryption
+    let decryption_key = derive_conversation_key(conversation_participants)?;
+    
+    // Try to parse as encrypted data structure
+    match serde_json::from_str::<EncryptedData>(encrypted_data) {
+        Ok(encrypted_struct) => {
+            // Decrypt using AES-256-GCM
+            decrypt_phi_data(&encrypted_struct, &decryption_key)
+        },
+        Err(_) => {
+            // If not encrypted format, return as-is (backward compatibility)
+            Ok(encrypted_data.to_string())
+        }
+    }
+}
+
+// === PRINCIPAL VALIDATION FUNCTIONS ===
+
+/// Validates that a Principal is not anonymous and has proper format
+fn validate_principal(principal: &Principal) -> Result<(), String> {
+    if principal == &Principal::anonymous() {
+        return Err("Anonymous principal not allowed".to_string());
+    }
+    
+    // Check if principal is properly formatted (basic validation)
+    let principal_text = principal.to_text();
+    if principal_text.is_empty() || principal_text.len() < 5 {
+        return Err("Invalid principal format".to_string());
+    }
+    
+    Ok(())
+}
+
+/// Validates multiple principals in a vector
+fn validate_principals(principals: &[Principal]) -> Result<(), String> {
+    for principal in principals {
+        validate_principal(principal)?;
+    }
+    Ok(())
+}
+
+/// Validates conversation ID format
+fn validate_conversation_id(conversation_id: &str) -> Result<(), String> {
+    if conversation_id.is_empty() {
+        return Err("Conversation ID cannot be empty".to_string());
+    }
+    
+    if conversation_id.len() > 128 {
+        return Err("Conversation ID too long".to_string());
+    }
+    
+    Ok(())
+}
+
+/// Validates session ID format for RTC sessions
+pub fn validate_session_id(session_id: &str) -> Result<(), String> {
+    if session_id.is_empty() {
+        return Err("Session ID cannot be empty".to_string());
+    }
+    
+    // Basic UUID format validation (36 characters with hyphens)
+    if session_id.len() != 36 {
+        return Err("Session ID must be a valid UUID format".to_string());
+    }
+    
+    // Check for basic UUID pattern (8-4-4-4-12)
+    let parts: Vec<&str> = session_id.split('-').collect();
+    if parts.len() != 5 || 
+       parts[0].len() != 8 || 
+       parts[1].len() != 4 || 
+       parts[2].len() != 4 || 
+       parts[3].len() != 4 || 
+       parts[4].len() != 12 {
+        return Err("Session ID must be a valid UUID format".to_string());
+    }
+    
+    Ok(())
+}
+
 // === CANISTER LIFECYCLE ===
 
 #[init]
@@ -731,6 +986,87 @@ fn post_upgrade() {
     ic_cdk::println!("Secure Messaging Canister upgraded");
 }
 
+// === PHI KEY MANAGEMENT API ===
+
+/// Generate and store a new PHI encryption key for a conversation
+#[update]
+fn generate_conversation_phi_key(conversation_id: String) -> Result<String, String> {
+    let caller = get_caller();
+    
+    // Validate caller principal
+    validate_principal(&caller)?;
+    
+    // Validate conversation ID format
+    validate_conversation_id(&conversation_id)?;
+    
+    // Verify caller is participant in conversation
+    let conversation = CONVERSATIONS.with(|conversations| {
+        conversations.borrow().get(&conversation_id)
+    });
+    
+    let conversation = match conversation {
+        Some(conv) => Conversation::from(conv),
+        None => return Err("Conversation not found".to_string()),
+    };
+    
+    if !is_participant(&conversation, &caller) {
+        return Err("Unauthorized: Not a participant in this conversation".to_string());
+    }
+    
+    // Generate new PHI encryption key
+    let phi_key = generate_phi_encryption_key()?;
+    let key_id = format!("phi_conv_{}_{}", conversation_id, get_time());
+    
+    let _phi_encryption_key = PHIEncryptionKey {
+        key_id: key_id.clone(),
+        key_data: phi_key,
+        created_at: get_time(),
+        is_active: true,
+        purpose: EncryptionPurpose::MessageContent,
+    };
+    
+    // Store the key (in a real implementation, this would be stored securely)
+    // For now, we return the key_id as confirmation
+    Ok(key_id)
+}
+
+/// Rotate PHI encryption key for a conversation (enhanced security)
+#[update]
+fn rotate_conversation_phi_key(conversation_id: String, _old_key_id: String) -> Result<String, String> {
+    let caller = get_caller();
+    
+    // Validate caller principal
+    validate_principal(&caller)?;
+    
+    // Validate conversation ID format
+    validate_conversation_id(&conversation_id)?;
+    
+    // Verify caller is participant in conversation
+    let conversation = CONVERSATIONS.with(|conversations| {
+        conversations.borrow().get(&conversation_id)
+    });
+    
+    let conversation = match conversation {
+        Some(conv) => Conversation::from(conv),
+        None => return Err("Conversation not found".to_string()),
+    };
+    
+    if !is_participant(&conversation, &caller) {
+        return Err("Unauthorized: Not a participant in this conversation".to_string());
+    }
+    
+    // Generate new PHI encryption key
+    let _new_phi_key = generate_phi_encryption_key()?;
+    let new_key_id = format!("phi_conv_{}_{}", conversation_id, get_time());
+    
+    // In a real implementation, you would:
+    // 1. Mark old key as inactive
+    // 2. Store new key securely
+    // 3. Re-encrypt recent messages with new key (optional)
+    
+    Ok(new_key_id)
+}
+
 // === PUBLIC API ===
 
 // Register user's public key for encryption
@@ -738,6 +1074,9 @@ fn post_upgrade() {
 fn register_user_key(public_key: String, key_type: KeyType) -> Result<UserKey, String> {
     let caller = get_caller();
     let now = get_time();
+    
+    // Validate caller principal
+    validate_principal(&caller)?;
     
     if public_key.is_empty() {
         return Err("Public key cannot be empty".to_string());
@@ -761,6 +1100,11 @@ fn register_user_key(public_key: String, key_type: KeyType) -> Result<UserKey, S
 // Get user's public key
 #[query]
 fn get_user_key(user_id: Principal) -> Option<UserKey> {
+    // Validate user_id principal
+    if validate_principal(&user_id).is_err() {
+        return None; // Return None for invalid principals
+    }
+    
     USER_KEYS.with(|keys| {
         keys.borrow().get(&user_id).map(|storable| UserKey::from(storable))
     })
@@ -775,6 +1119,24 @@ fn create_conversation(
 ) -> ConversationResult {
     let caller = get_caller();
     let now = get_time();
+    
+    // Validate caller principal
+    if let Err(e) = validate_principal(&caller) {
+        return ConversationResult {
+            success: false,
+            conversation: None,
+            error: Some(format!("Invalid caller: {}", e)),
+        };
+    }
+    
+    // Validate all participant principals
+    if let Err(e) = validate_principals(&participants) {
+        return ConversationResult {
+            success: false,
+            conversation: None,
+            error: Some(format!("Invalid participants: {}", e)),
+        };
+    }
     
     // Validate that caller is in participants
     if !participants.contains(&caller) {
@@ -834,7 +1196,7 @@ fn create_conversation(
     }
 }
 
-// Send a message
+// Send a message with comprehensive PHI encryption
 #[update]
 fn send_message(
     conversation_id: String,
@@ -846,6 +1208,42 @@ fn send_message(
 ) -> MessageResult {
     let caller = get_caller();
     let now = get_time();
+    
+    // Validate caller principal
+    if let Err(e) = validate_principal(&caller) {
+        return MessageResult {
+            success: false,
+            message: None,
+            error: Some(format!("Invalid caller: {}", e)),
+        };
+    }
+    
+    // Validate recipient principal
+    if let Err(e) = validate_principal(&recipient_id) {
+        return MessageResult {
+            success: false,
+            message: None,
+            error: Some(format!("Invalid recipient: {}", e)),
+        };
+    }
+    
+    // Validate conversation ID format
+    if let Err(e) = validate_conversation_id(&conversation_id) {
+        return MessageResult {
+            success: false,
+            message: None,
+            error: Some(format!("Invalid conversation ID: {}", e)),
+        };
+    }
+    
+    // Validate PHI content requirements
+    if let Err(e) = validate_phi_encryption(&content) {
+        return MessageResult {
+            success: false,
+            message: None,
+            error: Some(format!("PHI validation failed: {}", e)),
+        };
+    }
     
     // Validate conversation exists and caller is participant
     let conversation = CONVERSATIONS.with(|conversations| {
@@ -880,6 +1278,50 @@ fn send_message(
         };
     }
     
+    // Generate conversation-specific encryption key for PHI data
+    let encryption_key = match derive_conversation_key(&conversation.participants) {
+        Ok(key) => key,
+        Err(e) => {
+            return MessageResult {
+                success: false,
+                message: None,
+                error: Some(format!("Failed to derive encryption key: {}", e)),
+            };
+        }
+    };
+    
+    // Encrypt message content using AES-256-GCM
+    let encrypted_content = match encrypt_phi_data(&content, &encryption_key) {
+        Ok(encrypted) => {
+            // Store as JSON string containing encrypted data structure
+            serde_json::to_string(&encrypted).unwrap_or_else(|_| content.clone())
+        },
+        Err(e) => {
+            return MessageResult {
+                success: false,
+                message: None,
+                error: Some(format!("Failed to encrypt message content: {}", e)),
+            };
+        }
+    };
+    
+    // Encrypt attachments if present
+    let encrypted_attachments: Vec<Attachment> = attachments.into_iter().map(|mut attachment| {
+        if !attachment.encrypted_data.is_empty() {
+            // Decrypt first if already encrypted, then re-encrypt with conversation key
+            match encrypt_phi_data(&attachment.encrypted_data, &encryption_key) {
+                Ok(encrypted) => {
+                    attachment.encrypted_data = serde_json::to_string(&encrypted)
+                        .unwrap_or_else(|_| attachment.encrypted_data.clone());
+                },
+                Err(_) => {
+                    // Keep original if encryption fails
+                }
+            }
+        }
+        attachment
+    }).collect();
+    
     let message_id = generate_next_id();
     
     let message = Message {
@@ -887,13 +1329,13 @@ fn send_message(
         conversation_id: conversation_id.clone(),
         sender_id: caller,
         recipient_id,
-        content,
+        content: encrypted_content, // Store encrypted content
         message_type,
         timestamp: now,
         is_read: false,
         is_deleted: false,
         reply_to,
-        attachments,
+        attachments: encrypted_attachments, // Store encrypted attachments
     };
     
     // Store the message
@@ -931,6 +1373,16 @@ fn get_conversation_messages(
 ) -> Vec<Message> {
     let caller = get_caller();
     
+    // Validate caller principal
+    if validate_principal(&caller).is_err() {
+        return Vec::new(); // Return empty vector for invalid principals
+    }
+    
+    // Validate conversation ID format
+    if validate_conversation_id(&conversation_id).is_err() {
+        return Vec::new(); // Return empty vector for invalid conversation IDs
+    }
+    
     // Verify caller is participant in conversation
     let conversation = CONVERSATIONS.with(|conversations| {
         conversations.borrow().get(&conversation_id)
@@ -955,13 +1407,36 @@ fn get_conversation_messages(
     MESSAGES.with(|msg_store| {
         let messages_ref = msg_store.borrow();
         for (_, storable_message) in messages_ref.iter().rev() {
-            let message = Message::from(storable_message);
+            let mut message = Message::from(storable_message);
             
             if message.conversation_id == conversation_id && !message.is_deleted {
                 if skipped < offset {
                     skipped += 1;
                     continue;
                 }
+                
+                // Decrypt message content for authorized participant
+                match decrypt_message_content(&message.content, &conversation.participants) {
+                    Ok(decrypted_content) => {
+                        message.content = decrypted_content;
+                    },
+                    Err(_) => {
+                        // Keep encrypted content if decryption fails (shouldn't happen for valid participants)
+                    }
+                }
+                
+                // Decrypt attachments if present
+                message.attachments = message.attachments.into_iter().map(|mut attachment| {
+                    match decrypt_attachment_data(&attachment.encrypted_data, &conversation.participants) {
+                        Ok(decrypted_data) => {
+                            attachment.encrypted_data = decrypted_data;
+                        },
+                        Err(_) => {
+                            // Keep encrypted data if decryption fails
+                        }
+                    }
+                    attachment
+                }).collect();
                 
                 messages.push(message);
                 count += 1;

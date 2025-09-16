@@ -187,35 +187,70 @@ type Result_4 =
    err: text;
    ok: Appointment;
  };
-type Result_35 = 
+type Result_39 = 
  variant {
    err: text;
    ok: AppointmentId;
  };
-type Result_34 = 
+type Result_38 = 
  variant {
    err: text;
    ok: Prescription;
  };
-type Result_33 = 
+type Result_37 = 
  variant {
    err: text;
    ok: SessionNote;
  };
-type Result_32 = 
+type Result_36 = 
  variant {
    err: text;
    ok: Conversation;
  };
-type Result_31 = 
+type Result_35 = 
  variant {
    err: text;
    ok: TreatmentSummary;
  };
-type Result_30 = 
+type Result_34 = 
+ variant {
+   err: text;
+   ok: vec principal;
+ };
+type Result_33 = 
  variant {
    err: text;
    ok: vec AuditLog;
+ };
+type Result_32 = 
+ variant {
+   err: text;
+   ok:
+    record {
+      medicalRecordAccess: nat;
+      recentCriticalEvents: vec AuditLog;
+      roleChanges: nat;
+      securityEvents: nat;
+      totalEvents: nat;
+      unauthorizedAttempts: nat;
+      userRegistrations: nat;
+    };
+ };
+type Result_31 = 
+ variant {
+   err: text;
+   ok: record {
+         totalInteractions: nat;
+         uniqueUsers: nat;
+       };
+ };
+type Result_30 = 
+ variant {
+   err: text;
+   ok: record {
+         id: UserId;
+         role: text;
+       };
  };
 type Result_3 = 
  variant {
@@ -225,35 +260,24 @@ type Result_3 =
 type Result_29 = 
  variant {
    err: text;
-   ok: record {
-         totalInteractions: nat;
-         uniqueUsers: nat;
-       };
+   ok: Doctor;
  };
 type Result_28 = 
  variant {
    err: text;
-   ok: record {
-         id: UserId;
-         role: text;
-       };
+   ok: EncryptedPatientPHI;
  };
 type Result_27 = 
  variant {
    err: text;
-   ok: Doctor;
+   ok: MedicalRecord;
  };
 type Result_26 = 
  variant {
    err: text;
-   ok: MedicalRecord;
- };
-type Result_25 = 
- variant {
-   err: text;
    ok: Patient;
  };
-type Result_24 = 
+type Result_25 = 
  variant {
    err: text;
    ok:
@@ -266,25 +290,35 @@ type Result_24 =
       totalTransactions: nat;
     };
  };
-type Result_23 = 
+type Result_24 = 
  variant {
    err: text;
    ok: vec Prescription;
  };
-type Result_22 = 
+type Result_23 = 
  variant {
    err: text;
    ok: vec Message;
  };
-type Result_21 = 
+type Result_22 = 
  variant {
    err: text;
    ok: vec SessionNote;
  };
-type Result_20 = 
+type Result_21 = 
  variant {
    err: text;
    ok: Therapist;
+ };
+type Result_20 = 
+ variant {
+   err: text;
+   ok:
+    record {
+      daily_platform_usage: bool;
+      pending_feedback: vec AppointmentId;
+      upcoming_appointments: vec AppointmentId;
+    };
  };
 type Result_2 = 
  variant {
@@ -296,51 +330,46 @@ type Result_19 =
    err: text;
    ok:
     record {
-      daily_platform_usage: bool;
-      pending_feedback: vec AppointmentId;
-      upcoming_appointments: vec AppointmentId;
-    };
- };
-type Result_18 = 
- variant {
-   err: text;
-   ok:
-    record {
       advanced_features_cost: nat;
       ai_insights_cost: nat;
       premium_consultation_cost: nat;
       priority_booking_cost: nat;
     };
  };
-type Result_17 = 
+type Result_18 = 
  variant {
    err: text;
    ok: vec TreatmentSummary;
  };
-type Result_16 = 
+type Result_17 = 
  variant {
    err: text;
    ok: vec AccessControlRule;
  };
-type Result_15 = 
+type Result_16 = 
  variant {
    err: text;
    ok: vec ChatInteraction;
  };
-type Result_14 = 
+type Result_15 = 
  variant {
    err: text;
    ok: vec EscrowContract;
  };
-type Result_13 = 
+type Result_14 = 
  variant {
    err: text;
    ok: vec PaymentPlan;
  };
-type Result_12 = 
+type Result_13 = 
  variant {
    err: text;
    ok: vec PaymentTransaction;
+ };
+type Result_12 = 
+ variant {
+   err: text;
+   ok: UserType;
  };
 type Result_11 = 
  variant {
@@ -453,6 +482,9 @@ type Patient =
    email: text;
    emergencyContact: text;
    emergencyContactRelation: opt text;
+   encryptedDateOfBirth: opt EncryptedPHI;
+   encryptedEmergencyContact: opt EncryptedPHI;
+   encryptedPhoneNumber: opt EncryptedPHI;
    firstName: text;
    gender: text;
    id: UserId;
@@ -463,6 +495,16 @@ type Patient =
    preferredLanguage: opt text;
    timezone: opt text;
    updatedAt: int;
+ };
+type PHIDataType = 
+ variant {
+   allergies;
+   diagnostics;
+   labResults;
+   medicalHistory;
+   medications;
+   personalInfo;
+   sessionNotes;
  };
 type Message__1 = 
  record {
@@ -507,6 +549,8 @@ type MedicalRecord =
    createdAt: int;
    description: text;
    doctorId: DoctorId;
+   encryptedAttachments: opt EncryptedPHI;
+   encryptedDescription: opt EncryptedPHI;
    id: RecordId;
    isConfidential: bool;
    patientId: UserId;
@@ -556,6 +600,23 @@ type EncryptionLevel =
    maximum;
    none;
    standard;
+ };
+type EncryptedPatientPHI = 
+ record {
+   encryptedAllergies: opt EncryptedPHI;
+   encryptedCurrentMedications: opt EncryptedPHI;
+   encryptedMedicalHistory: opt EncryptedPHI;
+   encryptedPersonalInfo: opt EncryptedPHI;
+   lastUpdated: int;
+   patientId: UserId;
+ };
+type EncryptedPHI = 
+ record {
+   dataType: PHIDataType;
+   encryptedData: blob;
+   keyId: text;
+   nonce: blob;
+   timestamp: int;
  };
 type DoctorId = text;
 type Doctor = 
@@ -739,6 +800,7 @@ type AccessControlRule =
    userId: UserId;
  };
 service : {
+  assignUserRole: (targetUserId: principal, newRole: UserType) -> (Result);
   bookPremiumConsultation: (doctorId: DoctorId, appointmentData:
    record {
      appointmentType: AppointmentType;
@@ -746,7 +808,7 @@ service : {
      notes: text;
      scheduledDate: text;
      startTime: text;
-   }) -> (Result_35);
+   }) -> (Result_39);
   bookPriorityAppointment: (doctorId: DoctorId, appointmentData:
    record {
      appointmentType: AppointmentType;
@@ -754,7 +816,8 @@ service : {
      notes: text;
      scheduledDate: text;
      startTime: text;
-   }) -> (Result_35);
+   }) -> (Result_39);
+  checkOnboarding: () -> (bool) query;
   claimFaucetTokens: () -> (Result);
   completeAppointmentWithTokens: (appointmentId: AppointmentId) -> (Result);
   completeDoctorConsultation: (appointmentId: AppointmentId,
@@ -787,7 +850,7 @@ service : {
      licenseNumber: text;
      specialty: text;
      yearsOfExperience: nat;
-   }) -> (Result_27);
+   }) -> (Result_29);
   createEscrowContract: (payeeId: principal, amount: nat, serviceId: 
    text, conditions: text, releaseConditions: vec text, autoReleaseHours:
    nat) -> (Result);
@@ -800,7 +863,7 @@ service : {
      patientId: UserId;
      recordType: text;
      title: text;
-   }) -> (Result_26);
+   }) -> (Result_27);
   createPatientProfile: (patientData:
    record {
      dateOfBirth: text;
@@ -810,7 +873,7 @@ service : {
      insuranceProvider: opt text;
      preferredLanguage: opt text;
      timezone: opt text;
-   }) -> (Result_25);
+   }) -> (Result_26);
   createPaymentPlan: (totalAmount: nat, installments: nat, frequency: 
    text, autoPayEnabled: bool) -> (Result);
   createPaymentTransaction: (payeeId: principal, amount: nat, paymentMethod:
@@ -819,7 +882,7 @@ service : {
   createPrescription: (patientId: UserId, sessionId: opt text,
    medicationName: text, dosage: text, frequency: text, duration: text,
    instructions: text, sideEffects: vec text, contraindications: vec text) ->
-   (Result_34);
+   (Result_38);
   createSession: (sessionData:
    record {
      appointmentType: AppointmentType;
@@ -832,7 +895,7 @@ service : {
    }) -> (Result_4);
   createSessionNote: (sessionId: text, patientId: UserId, content: text,
    encryptionLevel: EncryptionLevel, tags: vec text, isConfidential: 
-   bool) -> (Result_33);
+   bool) -> (Result_37);
   createSessionRequest: (therapistId: UserId, sessionType: text,
    preferredDate: text, preferredTime: text, notes: opt text) -> (Result_2);
   createTherapistProfile: (therapistData:
@@ -847,37 +910,43 @@ service : {
      sessionTypes: vec text;
      specialty: text;
      yearsOfExperience: nat;
-   }) -> (Result_20);
+   }) -> (Result_21);
   createTherapyConversation: (therapistId: principal, sessionId: text) ->
-   (Result_32);
+   (Result_36);
   createTreatmentSummary: (patientId: UserId, startDate: text, endDate:
    opt text, diagnosis: vec text, treatmentGoals: vec text,
    interventionsUsed: vec text, progressNotes: text, outcomes: text,
    recommendations: text, followUpPlan: opt text, riskAssessment:
-   opt text) -> (Result_31);
+   opt text) -> (Result_35);
+  exportAuditLogs: (startTime: opt int, endTime: opt int, format: text) ->
+   (Result) query;
+  generateUserPHIKey: () -> (Result);
+  getAdminUsers: () -> (Result_34) query;
   getAllDoctors: () -> (vec Doctor) query;
   getAllTherapists: () -> (vec Therapist) query;
   getAuditLogs: (resourceType: opt text, resourceId: opt text, userId:
-   opt UserId, limit: opt nat) -> (Result_30) query;
-  getChatAnalytics: () -> (Result_29);
+   opt UserId, limit: opt nat) -> (Result_33) query;
+  getAuditSummary: (timeRangeHours: opt nat) -> (Result_32) query;
+  getChatAnalytics: () -> (Result_31);
   getChatEndpoint: () -> (text);
-  getCurrentUser: () -> (Result_28) query;
+  getCurrentUser: () -> (Result_30) query;
   getCurrentUserProfile: () -> (Result_1) query;
   getDoctorAppointments: () -> (vec Appointment) query;
-  getDoctorById: (doctorId: DoctorId) -> (Result_27) query;
+  getDoctorById: (doctorId: DoctorId) -> (Result_29) query;
+  getEncryptedPatientPHI: (patientId: UserId) -> (Result_28) query;
   getFaucetClaimHistory: () -> (vec FaucetClaim) query;
   getFaucetStats: () -> (FaucetStats) query;
-  getMedicalRecordById: (recordId: RecordId) -> (Result_26) query;
+  getMedicalRecordById: (recordId: RecordId) -> (Result_27);
   getMessages: (otherUserId: UserId) -> (vec Message__1) query;
   getPatientAppointments: () -> (vec Appointment) query;
   getPatientMedicalRecords: () -> (vec MedicalRecord) query;
-  getPatientProfile: () -> (Result_25) query;
-  getPaymentStatistics: () -> (Result_24) query;
-  getPrescriptions: (patientId: UserId) -> (Result_23) query;
+  getPatientProfile: () -> (Result_26) query;
+  getPaymentStatistics: () -> (Result_25) query;
+  getPrescriptions: (patientId: UserId) -> (Result_24) query;
   getSecureConversationMessages: (conversationId: text, limit: opt nat64,
-   offset: opt nat64) -> (Result_22);
+   offset: opt nat64) -> (Result_23);
   getSecureMessagingHealth: () -> (Result);
-  getSessionNotes: (patientId: UserId) -> (Result_21) query;
+  getSessionNotes: (patientId: UserId) -> (Result_22) query;
   getSystemStats: () ->
    (record {
       totalAppointments: nat;
@@ -889,19 +958,20 @@ service : {
     }) query;
   getTherapistAvailability: (therapistId: opt UserId) ->
    (vec TherapistAvailability) query;
-  getTherapistById: (therapistId: text) -> (Result_20) query;
+  getTherapistById: (therapistId: text) -> (Result_21) query;
   getTherapistPricing: (therapistId: opt UserId) ->
    (vec SessionPricing) query;
-  getTherapistProfile: () -> (Result_20) query;
-  getTokenEarningOpportunities: () -> (Result_19) query;
-  getTokenSpendingOptions: () -> (Result_18) query;
-  getTreatmentSummaries: (patientId: UserId) -> (Result_17) query;
-  getUserAccessPermissions: () -> (Result_16) query;
-  getUserChatHistory: (sessionId: opt text) -> (Result_15);
+  getTherapistProfile: () -> (Result_21) query;
+  getTokenEarningOpportunities: () -> (Result_20) query;
+  getTokenSpendingOptions: () -> (Result_19) query;
+  getTreatmentSummaries: (patientId: UserId) -> (Result_18) query;
+  getUserAccessPermissions: () -> (Result_17) query;
+  getUserChatHistory: (sessionId: opt text) -> (Result_16);
   getUserConsentRecords: () -> (vec ConsentRecord) query;
-  getUserEscrowContracts: () -> (Result_14) query;
-  getUserPaymentPlans: () -> (Result_13) query;
-  getUserPaymentTransactions: () -> (Result_12) query;
+  getUserEscrowContracts: () -> (Result_15) query;
+  getUserPaymentPlans: () -> (Result_14) query;
+  getUserPaymentTransactions: () -> (Result_13) query;
+  getUserRole: (userId: opt principal) -> (Result_12) query;
   getUserSecureConversations: () -> (Result_11);
   getUserSessionRequests: () -> (vec SessionRequest) query;
   grantAccess: (resourceType: text, resourceId: text, userId: UserId,
@@ -924,6 +994,7 @@ service : {
   logChatInteraction: (sessionId: text, messageContent: text, messageType:
    text) -> (Result);
   markMessageAsRead: (messageId: text) -> (Result);
+  markOnboardingComplete: () -> (Result);
   processAutomaticRefund: (paymentId: text, refundReason: RefundReason) ->
    (Result);
   processPayment: (paymentId: text) -> (Result);
@@ -932,8 +1003,10 @@ service : {
   registerUserEncryptionKey: (publicKey: text, keyType: KeyType) ->
    (Result_9);
   releaseEscrowFunds: (escrowId: text, releaseCondition: text) -> (Result);
+  removeAdminPrivileges: (targetUserId: principal) -> (Result);
   revokeAccess: (resourceType: text, resourceId: text, userId: UserId) ->
    (Result);
+  rotateUserPHIKey: () -> (Result);
   sendMessage: (receiverId: UserId, content: text, messageType: text) ->
    (Result_8);
   sendSecureMessage: (conversationId: text, recipientId: principal, content:
@@ -942,6 +1015,8 @@ service : {
    text, _description: opt text) -> (Result_6);
   setTherapistAvailability: (dayOfWeek: nat, startTime: text, endTime: 
    text, isAvailable: bool) -> (Result_5);
+  storeEncryptedPatientPHI: (patientId: UserId, phiType: PHIDataType,
+   encryptedData: blob) -> (Result);
   submitFeedbackWithTokens: (appointmentId: AppointmentId, _rating: nat,
    _feedback: text) -> (Result);
   updateAppointmentStatus: (appointmentId: AppointmentId, status:

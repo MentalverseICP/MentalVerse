@@ -178,10 +178,11 @@ persistent actor MVTTokenCanister {
   
   public shared(msg) func mint_tokens(to : Account, amount : Nat) : async Result.Result<TxIndex, Text> {
     let caller = msg.caller;
+    let mentalverse_backend_principal = Principal.fromText("cytcv-raaaa-aaaac-a4aoa-cai");
     
-    // Only minting account can mint
-    if (not MVTToken.account_eq({ owner = caller; subaccount = null }, minting_account)) {
-      return #err("Unauthorized: Only minting account can mint tokens");
+    // Only mentalverse_backend canister can mint
+    if (caller != mentalverse_backend_principal) {
+      return #err("Unauthorized: Only mentalverse_backend canister can mint tokens");
     };
     
     // Check max supply
@@ -260,8 +261,13 @@ persistent actor MVTTokenCanister {
 
   // Earning System
   public shared(msg) func earn_tokens(user : Principal, earning_type : EarningType, custom_amount : ?Nat) : async Result.Result<TxIndex, Text> {
-    // Only authorized canisters can call this function
-    let _caller = msg.caller;
+    let caller = msg.caller;
+    let mentalverse_backend_principal = Principal.fromText("cytcv-raaaa-aaaac-a4aoa-cai");
+    
+    // Only mentalverse_backend canister can call this function
+    if (caller != mentalverse_backend_principal) {
+      return #err("Unauthorized: Only mentalverse_backend canister can earn tokens");
+    };
     let amount = switch (custom_amount) {
       case (?amt) amt;
       case null {
@@ -316,8 +322,13 @@ persistent actor MVTTokenCanister {
 
   // Spending System
   public shared(msg) func spend_tokens(user : Principal, spending_type : SpendingType, custom_amount : ?Nat) : async Result.Result<TxIndex, Text> {
-    // Only authorized canisters can call this function
-    let _caller = msg.caller;
+    let caller = msg.caller;
+    let mentalverse_backend_principal = Principal.fromText("cytcv-raaaa-aaaac-a4aoa-cai");
+    
+    // Only mentalverse_backend canister can call this function
+    if (caller != mentalverse_backend_principal) {
+      return #err("Unauthorized: Only mentalverse_backend canister can spend tokens");
+    };
     let amount = switch (custom_amount) {
       case (?amt) amt;
       case null {
@@ -475,8 +486,13 @@ persistent actor MVTTokenCanister {
   };
 
   public shared(msg) func claim_staking_rewards(user : Principal) : async Result.Result<Nat, Text> {
-    // Only authorized canisters can call this function
-    let _caller = msg.caller;
+    let caller = msg.caller;
+    let mentalverse_backend_principal = Principal.fromText("cytcv-raaaa-aaaac-a4aoa-cai");
+    
+    // Only mentalverse_backend canister can call this function
+    if (caller != mentalverse_backend_principal) {
+      return #err("Unauthorized: Only mentalverse_backend canister can claim rewards");
+    };
     let stake_info = switch (stakes.get(user)) {
       case (?stake) stake;
       case null { return #err("No active stake found") };
