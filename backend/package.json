@@ -18,8 +18,11 @@
     "express-rate-limit": "^7.1.5",
     "express-validator": "^7.0.1",
     "helmet": "^7.1.0",
+    "isomorphic-dompurify": "^2.26.0",
+    "jsonwebtoken": "^9.0.2",
     "node-fetch": "^3.3.2",
-    "openai": "^4.20.1"
+    "openai": "^4.20.1",
+    "validator": "^13.15.15"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"

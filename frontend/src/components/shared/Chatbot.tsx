@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from '@/contexts/AuthContext';
 import { httpClient } from '@/services/httpClient';
 import { icAgent } from '@/services/icAgent';
+import SecureInput from '../ui/SecureInput';
+import { ValidationResult } from '../../utils/inputSecurity';
 
 interface Message {
   id: string;
@@ -29,6 +31,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ className = "" }) => {
   ]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [inputValidation, setInputValidation] = useState<ValidationResult | null>(null);
   const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -49,17 +52,24 @@ const Chatbot: React.FC<ChatbotProps> = ({ className = "" }) => {
   }, [isOpen]);
 
   const sendMessage = async () => {
-    if (!inputMessage.trim() || isLoading) return;
+    // Validate input before sending
+    if (!inputMessage.trim() || isLoading || (inputValidation && !inputValidation.isValid)) {
+      return;
+    }
+
+    // Use sanitized value from validation
+    const sanitizedMessage = inputValidation?.sanitizedValue || inputMessage.trim();
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      content: inputMessage,
+      content: sanitizedMessage,
       role: "user",
       timestamp: new Date(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
     setInputMessage("");
+    setInputValidation(null);
     setIsLoading(true);
 
     try {
@@ -71,7 +81,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ className = "" }) => {
         })),
         {
           role: "user",
-          content: inputMessage,
+          content: sanitizedMessage,
         },
       ];
 
@@ -86,7 +96,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ className = "" }) => {
       if (isAuthenticated && user) {
         try {
           await httpClient.logInteraction({
-            message: inputMessage,
+            message: sanitizedMessage,
             emotionalTone: data.analysis?.emotionalTone?.primary || 'neutral',
             sessionId: sessionId
           });
@@ -137,11 +147,14 @@ const Chatbot: React.FC<ChatbotProps> = ({ className = "" }) => {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
+
+
+  const handleInputChange = (value: string) => {
+    setInputMessage(value);
+  };
+
+  const handleValidationChange = (result: ValidationResult) => {
+    setInputValidation(result);
   };
 
   const formatTime = (date: Date) => {
@@ -224,21 +237,25 @@ const Chatbot: React.FC<ChatbotProps> = ({ className = "" }) => {
 
               {/* Input */}
               <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-                <div className="flex space-x-2">
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Share what's on your mind..."
-                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/50 dark:bg-gray-800 dark:text-white text-sm"
-                    disabled={isLoading}
-                  />
+                  <div className="flex space-x-2">
+                    <div className="flex-1">
+                      <SecureInput
+                        inputType="chatMessage"
+                        type="text"
+                        value={inputMessage}
+                        onChange={handleInputChange}
+                        onValidationChange={handleValidationChange}
+                        placeholder="Share what's on your mind..."
+                        disabled={isLoading}
+                        maxLength={1000}
+                        className="text-sm"
+                        showValidation={false}
+                      />
+                    </div>
                   <button
                     type="button"
                     onClick={sendMessage}
-                    disabled={!inputMessage.trim() || isLoading}
+                    disabled={!inputMessage.trim() || isLoading || (inputValidation ? !inputValidation.isValid : false)}
                     className="px-3 py-2 bg-[#18E614] text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-[#18E614]/50  text-md font-semibold hover:bg-[#18E614]/80 transform hover:scale-105"
                     aria-label="Send message"
                   >

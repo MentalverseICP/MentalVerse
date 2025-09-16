@@ -6,6 +6,29 @@ import { body, validationResult } from 'express-validator';
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
 import { icMiddleware, icRoutes, initializeIC } from './src/ic-integration/index.js';
+import {
+  InputSanitizer,
+  sanitizeMiddleware,
+  createValidationRules,
+  handleValidationErrors,
+  suspiciousActivityLimiter,
+  SECURITY_CONFIG
+} from './src/middleware/inputSanitizer.js';
+import {
+  authenticateToken,
+  requireRole,
+  requirePermission,
+  requireOwnership,
+  requireValidSession,
+  auditLog,
+  ROLES,
+  PERMISSIONS
+} from './src/middleware/auth.js';
+import authRoutes from './src/routes/auth.js';
+import chatRoutes from './src/routes/chat.js';
+import consentRoutes from './src/routes/consent.js';
+import dataErasureRoutes from './src/routes/dataErasure.js';
+import { auditAllEvents, auditSecurityEvents } from './src/middleware/auditMiddleware.js';
 
 // Load environment variables
 dotenv.config();
@@ -136,6 +159,10 @@ const limiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Audit middleware
+app.use(auditAllEvents());
+app.use(auditSecurityEvents());
+
 // Chat-specific rate limiting (more restrictive)
 const chatLimiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
@@ -151,8 +178,20 @@ app.use(limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// IC integration middleware
+// Use IC integration middleware
 app.use(icMiddleware);
+
+// Authentication routes (no auth required)
+app.use('/api/auth', authRoutes);
+
+// Chat routes
+app.use('/api/chat', chatRoutes);
+
+// Consent routes
+app.use('/api/consent', consentRoutes);
+
+// Data erasure routes (GDPR Right to be Forgotten)
+app.use('/api/data-erasure', dataErasureRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -167,13 +206,157 @@ app.get('/health', (req, res) => {
 // IC integration routes
 app.use('/api/ic', icRoutes);
 
+// User registration is now handled by /api/auth/register
+// This endpoint is kept for backward compatibility but redirects to the new auth system
+app.post('/api/users/register', (req, res) => {
+  res.status(301).json({
+    message: 'User registration has moved to /api/auth/register',
+    redirectTo: '/api/auth/register'
+  });
+});
+
+// Appointment/session management endpoint
+app.post('/api/appointments',
+  authenticateToken,
+  requirePermission(PERMISSIONS.CREATE_APPOINTMENT),
+  suspiciousActivityLimiter,
+  sanitizeMiddleware({
+    body: {
+      patientId: { type: 'id', idType: 'principal' },
+      therapistId: { type: 'id', idType: 'principal' },
+      notes: { type: 'text', options: { maxLength: SECURITY_CONFIG.MAX_LENGTHS.notes } },
+      sessionType: { type: 'text', options: { pattern: /^(individual|group|family)$/, strict: true } },
+      scheduledDate: { type: 'text' },
+      duration: { type: 'text', options: { pattern: /^[0-9]+$/, maxLength: 3 } }
+    }
+  }),
+  createValidationRules('appointment'),
+  handleValidationErrors,
+  auditLog('CREATE_APPOINTMENT', 'appointment'),
+  async (req, res) => {
+    try {
+      const {
+        patientId,
+        therapistId,
+        notes,
+        sessionType,
+        scheduledDate,
+        duration
+      } = req.body;
+      
+      const { principal: currentUserPrincipal, role: currentUserRole } = req.user;
+      
+      // Role-based validation
+      if (currentUserRole === ROLES.PATIENT) {
+        // Patients can only create appointments for themselves
+        if (patientId !== currentUserPrincipal) {
+          return res.status(403).json({
+            error: 'Access denied',
+            message: 'Patients can only create appointments for themselves'
+          });
+        }
+      } else if (currentUserRole === ROLES.THERAPIST) {
+        // Therapists can only create appointments where they are the therapist
+        if (therapistId !== currentUserPrincipal) {
+          return res.status(403).json({
+            error: 'Access denied',
+            message: 'Therapists can only create appointments for their own practice'
+          });
+        }
+      }
+      // Admins can create appointments for anyone
+      
+      // Validate required fields
+      if (!patientId || !therapistId) {
+        return res.status(400).json({
+          error: 'Missing required appointment information',
+          message: 'Patient ID and Therapist ID are required'
+        });
+      }
+      
+      // Validate date format
+      const appointmentDate = new Date(scheduledDate);
+      if (isNaN(appointmentDate.getTime())) {
+        return res.status(400).json({
+          error: 'Invalid date format',
+          message: 'Please provide a valid date for the appointment'
+        });
+      }
+      
+      // Ensure appointment is in the future
+      if (appointmentDate <= new Date()) {
+        return res.status(400).json({
+          error: 'Invalid appointment time',
+          message: 'Appointment must be scheduled for a future date'
+        });
+      }
+      
+      // Create appointment object
+      const appointment = {
+        id: `appt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        patientId,
+        therapistId,
+        notes: notes || '',
+        sessionType,
+        scheduledDate: appointmentDate.toISOString(),
+        duration: parseInt(duration) || 60,
+        status: 'scheduled',
+        createdAt: new Date().toISOString(),
+        createdBy: currentUserPrincipal
+      };
+      
+      // IC integration for secure appointment creation
+      const userPrincipal = req.headers['x-user-principal'];
+      if (req.icAgent && userPrincipal) {
+        try {
+          await req.userSession.createAppointment(userPrincipal, appointment);
+          appointment.icCreated = true;
+        } catch (icError) {
+          console.warn('IC appointment creation warning:', icError.message);
+          appointment.icCreated = false;
+        }
+      }
+      
+      res.status(201).json({
+        success: true,
+        appointment: {
+          id: appointment.id,
+          patientId: appointment.patientId,
+          therapistId: appointment.therapistId,
+          sessionType: appointment.sessionType,
+          scheduledDate: appointment.scheduledDate,
+          duration: appointment.duration,
+          status: appointment.status,
+          createdBy: appointment.createdBy
+        },
+        message: 'Appointment created successfully'
+      });
+      
+    } catch (error) {
+      console.error('Appointment creation error:', error);
+      res.status(500).json({
+        error: 'Failed to create appointment',
+        message: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+      });
+    }
+  }
+);
+
 // Chat interaction logging endpoint
 app.post('/api/log-interaction',
-  [
-    body('message').isString().isLength({ min: 1, max: 2000 }).withMessage('Message must be between 1 and 2000 characters'),
-    body('emotionalTone').optional().isString(),
-    body('sessionId').isString().withMessage('Session ID is required'),
-  ],
+  authenticateToken,
+  requirePermission(PERMISSIONS.LOG_INTERACTION),
+  suspiciousActivityLimiter,
+  sanitizeMiddleware({ 
+    body: {
+      message: { type: 'text', options: { maxLength: SECURITY_CONFIG.MAX_LENGTHS.message } },
+      emotionalTone: { type: 'text', options: { pattern: /^[a-zA-Z]+$/ } },
+      sessionId: { type: 'id', idType: 'sessionId' }
+    }
+  }),
+  createValidationRules('logInteraction'),
+  handleValidationErrors,
+  auditLog('LOG_INTERACTION', 'interaction'),
   async (req, res) => {
     try {
       const errors = validationResult(req);
@@ -185,7 +368,20 @@ app.post('/api/log-interaction',
       }
 
       const { message, emotionalTone, sessionId } = req.body;
-      const userPrincipal = req.headers['x-user-principal'];
+      const { principal: currentUserPrincipal, role: currentUserRole } = req.user;
+      const userPrincipal = req.headers['x-user-principal'] || currentUserPrincipal;
+      
+      // Role-based validation for interaction logging
+      if (currentUserRole === ROLES.PATIENT) {
+        // Patients can only log interactions for themselves
+        if (userPrincipal !== currentUserPrincipal) {
+          return res.status(403).json({
+            error: 'Access denied',
+            message: 'Patients can only log interactions for themselves'
+          });
+        }
+      }
+      // Therapists and admins can log interactions for others (for system purposes)
       
       const logEntry = {
         id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -193,7 +389,9 @@ app.post('/api/log-interaction',
         emotionalTone: emotionalTone,
         sessionId: sessionId,
         timestamp: new Date().toISOString(),
-        status: 'logged'
+        status: 'logged',
+        loggedBy: currentUserPrincipal,
+        loggerRole: currentUserRole
       };
       
       // IC integration for secure message logging
@@ -204,7 +402,11 @@ app.post('/api/log-interaction',
             userPrincipal,
             message,
             emotionalTone,
-            sessionId
+            sessionId,
+            {
+              loggedBy: currentUserPrincipal,
+              loggerRole: currentUserRole
+            }
           );
           
           // Update user session stats
@@ -224,7 +426,14 @@ app.post('/api/log-interaction',
       
       res.json({
         success: true,
-        logEntry: logEntry,
+        logEntry: {
+          id: logEntry.id,
+          emotionalTone: logEntry.emotionalTone,
+          sessionId: logEntry.sessionId,
+          timestamp: logEntry.timestamp,
+          status: logEntry.status,
+          loggedBy: logEntry.loggedBy
+        },
         message: 'Chat interaction logged successfully'
       });
       
@@ -298,14 +507,76 @@ app.get('/api/resources', (req, res) => {
 
 // Chat endpoint with OpenAI integration
 app.post('/api/chat', 
+  authenticateToken,
+  requirePermission(PERMISSIONS.SEND_MESSAGE),
   chatLimiter,
+  suspiciousActivityLimiter,
+  sanitizeMiddleware({
+    body: {
+      messages: { type: 'array' },
+      sessionId: { type: 'id', idType: 'sessionId' },
+      userId: { type: 'id', idType: 'principal' }
+    }
+  }),
   [
     body('messages').isArray().withMessage('Messages must be an array'),
     body('messages.*.role').isIn(['user', 'assistant', 'system']).withMessage('Invalid message role'),
-    body('messages.*.content').isString().isLength({ min: 1, max: 2000 }).withMessage('Message content must be between 1 and 2000 characters'),
+    body('messages.*.content').isString().isLength({ min: 1, max: SECURITY_CONFIG.MAX_LENGTHS.message }).withMessage(`Message content must be between 1 and ${SECURITY_CONFIG.MAX_LENGTHS.message} characters`),
+    body('userId').optional().isString().withMessage('User ID must be a string')
   ],
+  handleValidationErrors,
+  auditLog('SEND_MESSAGE', 'chat'),
   async (req, res) => {
     try {
+      let { messages, userId } = req.body;
+      const { principal: currentUserPrincipal, role: currentUserRole } = req.user;
+      
+      // Role-based validation for user ownership
+      if (userId && currentUserRole === ROLES.PATIENT) {
+        // Patients can only send messages as themselves
+        if (userId !== currentUserPrincipal) {
+          return res.status(403).json({
+            error: 'Access denied',
+            message: 'Patients can only send messages as themselves'
+          });
+        }
+      }
+      // Therapists and admins can send messages on behalf of others (for system purposes)
+      
+      // Additional sanitization for messages array content
+      if (Array.isArray(messages)) {
+        messages = messages.map(msg => {
+          if (msg && typeof msg === 'object') {
+            return {
+              role: msg.role,
+              content: InputSanitizer.sanitizeText(msg.content, {
+                maxLength: SECURITY_CONFIG.MAX_LENGTHS.message,
+                allowHtml: false
+              })
+            };
+          }
+          return msg;
+        }).filter(msg => msg && msg.content && msg.content.trim().length > 0);
+      }
+      
+      // Check for suspicious patterns in message content
+      const messageContent = messages.map(m => m.content).join(' ');
+      const suspiciousCheck = InputSanitizer.detectSuspiciousInput(messageContent);
+      
+      if (suspiciousCheck.isSuspicious && suspiciousCheck.severity === 'high') {
+        console.warn('Suspicious chat input detected:', {
+          ip: req.ip,
+          userAgent: req.get('User-Agent'),
+          patterns: suspiciousCheck.patterns,
+          messagePreview: messageContent.substring(0, 100)
+        });
+        
+        return res.status(400).json({
+          error: 'Invalid message content',
+          message: 'Your message contains potentially harmful content'
+        });
+      }
+
       // Check for validation errors
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -314,8 +585,6 @@ app.post('/api/chat',
           details: errors.array()
         });
       }
-
-      const { messages } = req.body;
 
       // Ensure we have the OpenAI API key
       if (!process.env.OPENAI_API_KEY) {
@@ -395,7 +664,8 @@ Remember: You're creating a safe, supportive space for mental health growth and 
       
       // IC integration for user session and token operations
       const sessionId = req.headers['x-session-id'] || 'anonymous';
-      const userPrincipal = req.headers['x-user-principal'];
+      const userPrincipal = req.headers['x-user-principal'] || currentUserPrincipal;
+      const effectiveUserId = userId || currentUserPrincipal;
       
       // Update user session with chat interaction
       if (req.icAgent && userPrincipal) {
@@ -495,6 +765,19 @@ app.listen(PORT, () => {
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`💬 Chat API: http://localhost:${PORT}/api/chat`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  
+  // Start automatic token cleanup job (every 30 minutes)
+  setInterval(() => {
+    try {
+      const { JWTService } = require('./src/middleware/auth.js');
+      JWTService.cleanupExpiredTokens();
+      console.log(`🧹 Token cleanup completed at ${new Date().toISOString()}`);
+    } catch (error) {
+      console.error('Automatic token cleanup failed:', error);
+    }
+  }, 30 * 60 * 1000); // 30 minutes
+  
+  console.log('🔄 Automatic token cleanup job started (every 30 minutes)');
 });
 
 // Graceful shutdown

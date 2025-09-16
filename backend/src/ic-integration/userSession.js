@@ -97,6 +97,26 @@ class UserSessionService {
     return null;
   }
 
+  // Get all sessions by principal (for security logout)
+  getAllSessionsByPrincipal(principal) {
+    const userSessions = [];
+    const now = Date.now();
+    
+    for (const [sessionId, session] of this.sessions.entries()) {
+      if (session.principal === principal) {
+        // Check if session is still valid
+        if (now - session.lastActivity <= this.sessionTimeout) {
+          userSessions.push({ sessionId, session });
+        } else {
+          // Clean up expired session
+          this.sessions.delete(sessionId);
+        }
+      }
+    }
+    
+    return userSessions;
+  }
+
   // Update user stats in session
   async updateUserStats(sessionId) {
     const session = this.sessions.get(sessionId);

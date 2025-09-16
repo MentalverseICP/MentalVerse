@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { User, Stethoscope, ArrowUpRight, CheckCircle } from 'lucide-react';
+import SecureInput from '../components/ui/SecureInput';
+import { ValidationResult } from '../utils/inputSecurity';
 
 interface OnboardingFormData {
   firstName: string;
@@ -54,13 +56,21 @@ const Onboarding: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
+  const [fieldValidations, setFieldValidations] = useState<Record<string, ValidationResult>>({});
+  const [fieldValidityStates, setFieldValidityStates] = useState<Record<string, boolean>>({});
 
-  const handleInputChange = (field: keyof OnboardingFormData, value: string) => {
+  const handleInputChange = (field: keyof OnboardingFormData, value: string, isValid: boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    // Track field validity for form submission logic
+    setFieldValidityStates(prev => ({ ...prev, [field]: isValid }));
     // Clear validation error when user starts typing
     if (validationErrors[field as keyof ValidationErrors]) {
       setValidationErrors(prev => ({ ...prev, [field]: undefined }));
     }
+  };
+
+  const handleValidationChange = (field: keyof OnboardingFormData) => (result: ValidationResult) => {
+    setFieldValidations(prev => ({ ...prev, [field]: result }));
   };
 
   const handleRoleSelect = (role: 'patient' | 'therapist') => {
@@ -90,8 +100,10 @@ const Onboarding: React.FC = () => {
   // Change validateStep to return errors, not set state
   const validateStep = (step: number): ValidationErrors => {
     const errors: ValidationErrors = {};
+    let stepFields: (keyof OnboardingFormData)[] = [];
 
     if (step === 1) {
+      stepFields = ['firstName', 'lastName', 'email'];
       if (!validateRequired(formData.firstName)) {
         errors.firstName = 'First name is required';
       } else if (formData.firstName.length < 2) {
@@ -116,6 +128,7 @@ const Onboarding: React.FC = () => {
     }
 
     if (step === 3 && formData.role === 'therapist') {
+      stepFields = ['specialization', 'experience', 'licenseNumber'];
       if (!validateRequired(formData.specialization || '')) {
         errors.specialization = 'Specialization is required';
       }
@@ -132,6 +145,7 @@ const Onboarding: React.FC = () => {
     }
 
     if (step === 3 && formData.role === 'patient') {
+      stepFields = ['age', 'phoneNumber', 'emergencyContact'];
       if (!validateRequired(formData.age || '')) {
         errors.age = 'Age is required';
       } else if (!validateAge(formData.age || '')) {
@@ -146,6 +160,18 @@ const Onboarding: React.FC = () => {
         errors.emergencyContact = 'Emergency contact is required';
       } else if (!validatePhoneNumber(formData.emergencyContact || '')) {
         errors.emergencyContact = 'Please enter a valid emergency contact number';
+      }
+    }
+
+    // Check if all fields in current step are valid using fieldValidations and fieldValidityStates
+    for (const field of stepFields) {
+      const validation = fieldValidations[field];
+      const isFieldValid = fieldValidityStates[field] !== false; // Default to true if not set
+      
+      if (validation && !validation.isValid) {
+        errors[field as keyof ValidationErrors] = validation.errors[0] || `${field} is invalid`;
+      } else if (!isFieldValid) {
+        errors[field as keyof ValidationErrors] = `${field} validation failed`;
       }
     }
 
@@ -265,61 +291,43 @@ const Onboarding: React.FC = () => {
             {currentStep === 1 && (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      First Name *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.firstName}
-                      onChange={(e) => handleInputChange('firstName', e.target.value)}
-                      className={`w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#18E614] focus:border-transparent ${
-                        validationErrors.firstName ? 'border-red-500' : 'border-input'
-                      }`}
-                      placeholder="Enter first name"
-                      required
-                    />
-                    {validationErrors.firstName && (
-                      <p className="text-red-500 text-xs mt-1">{validationErrors.firstName}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Last Name *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.lastName}
-                      onChange={(e) => handleInputChange('lastName', e.target.value)}
-                      className={`w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#18E614] focus:border-transparent ${
-                        validationErrors.lastName ? 'border-red-500' : 'border-input'
-                      }`}
-                      placeholder="Enter last name"
-                      required
-                    />
-                    {validationErrors.lastName && (
-                      <p className="text-red-500 text-xs mt-1">{validationErrors.lastName}</p>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Email Address *
-                  </label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#18E614] focus:border-transparent ${
-                      validationErrors.email ? 'border-red-500' : 'border-input'
-                    }`}
-                    placeholder="Enter email address"
+                  <SecureInput
+                    inputType="name"
+                    type="text"
+                    label="First Name"
+                    value={formData.firstName}
+                    onChange={(value, isValid) => handleInputChange('firstName', value, isValid)}
+                    onValidationChange={handleValidationChange('firstName')}
+                    placeholder="Enter first name"
                     required
+                    maxLength={50}
+                    autoComplete="given-name"
                   />
-                  {validationErrors.email && (
-                    <p className="text-red-500 text-xs mt-1">{validationErrors.email}</p>
-                  )}
+                  <SecureInput
+                    inputType="name"
+                    type="text"
+                    label="Last Name"
+                    value={formData.lastName}
+                    onChange={(value, isValid) => handleInputChange('lastName', value, isValid)}
+                    onValidationChange={handleValidationChange('lastName')}
+                    placeholder="Enter last name"
+                    required
+                    maxLength={50}
+                    autoComplete="family-name"
+                  />
                 </div>
+                <SecureInput
+                  inputType="email"
+                  type="email"
+                  label="Email Address"
+                  value={formData.email}
+                  onChange={(value, isValid) => handleInputChange('email', value, isValid)}
+                  onValidationChange={handleValidationChange('email')}
+                  placeholder="Enter email address"
+                  required
+                  maxLength={100}
+                  autoComplete="email"
+                />
               </div>
             )}
 
@@ -377,61 +385,42 @@ const Onboarding: React.FC = () => {
             {/* Step 3: Role-specific Information */}
             {currentStep === 3 && formData.role === 'therapist' && (
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Specialization *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.specialization}
-                    onChange={(e) => handleInputChange('specialization', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#18E614] focus:border-transparent ${
-                      validationErrors.specialization ? 'border-red-500' : 'border-input'
-                    }`}
-                    placeholder="e.g., Clinical Psychology, Psychiatry"
-                    required
-                  />
-                  {validationErrors.specialization && (
-                    <p className="text-red-500 text-xs mt-1">{validationErrors.specialization}</p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Years of Experience *
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.experience}
-                    onChange={(e) => handleInputChange('experience', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#18E614] focus:border-transparent ${
-                      validationErrors.experience ? 'border-red-500' : 'border-input'
-                    }`}
-                    placeholder="e.g., 5"
-                    min="0"
-                    required
-                  />
-                  {validationErrors.experience && (
-                    <p className="text-red-500 text-xs mt-1">{validationErrors.experience}</p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    License Number *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.licenseNumber}
-                    onChange={(e) => handleInputChange('licenseNumber', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#18E614] focus:border-transparent ${
-                      validationErrors.licenseNumber ? 'border-red-500' : 'border-input'
-                    }`}
-                    placeholder="Enter your professional license number"
-                    required
-                  />
-                  {validationErrors.licenseNumber && (
-                    <p className="text-red-500 text-xs mt-1">{validationErrors.licenseNumber}</p>
-                  )}
-                </div>
+                <SecureInput
+                  inputType="specialization"
+                  type="text"
+                  label="Specialization"
+                  value={formData.specialization || ''}
+                  onChange={(value, isValid) => handleInputChange('specialization', value, isValid)}
+                  onValidationChange={handleValidationChange('specialization')}
+                  placeholder="e.g., Clinical Psychology, Psychiatry"
+                  required
+                  maxLength={100}
+                />
+                <SecureInput
+                  inputType="age"
+                  type="text"
+                  label="Years of Experience"
+                  value={formData.experience || ''}
+                  onChange={(value, isValid) => handleInputChange('experience', value, isValid)}
+                  onValidationChange={handleValidationChange('experience')}
+                  placeholder="e.g., 5"
+                  required
+                  maxLength={2}
+                />
+                <SecureInput
+                  inputType="licenseNumber"
+                  type="text"
+                  label="License Number"
+                  value={formData.licenseNumber || ''}
+                  onChange={(value, isValid) => handleInputChange('licenseNumber', value, isValid)}
+                  onValidationChange={handleValidationChange('licenseNumber')}
+                  placeholder="Enter your professional license number"
+                  required
+                  maxLength={50}
+                />
+                {validationErrors.licenseNumber && (
+                  <p className="text-red-500 text-xs mt-1">{validationErrors.licenseNumber}</p>
+                )}
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
                     Phone Number
@@ -439,7 +428,7 @@ const Onboarding: React.FC = () => {
                   <input
                     type="tel"
                     value={formData.phoneNumber}
-                    onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+                    onChange={(e) => handleInputChange('phoneNumber', e.target.value, true)}
                     className={`w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#18E614] focus:border-transparent ${
                       validationErrors.phoneNumber ? 'border-red-500' : 'border-input'
                     }`}
@@ -455,7 +444,7 @@ const Onboarding: React.FC = () => {
                   </label>
                   <textarea
                     value={formData.bio}
-                    onChange={(e) => handleInputChange('bio', e.target.value)}
+                    onChange={(e) => handleInputChange('bio', e.target.value, true)}
                     className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#18E614] focus:border-transparent"
                     placeholder="Tell us about your professional background and approach to therapy..."
                     rows={3}
@@ -466,98 +455,74 @@ const Onboarding: React.FC = () => {
 
             {currentStep === 3 && formData.role === 'patient' && (
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Age *
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.age}
-                    onChange={(e) => handleInputChange('age', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#18E614] focus:border-transparent ${
-                      validationErrors.age ? 'border-red-500' : 'border-input'
-                    }`}
-                    placeholder="Enter your age"
-                    min="13"
-                    max="120"
-                    required
-                  />
-                  {validationErrors.age && (
-                    <p className="text-red-500 text-xs mt-1">{validationErrors.age}</p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Phone Number *
-                  </label>
-                  <input
-                    type="tel"
-                    value={formData.phoneNumber}
-                    onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#18E614] focus:border-transparent ${
-                      validationErrors.phoneNumber ? 'border-red-500' : 'border-input'
-                    }`}
-                    placeholder="+1 (555) 123-4567"
-                    required
-                  />
-                  {validationErrors.phoneNumber && (
-                    <p className="text-red-500 text-xs mt-1">{validationErrors.phoneNumber}</p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Emergency Contact Number *
-                  </label>
-                  <input
-                    type="tel"
-                    value={formData.emergencyContact}
-                    onChange={(e) => handleInputChange('emergencyContact', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#18E614] focus:border-transparent ${
-                      validationErrors.emergencyContact ? 'border-red-500' : 'border-input'
-                    }`}
-                    placeholder="+1 (555) 987-6543"
-                    required
-                  />
-                  {validationErrors.emergencyContact && (
-                    <p className="text-red-500 text-xs mt-1">{validationErrors.emergencyContact}</p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Medical History (Optional)
-                  </label>
-                  <textarea
-                    value={formData.medicalHistory}
-                    onChange={(e) => handleInputChange('medicalHistory', e.target.value)}
-                    className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#18E614] focus:border-transparent"
-                    placeholder="Any relevant medical history or conditions..."
-                    rows={2}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Current Medications (Optional)
-                  </label>
-                  <textarea
-                    value={formData.currentMedications}
-                    onChange={(e) => handleInputChange('currentMedications', e.target.value)}
-                    className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#18E614] focus:border-transparent"
-                    placeholder="List any current medications..."
-                    rows={2}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">
-                    Therapy Goals (Optional)
-                  </label>
-                  <textarea
-                    value={formData.therapyGoals}
-                    onChange={(e) => handleInputChange('therapyGoals', e.target.value)}
-                    className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#18E614] focus:border-transparent"
-                    placeholder="What do you hope to achieve through therapy?"
-                    rows={2}
-                  />
-                </div>
+                <SecureInput
+                  inputType="age"
+                  type="text"
+                  label="Age"
+                  value={formData.age || ''}
+                  onChange={(value, isValid) => handleInputChange('age', value, isValid)}
+                  onValidationChange={handleValidationChange('age')}
+                  placeholder="Enter your age (13-120)"
+                  required
+                  maxLength={3}
+                />
+                <SecureInput
+                  inputType="phone"
+                  type="tel"
+                  label="Phone Number"
+                  value={formData.phoneNumber || ''}
+                  onChange={(value, isValid) => handleInputChange('phoneNumber', value, isValid)}
+                  onValidationChange={handleValidationChange('phoneNumber')}
+                  placeholder="+1 (555) 123-4567"
+                  required
+                  maxLength={20}
+                  autoComplete="tel"
+                />
+                <SecureInput
+                  inputType="phone"
+                  type="tel"
+                  label="Emergency Contact Number"
+                  value={formData.emergencyContact || ''}
+                  onChange={(value, isValid) => handleInputChange('emergencyContact', value, isValid)}
+                  onValidationChange={handleValidationChange('emergencyContact')}
+                  placeholder="+1 (555) 987-6543"
+                  required
+                  maxLength={20}
+                  autoComplete="tel"
+                />
+                <SecureInput
+                  inputType="medicalHistory"
+                  type="textarea"
+                  label="Medical History (Optional)"
+                  value={formData.medicalHistory || ''}
+                  onChange={(value, isValid) => handleInputChange('medicalHistory', value, isValid)}
+                  onValidationChange={handleValidationChange('medicalHistory')}
+                  placeholder="Any relevant medical history or conditions..."
+                  maxLength={1000}
+                  rows={3}
+                />
+                <SecureInput
+                  inputType="medications"
+                  type="textarea"
+                  label="Current Medications (Optional)"
+                  value={formData.currentMedications || ''}
+                  onChange={(value, isValid) => handleInputChange('currentMedications', value, isValid)}
+                  onValidationChange={handleValidationChange('currentMedications')}
+                  placeholder="List any current medications..."
+                  maxLength={1000}
+                  rows={3}
+                />
+                <SecureInput
+                  inputType="therapyGoals"
+                  type="textarea"
+                  label="Therapy Goals (Optional)"
+                  value={formData.therapyGoals || ''}
+                  onChange={(value, isValid) => handleInputChange('therapyGoals', value, isValid)}
+                  onValidationChange={handleValidationChange('therapyGoals')}
+                  placeholder="What do you hope to achieve through therapy?"
+                  maxLength={1000}
+                  rows={3}
+                />
               </div>
             )}
 
