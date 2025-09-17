@@ -16,6 +16,7 @@
       "type": "motoko",
       "dependencies": [
         "internet_identity",
+        "mvt_token_canister",
         "secure_messaging"
       ]
     },

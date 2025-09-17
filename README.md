@@ -3,20 +3,58 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen.svg)](#)
 [![Web3](https://img.shields.io/badge/Web3-Enabled-blue.svg)](#)
+[![Regional Round](https://img.shields.io/badge/Regional%20Round-Upgrades-gold.svg)](#)
 
 MentalVerse is the world's first Web3-powered mental health support platform that combines blockchain technology, AI assistance, and community-driven care to revolutionize mental healthcare accessibility and privacy.
 
-## 🌟 Overview
+## 🏆 Regional Round Upgrades (December 2024)
+
+This release includes significant enhancements and new features developed for the regional competition round:
+
+### 🎯 **Enhanced Testnet Faucet System**
+- **Daily Token Claims**: Users can claim up to 1,000 MVT tokens daily for platform testing
+- **Claim History Tracking**: Complete audit trail of all token claims with timestamps
+- **Real-time Statistics**: Live dashboard showing claimed amounts and remaining daily allowance
+- **Eligibility Verification**: Automated daily limit checking and countdown timers
+- **Mobile-Responsive Design**: Optimized interface for all device types
+
+### 🔧 **Technical Infrastructure Improvements**
+- **Production-Ready Backend**: Secure Node.js API server with OpenAI integration
+- **Comprehensive Security**: HIPAA and GDPR compliance implementation
+- **Advanced Error Handling**: Robust error tracking and user feedback systems
+- **Environment Configuration**: Automated setup for development and production environments
+- **TypeScript Optimization**: Enhanced type safety and code quality improvements
+
+### 📚 **Enhanced Documentation Suite**
+- **Deployment Guides**: Step-by-step production deployment instructions
+- **Security Implementation**: Comprehensive security and compliance documentation
+- **Testing Framework**: Complete manual and automated testing procedures
+- **API Documentation**: Detailed backend API reference and integration guides
+- **Progress Tracking**: Systematic development milestone documentation
+
+### 🎨 **User Experience Enhancements**
+- **Improved UI Components**: Modern, accessible interface design
+- **Real-time Feedback**: Enhanced status indicators and user messaging
+- **Performance Optimization**: Faster load times and smoother interactions
+- **Cross-platform Compatibility**: Consistent experience across all devices
+
+## 🌟 Platform Overview
 
 MentalVerse leverages cutting-edge Web3 technologies to create a decentralized, private, and community-driven mental health ecosystem that provides:
 
+### Core Features
 - **Peer Support Groups** - Anonymous, secure community connections
 - **Professional Therapy** - Licensed therapists with blockchain-verified credentials
-- **AI-Powered Support** - 24/7 intelligent mental health assistance
+- **AI-Powered Support** - 24/7 intelligent mental health assistance powered by OpenAI GPT-4
 - **Specialized Mentorship** - Identity-based and condition-specific guidance
 - **Token Economics** - MVT tokens for incentivizing participation and accessing services
-- **Comprehensive Error Handling** - Robust error tracking and user feedback
-- **Production-Ready Deployment** - Environment-aware configuration and deployment guides
+
+### Technical Excellence
+- **Comprehensive Security** - HIPAA and GDPR compliant infrastructure
+- **Production-Ready Architecture** - Scalable backend with secure API endpoints
+- **Advanced Error Handling** - Robust error tracking and user feedback systems
+- **Multi-Environment Support** - Automated configuration for development and production
+- **Cross-Chain Integration** - Internet Computer Protocol with Bitcoin and Ethereum bridges
 
 ## 🪙 MVT Token (MentalVerse Token)
 
@@ -150,29 +188,57 @@ The platform features a robust staking mechanism that allows users to:
 
 ```
 mentalverse/
-├── frontend/                 # React frontend application
+├── frontend/                    # React frontend application
 │   ├── src/
-│   │   ├── components/      # Reusable UI components
-│   │   ├── pages/          # Application pages
-│   │   ├── services/       # API and blockchain services
-│   │   └── types/          # TypeScript type definitions
+│   │   ├── components/         # Reusable UI components
+│   │   │   └── TestnetFaucet/  # MVT token faucet component
+│   │   ├── pages/             # Application pages
+│   │   ├── services/          # API and blockchain services
+│   │   └── types/             # TypeScript type definitions
 │   └── package.json
-├── backend/                 # Node.js API server
-│   ├── server.js           # Express server setup
-│   └── package.json
-├── mentalverse/            # ICP blockchain canisters
+├── backend/                     # Node.js API server
 │   ├── src/
-│   │   └── mentalverse_backend/  # Motoko smart contracts
+│   │   ├── routes/            # API route handlers
+│   │   ├── middleware/        # Express middleware
+│   │   └── services/          # Business logic services
+│   ├── docs/                  # Backend documentation
+│   │   ├── SECURITY_IMPLEMENTATION_README.md
+│   │   ├── COMPLIANCE_DOCUMENTATION.md
+│   │   └── SECURITY_TEST_CHECKLIST.md
+│   ├── server.js              # Express server setup
+│   └── package.json
+├── mentalverse/                 # ICP blockchain canisters
+│   ├── src/
+│   │   ├── mentalverse_backend/    # Main Motoko smart contracts
+│   │   ├── mvt_token_canister/     # MVT token implementation
+│   │   └── secure_messaging/       # Encrypted messaging (Rust)
 │   └── dfx.json
-├── docs/                   # Documentation site
-│   ├── docs/              # Documentation content
+├── docs/                        # Documentation site (Docusaurus)
+│   ├── docs/                   # Documentation content
+│   │   ├── api/               # API documentation
+│   │   ├── features/          # Feature guides
+│   │   ├── mentorship/        # Mentorship program docs
+│   │   ├── user-guides/       # User instruction guides
+│   │   └── web3-technology/   # Blockchain integration docs
+│   ├── blog/                  # Platform blog posts
 │   └── docusaurus.config.js
-└── README.md              # This file
+├── DEPLOYMENT_GUIDE.md          # Production deployment instructions
+├── BACKEND_DEPLOYMENT_GUIDE.md  # Backend-specific deployment
+├── TESTING_GUIDE.md             # Comprehensive testing procedures
+├── PROGRESS.md                  # Development milestone tracking
+├── setup-env.js                # Environment configuration automation
+└── README.md                   # This file
 ```
 
 ## 🔧 Development
 
 ### Available Scripts
+
+#### Environment Setup
+```bash
+node setup-env.js development  # Configure development environment
+node setup-env.js production   # Configure production environment
+```
 
 #### Frontend
 ```bash
@@ -188,14 +254,28 @@ npm run type-check   # TypeScript type checking
 npm start           # Start production server
 npm run dev         # Start development server with hot reload
 npm test            # Run tests
+npm run security    # Run security tests
 ```
 
 #### Blockchain
 ```bash
-dfx start           # Start local ICP replica
+dfx start --clean   # Start local ICP replica (clean state)
 dfx deploy          # Deploy all canisters
 dfx build           # Build canisters
 dfx canister status # Check canister status
+./test_inter_canister.sh  # Test inter-canister communication
+```
+
+#### Testing & Quality Assurance
+```bash
+# Manual testing procedures
+npm run test:manual     # Run manual testing checklist
+npm run test:security   # Security compliance testing
+npm run test:integration # Integration testing
+
+# Code quality
+npm run lint:fix        # Auto-fix linting issues
+npm run type-check:watch # Watch mode type checking
 ```
 
 ## 🔒 Security & Privacy
@@ -231,35 +311,60 @@ We welcome contributions from the community! Please read our [Contributing Guide
 4. Add tests if applicable
 5. Submit a pull request
 
-## 📚 Documentation
+## 📚 Documentation & Guides
 
 Comprehensive documentation is available at [docs.mentalverse.com](https://docs.mentalverse.com), including:
 
-- **User Guides**: How to use the platform
-- **API Documentation**: Backend API reference
-- **Web3 Integration**: Blockchain development guides
-- **Token Economics**: Detailed MVT token information
-- **Security**: Privacy and security best practices
+### User Documentation
+- **User Guides**: How to use the platform and its features
+- **Token Economics**: Detailed MVT token information and faucet usage
+- **Mentorship Programs**: Professional and peer mentorship guides
+- **Crisis Support**: Emergency resources and intervention protocols
 
-## 🗺️ Roadmap
+### Developer Documentation
+- **API Documentation**: Complete backend API reference
+- **Web3 Integration**: Blockchain development and canister guides
+- **Deployment Guides**: Production deployment instructions
+- **Security Implementation**: HIPAA/GDPR compliance documentation
+- **Testing Procedures**: Manual and automated testing frameworks
 
-### Phase 1: Foundation (Completed)
+### Technical Resources
+- **Architecture Overview**: System design and component interaction
+- **Smart Contract Documentation**: Motoko and Rust canister guides
+- **Environment Setup**: Development and production configuration
+- **Progress Tracking**: Development milestone and change documentation
+
+## 🗺️ Development Roadmap
+
+### Phase 1: Foundation (✅ Completed)
 - ✅ Core platform development
 - ✅ MVT token implementation
 - ✅ Basic staking mechanism
 - ✅ Internet Identity integration
+- ✅ Secure messaging infrastructure
 
-### Phase 2: Enhanced Features (In Progress)
-- 🔄 Advanced AI chatbot
-- 🔄 Professional therapist network
-- 🔄 Mobile application
-- 🔄 Enhanced token utilities
+### Phase 2: Regional Round Upgrades (✅ Completed - December 2024)
+- ✅ **Enhanced Testnet Faucet** - Daily token claims with history tracking
+- ✅ **Production Backend** - Secure Node.js API server with OpenAI integration
+- ✅ **Security Compliance** - HIPAA and GDPR implementation
+- ✅ **Comprehensive Documentation** - Deployment, security, and testing guides
+- ✅ **Advanced Error Handling** - Robust error tracking and user feedback
+- ✅ **Environment Automation** - Development and production configuration
+- ✅ **TypeScript Optimization** - Enhanced type safety and code quality
 
-### Phase 3: Ecosystem Expansion (Planned)
-- 📋 Cross-chain compatibility
-- 📋 Third-party integrations
-- 📋 Global partnerships
-- 📋 Advanced analytics
+### Phase 3: Enhanced Features (🔄 In Progress)
+- 🔄 Advanced AI chatbot with crisis detection
+- 🔄 Professional therapist network expansion
+- 🔄 Mobile application development
+- 🔄 Enhanced token utilities and governance
+- 🔄 Multi-language support
+
+### Phase 4: Ecosystem Expansion (📋 Planned)
+- 📋 Cross-chain compatibility (Bitcoin, Ethereum)
+- 📋 Third-party integrations and APIs
+- 📋 Global partnerships and licensing
+- 📋 Advanced analytics and AI insights
+- 📋 Decentralized governance (DAO)
 
 ## 📄 License
 

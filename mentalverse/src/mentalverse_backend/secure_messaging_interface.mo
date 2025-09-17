@@ -1,7 +1,8 @@
 // Inter-canister communication interface for Secure Messaging
 import Principal "mo:base/Principal";
 import Result "mo:base/Result";
-import Time "mo:base/Time";
+import Nat64 "mo:base/Nat64";
+import Text "mo:base/Text";
 
 module {
   // Types matching the Rust canister's Candid interface
@@ -86,30 +87,32 @@ module {
     error: ?Text;
   };
 
-  // Actor interface for the Secure Messaging canister
-  public type SecureMessagingActor = actor {
+  public type SendMessageRequest = {
+    recipient_id: Principal;
+    content: Text;
+    message_type: MessageType;
+    attachments: [Attachment];
+  };
+
+  // Inter-canister communication interface for Secure Messaging Canister
+  public type SecureMessagingCanisterInterface = actor {
     // User key management
-    register_user_key: (Text, KeyType) -> async {#Ok: UserKey; #Err: Text};
+    register_user_key: (Text, KeyType) -> async Result.Result<UserKey, Text>;
     get_user_key: (Principal) -> async ?UserKey;
     
     // Conversation management
     create_conversation: ([Principal], ConversationType, ConversationMetadata) -> async ConversationResult;
     get_user_conversations: () -> async [Conversation];
-    archive_conversation: (Text) -> async {#Ok; #Err: Text};
+    archive_conversation: (Text) -> async Result.Result<(), Text>;
     
     // Message management
-    send_message: (Text, Principal, Text, MessageType, ?Nat64, [Attachment]) -> async MessageResult;
+    send_message: (SendMessageRequest) -> async Result.Result<Nat64, Text>;
     get_conversation_messages: (Text, ?Nat64, ?Nat64) -> async [Message];
-    mark_message_read: (Nat64) -> async {#Ok; #Err: Text};
-    delete_message: (Nat64) -> async {#Ok; #Err: Text};
+    mark_message_read: (Nat64) -> async Result.Result<(), Text>;
+    delete_message: (Nat64) -> async Result.Result<(), Text>;
     
     // Utility functions
-    health_check: () -> async Text;
+    health_check: () -> async Bool;
     get_stats: () -> async [(Text, Nat64)];
-  };
-
-  // Helper function to create actor reference
-  public func getSecureMessagingActor(canisterId: Text) : SecureMessagingActor {
-    actor(canisterId) : SecureMessagingActor
   };
 }
