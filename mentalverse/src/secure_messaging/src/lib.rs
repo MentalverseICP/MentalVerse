@@ -11,7 +11,6 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use hmac::{Hmac, Mac};
 use base64::{Engine as _, engine::general_purpose};
-// Removed unused imports
 use hex;
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
@@ -23,8 +22,69 @@ type _WebRTCSignalStore = StableBTreeMap<String, StorableWebRTCSignal, Memory>;
 type _SessionTokenStore = StableBTreeMap<String, StorableSessionToken, Memory>;
 type _KeyExchangeStore = StableBTreeMap<String, StorableKeyExchange, Memory>;
 type _RTCSessionStore = StableBTreeMap<String, StorableRTCSession, Memory>;
+type RateLimitStore = StableBTreeMap<Principal, StorableRateLimit, Memory>;
+type NonceStore = StableBTreeMap<String, u64, Memory>;
 
 // === ENCRYPTION STRUCTURES ===
+
+// Phase 2: Security structures for rate limiting and nonce validation
+#[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
+pub struct RateLimit {
+    pub principal: Principal,
+    pub call_count: u32,
+    pub window_start: u64,
+    pub window_duration: u64, // in milliseconds
+}
+
+#[derive(CandidType, Deserialize, Serialize, Clone)]
+struct StorableRateLimit {
+    pub principal: Principal,
+    pub call_count: u32,
+    pub window_start: u64,
+    pub window_duration: u64,
+}
+
+impl From<RateLimit> for StorableRateLimit {
+    fn from(rate_limit: RateLimit) -> Self {
+        StorableRateLimit {
+            principal: rate_limit.principal,
+            call_count: rate_limit.call_count,
+            window_start: rate_limit.window_start,
+            window_duration: rate_limit.window_duration,
+        }
+    }
+}
+
+impl From<StorableRateLimit> for RateLimit {
+    fn from(storable: StorableRateLimit) -> Self {
+        RateLimit {
+            principal: storable.principal,
+            call_count: storable.call_count,
+            window_start: storable.window_start,
+            window_duration: storable.window_duration,
+        }
+    }
+}
+
+impl Storable for StorableRateLimit {
+    const BOUND: Bound = Bound::Bounded {
+        max_size: 256,
+        is_fixed_size: false,
+    };
+
+    fn to_bytes(&self) -> Cow<'_, [u8]> {
+        Cow::Owned(candid::encode_one(self).unwrap())
+    }
+
+    fn from_bytes(bytes: Cow<'_, [u8]>) -> Self {
+        candid::decode_one(&bytes).unwrap()
+    }
+}
+
+// Phase 2: Security constants
+const MAX_TEXT_LENGTH: usize = 10000;
+
+const NONCE_EXPIRY_MS: u64 = 300000; // 5 minutes
 
 #[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
 pub struct EncryptedData {
@@ -702,6 +762,19 @@ thread_local! {
             MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(3)))
         )
     );
+    
+    // Phase 2: Security storage
+    static RATE_LIMITS: RefCell<RateLimitStore> = RefCell::new(
+        RateLimitStore::init(
+            MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(4)))
+        )
+    );
+    
+    static USED_NONCES: RefCell<NonceStore> = RefCell::new(
+        NonceStore::init(
+            MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(5)))
+        )
+    );
 }
 
 // === HELPER FUNCTIONS ===
@@ -741,6 +814,130 @@ fn get_caller() -> Principal {
 
 fn get_time() -> u64 {
     time()
+}
+
+// Phase 2: Security validation functions
+fn check_rate_limit(principal: Principal, max_calls: u32, window_ms: u64) -> Result<(), String> {
+    let current_time = get_time();
+    
+    RATE_LIMITS.with(|rate_limits| {
+        let mut rate_limits = rate_limits.borrow_mut();
+        
+        match rate_limits.get(&principal) {
+            Some(rate_limit) => {
+                let rate_limit = RateLimit::from(rate_limit);
+                
+                // Check if we're still in the same time window
+                if current_time - rate_limit.window_start < window_ms {
+                    if rate_limit.call_count >= max_calls {
+                        return Err(format!("Rate limit exceeded: {} calls in {} ms", max_calls, window_ms));
+                    }
+                    
+                    // Increment call count
+                    let updated_rate_limit = RateLimit {
+                        principal,
+                        call_count: rate_limit.call_count + 1,
+                        window_start: rate_limit.window_start,
+                        window_duration: window_ms,
+                    };
+                    rate_limits.insert(principal, StorableRateLimit::from(updated_rate_limit));
+                } else {
+                    // New time window, reset counter
+                    let new_rate_limit = RateLimit {
+                        principal,
+                        call_count: 1,
+                        window_start: current_time,
+                        window_duration: window_ms,
+                    };
+                    rate_limits.insert(principal, StorableRateLimit::from(new_rate_limit));
+                }
+            }
+            None => {
+                // First call from this principal
+                let new_rate_limit = RateLimit {
+                    principal,
+                    call_count: 1,
+                    window_start: current_time,
+                    window_duration: window_ms,
+                };
+                rate_limits.insert(principal, StorableRateLimit::from(new_rate_limit));
+            }
+        }
+        
+        Ok(())
+    })
+}
+
+fn validate_nonce(nonce: &str, timestamp: u64) -> Result<(), String> {
+    if nonce.is_empty() {
+        return Err("Nonce cannot be empty".to_string());
+    }
+    
+    let current_time = get_time();
+    
+    // Check if timestamp is not too old or in the future
+    if timestamp > current_time + 60000 { // 1 minute future tolerance
+        return Err("Timestamp is too far in the future".to_string());
+    }
+    
+    if current_time - timestamp > NONCE_EXPIRY_MS {
+        return Err("Nonce has expired".to_string());
+    }
+    
+    USED_NONCES.with(|nonces| {
+        let mut nonces = nonces.borrow_mut();
+        
+        if nonces.get(&nonce.to_string()).is_some() {
+            return Err("Nonce has already been used".to_string());
+        }
+        
+        // Store the nonce with its timestamp
+        nonces.insert(nonce.to_string(), timestamp);
+        
+        // Clean up expired nonces (simple cleanup)
+        let expired_threshold = current_time - NONCE_EXPIRY_MS;
+        let expired_nonces: Vec<String> = nonces
+            .iter()
+            .filter_map(|(nonce_key, nonce_timestamp)| {
+                if nonce_timestamp < expired_threshold {
+                    Some(nonce_key)
+                } else {
+                    None
+                }
+            })
+            .collect();
+        
+        for expired_nonce in expired_nonces {
+            nonces.remove(&expired_nonce);
+        }
+        
+        Ok(())
+    })
+}
+
+fn validate_text_length(text: &str, max_length: usize, field_name: &str) -> Result<(), String> {
+    if text.len() > max_length {
+        return Err(format!("{} exceeds maximum length of {} characters", field_name, max_length));
+    }
+    Ok(())
+}
+
+fn validate_text_not_empty(text: &str, field_name: &str) -> Result<(), String> {
+    if text.trim().is_empty() {
+        return Err(format!("{} cannot be empty", field_name));
+    }
+    Ok(())
+}
+
+fn sanitize_text(text: &str) -> String {
+    // Remove potentially dangerous characters and normalize whitespace
+    let sanitized = text
+        .chars()
+        .filter(|c| c.is_alphanumeric() || c.is_whitespace() || ".,!?-_@#$%^&*()+=[]{}|;:'\"/~`<>".contains(*c))
+        .collect::<String>();
+    
+    // Normalize whitespace
+    sanitized.split_whitespace().collect::<Vec<&str>>().join(" ")
 }
 
 // === PHI ENCRYPTION FUNCTIONS ===
@@ -1205,9 +1402,48 @@ fn send_message(
     message_type: MessageType,
     reply_to: Option<u64>,
     attachments: Vec<Attachment>,
+    nonce: String,
+    timestamp: u64,
 ) -> MessageResult {
     let caller = get_caller();
     let now = get_time();
+    
+    // Phase 2: Rate limiting (max 50 messages per minute)
+    if let Err(e) = check_rate_limit(caller, 50, 60000) {
+        return MessageResult {
+            success: false,
+            message: None,
+            error: Some(e),
+        };
+    }
+    
+    // Phase 2: Replay attack protection
+    if let Err(e) = validate_nonce(&nonce, timestamp) {
+        return MessageResult {
+            success: false,
+            message: None,
+            error: Some(e),
+        };
+    }
+    
+    // Phase 2: Input validation and sanitization
+    if let Err(e) = validate_text_not_empty(&content, "Message content") {
+        return MessageResult {
+            success: false,
+            message: None,
+            error: Some(e),
+        };
+    }
+    
+    if let Err(e) = validate_text_length(&content, MAX_TEXT_LENGTH, "Message content") {
+        return MessageResult {
+            success: false,
+            message: None,
+            error: Some(e),
+        };
+    }
+    
+    let sanitized_content = sanitize_text(&content);
     
     // Validate caller principal
     if let Err(e) = validate_principal(&caller) {
@@ -1290,11 +1526,11 @@ fn send_message(
         }
     };
     
-    // Encrypt message content using AES-256-GCM
-    let encrypted_content = match encrypt_phi_data(&content, &encryption_key) {
+    // Encrypt message content using AES-256-GCM (use sanitized content)
+    let encrypted_content = match encrypt_phi_data(&sanitized_content, &encryption_key) {
         Ok(encrypted) => {
             // Store as JSON string containing encrypted data structure
-            serde_json::to_string(&encrypted).unwrap_or_else(|_| content.clone())
+            serde_json::to_string(&encrypted).unwrap_or_else(|_| sanitized_content.clone())
         },
         Err(e) => {
             return MessageResult {

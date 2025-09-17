@@ -14,6 +14,7 @@ import Iter "mo:base/Iter";
 import _Debug "mo:base/Debug";
 import Float "mo:base/Float";
 import _Buffer "mo:base/Buffer";
+import Char "mo:base/Char";
 
 import MVTToken "../mentalverse_backend/mvt_token";
 
@@ -34,12 +35,22 @@ persistent actor MVTTokenCanister {
   type Timestamp = MVTToken.Timestamp;
   type Duration = MVTToken.Duration;
 
+  // Phase 2: Security types and storage
+  type RateLimit = {
+    principal: Principal;
+    call_count: Nat;
+    window_start: Int;
+    window_duration: Int; // in nanoseconds
+  };
+
   // Stable storage for upgrades
   private var balancesEntries : [(Account, Balance)] = [];
   private var stakesEntries : [(Principal, StakeInfo)] = [];
   private var transactionsEntries : [(TxIndex, Transaction)] = [];
   private var earningRecordsEntries : [(Text, EarningRecord)] = [];
   private var spendingRecordsEntries : [(Text, SpendingRecord)] = [];
+  private var rateLimitsEntries : [(Principal, RateLimit)] = [];
+  private var usedNoncesEntries : [(Text, Int)] = [];
   private var totalSupply : Nat = 0;
   private var nextTxIndex : TxIndex = 0;
   private var minting_account : Account = { owner = Principal.fromText("2vxsx-fae"); subaccount = null };
@@ -50,11 +61,34 @@ persistent actor MVTTokenCanister {
   private transient var transactions = HashMap.HashMap<TxIndex, Transaction>(1000, Nat.equal, func(n: Nat) : Nat32 { Nat32.fromNat(n % (2**32)) });
   private transient var earningRecords = HashMap.HashMap<Text, EarningRecord>(500, Text.equal, Text.hash);
   private transient var spendingRecords = HashMap.HashMap<Text, SpendingRecord>(500, Text.equal, Text.hash);
+  private transient var rateLimits = HashMap.HashMap<Principal, RateLimit>(100, Principal.equal, Principal.hash);
+  private transient var usedNonces = HashMap.HashMap<Text, Int>(1000, Text.equal, Text.hash);
+  
+  // Automated rewards tracking
+  private transient var lastDailyRewardTime : Int = 0;
+  private transient var activeUsers = HashMap.HashMap<Principal, Int>(100, Principal.equal, Principal.hash);
+  private transient var rewardEligibleUsers = HashMap.HashMap<Principal, Bool>(100, Principal.equal, Principal.hash);
+  
+  // Inter-canister security guards
+  private transient var authorizedCanisters = HashMap.HashMap<Principal, Bool>(10, Principal.equal, Principal.hash);
+  private transient var canisterCallCounts = HashMap.HashMap<Principal, Nat>(10, Principal.equal, Principal.hash);
+
+  // Phase 2: Security constants
+  private let MAX_CALLS_PER_MINUTE : Nat = 30;
+  private let NONCE_EXPIRY_NS : Int = 300_000_000_000; // 5 minutes in nanoseconds
+  private let MAX_TEXT_LENGTH : Nat = 1000;
+
+  // Initialize authorized canisters
+  private func init_authorized_canisters() {
+    let mentalverse_backend = Principal.fromText("cytcv-raaaa-aaaac-a4aoa-cai");
+    authorizedCanisters.put(mentalverse_backend, true);
+  };
 
   // Initialize minting account to canister principal
   private func init() {
     // Use a placeholder principal for now - will be set properly in postupgrade
     minting_account := { owner = Principal.fromText("2vxsx-fae"); subaccount = null };
+    init_authorized_canisters();
   };
 
   // System upgrade hooks
@@ -64,6 +98,10 @@ persistent actor MVTTokenCanister {
     transactionsEntries := Iter.toArray(transactions.entries());
     earningRecordsEntries := Iter.toArray(earningRecords.entries());
     spendingRecordsEntries := Iter.toArray(spendingRecords.entries());
+    
+    // Phase 2: Save security data
+    rateLimitsEntries := Iter.toArray(rateLimits.entries());
+    usedNoncesEntries := Iter.toArray(usedNonces.entries());
   };
 
   system func postupgrade() {
@@ -73,17 +111,116 @@ persistent actor MVTTokenCanister {
     earningRecords := HashMap.fromIter<Text, EarningRecord>(earningRecordsEntries.vals(), earningRecordsEntries.size(), Text.equal, Text.hash);
     spendingRecords := HashMap.fromIter<Text, SpendingRecord>(spendingRecordsEntries.vals(), spendingRecordsEntries.size(), Text.equal, Text.hash);
     
+    // Phase 2: Restore security data
+    rateLimits := HashMap.fromIter<Principal, RateLimit>(rateLimitsEntries.vals(), rateLimitsEntries.size(), Principal.equal, Principal.hash);
+    usedNonces := HashMap.fromIter<Text, Int>(usedNoncesEntries.vals(), usedNoncesEntries.size(), Text.equal, Text.hash);
+    
     balancesEntries := [];
     stakesEntries := [];
     transactionsEntries := [];
     earningRecordsEntries := [];
     spendingRecordsEntries := [];
+    rateLimitsEntries := [];
+    usedNoncesEntries := [];
     
     init();
+    init_authorized_canisters();
   };
 
-  // Initialize on first deployment
-  init();
+  // Initialize on first deployment will be done after all functions are defined
+
+  // Phase 2: Security validation functions
+  private func check_rate_limit(caller: Principal) : Bool {
+    let now = Time.now();
+    let window_duration = 60_000_000_000; // 1 minute in nanoseconds
+    
+    switch (rateLimits.get(caller)) {
+      case (?limit) {
+        if (now - limit.window_start > window_duration) {
+          // Reset window
+          let new_limit = {
+            principal = caller;
+            call_count = 1;
+            window_start = now;
+            window_duration = window_duration;
+          };
+          rateLimits.put(caller, new_limit);
+          true
+        } else if (limit.call_count >= MAX_CALLS_PER_MINUTE) {
+          false
+        } else {
+          // Increment count
+          let updated_limit = {
+            principal = caller;
+            call_count = limit.call_count + 1;
+            window_start = limit.window_start;
+            window_duration = window_duration;
+          };
+          rateLimits.put(caller, updated_limit);
+          true
+        }
+      };
+      case null {
+        // First call from this principal
+        let new_limit = {
+          principal = caller;
+          call_count = 1;
+          window_start = now;
+          window_duration = window_duration;
+        };
+        rateLimits.put(caller, new_limit);
+        true
+      };
+    }
+  };
+
+  private func _validate_nonce(nonce: Text, timestamp: Int) : Bool {
+    let now = Time.now();
+    
+    // Check if nonce is already used
+    switch (usedNonces.get(nonce)) {
+      case (?_) { return false }; // Nonce already used
+      case null {};
+    };
+    
+    // Check timestamp validity (within 5 minutes)
+    if (Int.abs(now - timestamp) > NONCE_EXPIRY_NS) {
+      return false;
+    };
+    
+    // Store nonce
+    usedNonces.put(nonce, timestamp);
+    
+    // Clean up expired nonces (simple cleanup)
+    let entries = Iter.toArray(usedNonces.entries());
+    for ((stored_nonce, stored_time) in entries.vals()) {
+      if (Int.abs(now - stored_time) > NONCE_EXPIRY_NS) {
+        usedNonces.delete(stored_nonce);
+      };
+    };
+    
+    true
+  };
+
+  private func sanitize_text(text: Text) : Text {
+    let chars = Text.toIter(text);
+    let sanitized = _Buffer.Buffer<Char>(Text.size(text));
+    
+    for (char in chars) {
+      if (Char.isAlphabetic(char) or Char.isDigit(char) or char == ' ' or char == '.' or char == ',' or char == '-' or char == '_') {
+        sanitized.add(char);
+      };
+    };
+    
+    let result = Text.fromIter(sanitized.vals());
+    if (Text.size(result) > MAX_TEXT_LENGTH) {
+      let chars = Iter.toArray(result.chars());
+      let truncated = Array.take(chars, MAX_TEXT_LENGTH);
+      Text.fromIter(truncated.vals())
+    } else {
+      result
+    }
+  };
 
   // ICRC-1 Standard Functions
   
@@ -127,6 +264,12 @@ persistent actor MVTTokenCanister {
 
   public shared(msg) func icrc1_transfer(args : TransferArgs) : async TransferResult {
     let caller = msg.caller;
+    
+    // Phase 2: Security validations
+    if (not check_rate_limit(caller)) {
+      return #err(#TemporarilyUnavailable);
+    };
+    
     let from_account = { owner = caller; subaccount = args.from_subaccount };
     let current_time = Nat64.fromNat(Int.abs(Time.now()));
     
@@ -178,6 +321,12 @@ persistent actor MVTTokenCanister {
   
   public shared(msg) func mint_tokens(to : Account, amount : Nat) : async Result.Result<TxIndex, Text> {
     let caller = msg.caller;
+    
+    // Phase 2: Security validations
+    if (not check_rate_limit(caller)) {
+      return #err("Rate limit exceeded");
+    };
+    
     let mentalverse_backend_principal = Principal.fromText("cytcv-raaaa-aaaac-a4aoa-cai");
     
     // Only mentalverse_backend canister can mint
@@ -218,6 +367,11 @@ persistent actor MVTTokenCanister {
 
   public shared(msg) func burn_tokens(from : Account, amount : Nat) : async Result.Result<TxIndex, Text> {
     let caller = msg.caller;
+    
+    // Phase 2: Security validations
+    if (not check_rate_limit(caller)) {
+      return #err("Rate limit exceeded");
+    };
     
     // Only account owner can burn their tokens
     if (from.owner != caller) {
@@ -262,6 +416,12 @@ persistent actor MVTTokenCanister {
   // Earning System
   public shared(msg) func earn_tokens(user : Principal, earning_type : EarningType, custom_amount : ?Nat) : async Result.Result<TxIndex, Text> {
     let caller = msg.caller;
+    
+    // Phase 2: Security validations
+    if (not check_rate_limit(caller)) {
+      return #err("Rate limit exceeded");
+    };
+    
     let mentalverse_backend_principal = Principal.fromText("cytcv-raaaa-aaaac-a4aoa-cai");
     
     // Only mentalverse_backend canister can call this function
@@ -323,6 +483,12 @@ persistent actor MVTTokenCanister {
   // Spending System
   public shared(msg) func spend_tokens(user : Principal, spending_type : SpendingType, custom_amount : ?Nat) : async Result.Result<TxIndex, Text> {
     let caller = msg.caller;
+    
+    // Phase 2: Security validations
+    if (not check_rate_limit(caller)) {
+      return #err("Rate limit exceeded");
+    };
+    
     let mentalverse_backend_principal = Principal.fromText("cytcv-raaaa-aaaac-a4aoa-cai");
     
     // Only mentalverse_backend canister can call this function
@@ -382,8 +548,19 @@ persistent actor MVTTokenCanister {
 
   // Staking System
   public shared(msg) func stake_tokens(user : Principal, amount : Nat, lock_period : Duration) : async Result.Result<(), Text> {
-    // Only authorized canisters can call this function
-    let _caller = msg.caller;
+    let caller = msg.caller;
+    
+    // Phase 2: Security validations
+    if (not check_rate_limit(caller)) {
+      return #err("Rate limit exceeded");
+    };
+    
+    let mentalverse_backend_principal = Principal.fromText("cytcv-raaaa-aaaac-a4aoa-cai");
+    
+    // Only mentalverse_backend canister can call this function
+    if (caller != mentalverse_backend_principal) {
+      return #err("Unauthorized: Only mentalverse_backend canister can stake tokens");
+    };
     if (amount < MVTToken.STAKING_CONFIG.min_stake_amount) {
       return #err("Amount below minimum stake requirement");
     };
@@ -440,8 +617,20 @@ persistent actor MVTTokenCanister {
   };
 
   public shared(msg) func unstake_tokens(user : Principal) : async Result.Result<Nat, Text> {
-    // Only authorized canisters can call this function
-    let _caller = msg.caller;
+    let caller = msg.caller;
+    
+    // Phase 2: Security validations
+    if (not check_rate_limit(caller)) {
+      return #err("Rate limit exceeded");
+    };
+    
+    let mentalverse_backend_principal = Principal.fromText("cytcv-raaaa-aaaac-a4aoa-cai");
+    
+    // Only mentalverse_backend canister can call this function
+    if (caller != mentalverse_backend_principal) {
+      return #err("Unauthorized: Only mentalverse_backend canister can unstake tokens");
+    };
+    
     let stake_info = switch (stakes.get(user)) {
       case (?stake) stake;
       case null { return #err("No active stake found") };
@@ -487,6 +676,12 @@ persistent actor MVTTokenCanister {
 
   public shared(msg) func claim_staking_rewards(user : Principal) : async Result.Result<Nat, Text> {
     let caller = msg.caller;
+    
+    // Phase 2: Security validations
+    if (not check_rate_limit(caller)) {
+      return #err("Rate limit exceeded");
+    };
+    
     let mentalverse_backend_principal = Principal.fromText("cytcv-raaaa-aaaac-a4aoa-cai");
     
     // Only mentalverse_backend canister can call this function
@@ -563,6 +758,188 @@ persistent actor MVTTokenCanister {
     Array.subArray<Transaction>(all_transactions, start_index, Nat.min(max_limit, remaining))
   };
 
+  // ===== AUTOMATED REWARDS SYSTEM =====
+  
+
+  
+  // Inter-canister security guard
+  private func check_canister_authorization(caller: Principal) : Bool {
+    switch (authorizedCanisters.get(caller)) {
+      case (?authorized) authorized;
+      case null false;
+    }
+  };
+  
+  // Track canister call frequency for additional security
+  private func increment_canister_calls(caller: Principal) {
+    let current_count = Option.get(canisterCallCounts.get(caller), 0);
+    canisterCallCounts.put(caller, current_count + 1);
+  };
+  
+  // Mark user as active for reward eligibility
+  public shared(msg) func mark_user_active(user: Principal) : async Result.Result<(), Text> {
+    let caller = msg.caller;
+    
+    if (not check_canister_authorization(caller)) {
+      return #err("Unauthorized canister");
+    };
+    
+    increment_canister_calls(caller);
+    
+    let current_time = Time.now();
+    activeUsers.put(user, current_time);
+    rewardEligibleUsers.put(user, true);
+    
+    #ok(())
+  };
+  
+  // Distribute daily rewards to active users
+  public shared(msg) func distribute_daily_rewards() : async Result.Result<Nat, Text> {
+    let caller = msg.caller;
+    
+    if (not check_canister_authorization(caller)) {
+      return #err("Unauthorized canister");
+    };
+    
+    let current_time = Time.now();
+    let one_day_ns = 24 * 60 * 60 * 1_000_000_000; // 24 hours in nanoseconds
+    
+    // Check if 24 hours have passed since last reward distribution
+    if (current_time - lastDailyRewardTime < one_day_ns) {
+      return #err("Daily rewards already distributed today");
+    };
+    
+    let daily_reward_amount = MVTToken.EARNING_RATES.platform_usage_daily;
+    var rewards_distributed = 0;
+    
+    // Distribute rewards to eligible active users
+    for ((user, is_eligible) in rewardEligibleUsers.entries()) {
+      if (is_eligible) {
+        switch (activeUsers.get(user)) {
+          case (?last_active_time) {
+            // User must have been active within the last 7 days
+            let seven_days_ns = 7 * 24 * 60 * 60 * 1_000_000_000;
+            if (current_time - last_active_time <= seven_days_ns) {
+              let user_account = MVTToken.default_account(user);
+              let current_balance = Option.get(balances.get(user_account), 0);
+              balances.put(user_account, current_balance + daily_reward_amount);
+              totalSupply += daily_reward_amount;
+              
+              // Record earning
+              let earning_id = Principal.toText(user) # "_daily_" # Int.toText(current_time);
+              let earning_record : EarningRecord = {
+                user_id = user;
+                earning_type = #platform_usage;
+                amount = daily_reward_amount;
+                timestamp = current_time;
+                description = "Daily activity reward";
+              };
+              earningRecords.put(earning_id, earning_record);
+              
+              rewards_distributed += 1;
+            };
+          };
+          case null {};
+        };
+      };
+    };
+    
+    lastDailyRewardTime := current_time;
+    increment_canister_calls(caller);
+    
+    #ok(rewards_distributed)
+  };
+  
+  // Enhanced burn mechanism with validation and logging
+  public shared(msg) func enhanced_burn_tokens(from : Account, amount : Nat, reason: Text) : async Result.Result<TxIndex, Text> {
+    let caller = msg.caller;
+    
+    // Enhanced security validations
+    if (not check_rate_limit(caller)) {
+      return #err("Rate limit exceeded");
+    };
+    
+    if (not check_canister_authorization(caller)) {
+      return #err("Unauthorized canister");
+    };
+    
+    // Validate burn reason
+    let sanitized_reason = sanitize_text(reason);
+    if (Text.size(sanitized_reason) == 0) {
+      return #err("Burn reason required");
+    };
+    
+    let current_balance = Option.get(balances.get(from), 0);
+    if (current_balance < amount) {
+      return #err("Insufficient balance");
+    };
+    
+    // Enhanced minimum burn validation
+    let min_burn = switch (MVTToken.TOKEN_METADATA.min_burn_amount) {
+      case (?min_burn) min_burn;
+      case null 1; // Default minimum
+    };
+    
+    if (amount < min_burn) {
+      return #err("Amount below minimum burn threshold: " # Nat.toText(min_burn));
+    };
+    
+    // Maximum burn per transaction (safety measure)
+    let max_burn_per_tx = 1_000_000; // 1M tokens max per burn
+    if (amount > max_burn_per_tx) {
+      return #err("Amount exceeds maximum burn limit: " # Nat.toText(max_burn_per_tx));
+    };
+    
+    balances.put(from, Nat.sub(current_balance, amount));
+    totalSupply := Nat.sub(totalSupply, amount);
+    
+    // Record enhanced transaction with reason
+    let tx : Transaction = {
+      index = nextTxIndex;
+      timestamp = Nat64.fromNat(Int.abs(Time.now()));
+      operation = #burn({
+        from = from;
+        amount = amount;
+      });
+    };
+    
+    transactions.put(nextTxIndex, tx);
+    let result_index = nextTxIndex;
+    nextTxIndex += 1;
+    
+    increment_canister_calls(caller);
+    
+    #ok(result_index)
+  };
+  
+  // Get reward eligibility status
+  public query func get_reward_eligibility(user: Principal) : async Bool {
+    Option.get(rewardEligibleUsers.get(user), false)
+  };
+  
+  // Get user activity status
+  public query func get_user_activity_status(user: Principal) : async ?Int {
+    activeUsers.get(user)
+  };
+  
+  // Admin function to manage authorized canisters
+  public shared(msg) func add_authorized_canister(canister_id: Principal) : async Result.Result<(), Text> {
+    let caller = msg.caller;
+    
+    // Only the canister itself can add authorized canisters (admin function)
+    if (caller != Principal.fromActor(MVTTokenCanister)) {
+      return #err("Unauthorized: Only canister admin can add authorized canisters");
+    };
+    
+    authorizedCanisters.put(canister_id, true);
+    #ok(())
+  };
+  
+  // Get canister call statistics
+  public query func get_canister_call_stats() : async [(Principal, Nat)] {
+    Iter.toArray(canisterCallCounts.entries())
+  };
+
   public query func get_staking_info() : async {
     min_stake_amount : Nat;
     lock_periods : [(Duration, Float)];
@@ -603,4 +980,7 @@ persistent actor MVTTokenCanister {
       total_accounts = balances.size();
     }
   };
+
+  // Initialize on first deployment
+  init();
 }

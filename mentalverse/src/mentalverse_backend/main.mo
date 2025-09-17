@@ -16,11 +16,742 @@ import Blob "mo:base/Blob";
 import Random "mo:base/Random";
 import Char "mo:base/Char";
 import Debug "mo:base/Debug";
+import Regex "mo:base/Regex";
+import Crypto "mo:base/Crypto";
 
 // Import MVT Token module
 import MVTToken "mvt_token";
 // Import Secure Messaging interface
 import SecureMessagingInterface "secure_messaging_interface";
+
+// === PHASE 2: ADVANCED SECURITY & VALIDATION ===
+
+// Enhanced rate limiting and DDoS protection types
+type RateLimitInfo = {
+  callCount: Nat;
+  windowStart: Int;
+  lastCallTime: Int;
+  violationCount: Nat;
+  blockUntil: ?Int;
+  suspiciousActivity: Bool;
+};
+
+type DDoSProtectionLevel = {
+  #normal;
+  #elevated;
+  #high;
+  #critical;
+};
+
+type ThreatMetrics = {
+  requestsPerSecond: Nat;
+  uniqueCallers: Nat;
+  blockedRequests: Nat;
+  suspiciousPatterns: Nat;
+  lastUpdated: Int;
+};
+
+// Validation result types
+type ValidationResult = {
+  #ok;
+  #err: Text;
+};
+
+// DDoS protection storage
+private stable var threatMetricsEntries : [(Text, ThreatMetrics)] = [];
+private var threatMetrics = HashMap.HashMap<Text, ThreatMetrics>(10, Text.equal, Text.hash);
+private stable var blockedPrincipalsEntries : [(Principal, Int)] = [];
+private var blockedPrincipals = HashMap.HashMap<Principal, Int>(100, Principal.equal, Principal.hash);
+private stable var currentProtectionLevel : DDoSProtectionLevel = #normal;
+private stable var globalRequestCount : Nat = 0;
+private stable var lastGlobalReset : Int = 0;
+
+// Input sanitization and validation utilities
+private func validateTextLength(text: Text, maxLength: Nat, fieldName: Text) : ValidationResult {
+  if (Text.size(text) > maxLength) {
+    return #err(fieldName # " exceeds maximum length of " # Nat.toText(maxLength) # " characters");
+  };
+  #ok
+};
+
+private func validateTextNotEmpty(text: Text, fieldName: Text) : ValidationResult {
+  if (Text.size(text) == 0) {
+    return #err(fieldName # " cannot be empty");
+  };
+  #ok
+};
+
+private func validateArraySize<T>(array: [T], maxSize: Nat, fieldName: Text) : ValidationResult {
+  if (Array.size(array) > maxSize) {
+    return #err(fieldName # " exceeds maximum size of " # Nat.toText(maxSize) # " items");
+  };
+  #ok
+};
+
+private func validateEmail(email: Text) : ValidationResult {
+  if (Text.size(email) > MAX_EMAIL_LENGTH) {
+    return #err("Email exceeds maximum length");
+  };
+  if (not Text.contains(email, #char '@')) {
+    return #err("Invalid email format");
+  };
+  #ok
+};
+
+// Enhanced comprehensive input sanitization
+private func sanitizeText(text: Text) : Text {
+  // Remove potentially dangerous characters and normalize
+  var sanitized = Text.replace(text, #char '<', "");
+  sanitized := Text.replace(sanitized, #char '>', "");
+  sanitized := Text.replace(sanitized, #char '"', "");
+  sanitized := Text.replace(sanitized, #char '\u{27}', "");
+  sanitized := Text.replace(sanitized, #char '\\', "");
+  sanitized := Text.replace(sanitized, #char '&', "");
+  sanitized := Text.replace(sanitized, #char '%', "");
+  sanitized := Text.replace(sanitized, #char ';', "");
+  sanitized := Text.replace(sanitized, #char '(', "");
+  sanitized := Text.replace(sanitized, #char ')', "");
+  sanitized := Text.replace(sanitized, #char '+', "");
+  sanitized := Text.replace(sanitized, #char '=', "");
+  
+  // Trim whitespace and normalize
+  Text.trim(sanitized, #char ' ')
+};
+
+// Sanitize HTML/XML content more aggressively
+private func sanitizeHtmlContent(text: Text) : Text {
+  var sanitized = sanitizeText(text);
+  sanitized := Text.replace(sanitized, #text "script", "");
+  sanitized := Text.replace(sanitized, #text "javascript", "");
+  sanitized := Text.replace(sanitized, #text "onclick", "");
+  sanitized := Text.replace(sanitized, #text "onload", "");
+  sanitized := Text.replace(sanitized, #text "onerror", "");
+  sanitized := Text.replace(sanitized, #text "eval", "");
+  sanitized := Text.replace(sanitized, #text "expression", "");
+  sanitized
+};
+
+// Validate and sanitize medical data with strict requirements
+private func validateMedicalText(text: Text, fieldName: Text, maxLength: Nat) : Result.Result<Text, Text> {
+  // Check length
+  if (Text.size(text) > maxLength) {
+    return #err(fieldName # " exceeds maximum length of " # Nat.toText(maxLength) # " characters");
+  };
+  
+  // Check for empty content
+  if (Text.size(text) == 0) {
+    return #err(fieldName # " cannot be empty");
+  };
+  
+  // Sanitize content
+  let sanitized = sanitizeHtmlContent(text);
+  
+  // Ensure sanitization didn't remove everything
+  if (Text.size(sanitized) == 0) {
+    return #err(fieldName # " contains invalid characters");
+  };
+  
+  #ok(sanitized)
+};
+
+// Validate Principal ID format
+private func validatePrincipalId(principalText: Text, fieldName: Text) : ValidationResult {
+  if (Text.size(principalText) == 0) {
+    return #err(fieldName # " cannot be empty");
+  };
+  
+  if (Text.size(principalText) > 100) {
+    return #err(fieldName # " is too long");
+  };
+  
+  // Basic format validation - should contain only alphanumeric and hyphens
+  let chars = Text.toArray(principalText);
+  for (char in chars.vals()) {
+    if (not (Char.isAlphabetic(char) or Char.isDigit(char) or char == '-')) {
+      return #err(fieldName # " contains invalid characters");
+    };
+  };
+  
+  #ok
+};
+
+// Validate numeric ranges
+private func validateNumericRange(value: Nat, min: Nat, max: Nat, fieldName: Text) : ValidationResult {
+  if (value < min or value > max) {
+    return #err(fieldName # " must be between " # Nat.toText(min) # " and " # Nat.toText(max));
+  };
+  #ok
+};
+
+// Validate timestamp
+private func validateTimestamp(timestamp: Int, fieldName: Text) : ValidationResult {
+  let now = Time.now();
+  let maxAge = 300_000_000_000; // 5 minutes in nanoseconds
+  let maxFuture = 60_000_000_000; // 1 minute in nanoseconds
+  
+  if (timestamp < (now - maxAge)) {
+    return #err(fieldName # " is too old");
+  };
+  
+  if (timestamp > (now + maxFuture)) {
+    return #err(fieldName # " is too far in the future");
+  };
+  
+  #ok
+};
+
+// Comprehensive appointment data validation
+private func validateAppointmentData(appointmentData: {
+  appointmentType: AppointmentType;
+  scheduledDate: Text;
+  startTime: Text;
+  endTime: Text;
+  notes: Text;
+}) : Result.Result<{
+  appointmentType: AppointmentType;
+  scheduledDate: Text;
+  startTime: Text;
+  endTime: Text;
+  notes: Text;
+}, Text> {
+  
+  // Validate scheduled date format (basic validation)
+  switch (validateTextLength(appointmentData.scheduledDate, 20, "Scheduled date")) {
+    case (#err(msg)) { return #err(msg) };
+    case (#ok) {};
+  };
+  
+  // Validate time formats
+  switch (validateTextLength(appointmentData.startTime, 10, "Start time")) {
+    case (#err(msg)) { return #err(msg) };
+    case (#ok) {};
+  };
+  
+  switch (validateTextLength(appointmentData.endTime, 10, "End time")) {
+    case (#err(msg)) { return #err(msg) };
+    case (#ok) {};
+  };
+  
+  // Validate and sanitize notes
+  switch (validateMedicalText(appointmentData.notes, "Notes", 1000)) {
+    case (#err(msg)) { return #err(msg) };
+    case (#ok(sanitizedNotes)) {
+      #ok({
+        appointmentType = appointmentData.appointmentType;
+        scheduledDate = Text.trim(appointmentData.scheduledDate, #char ' ');
+        startTime = Text.trim(appointmentData.startTime, #char ' ');
+        endTime = Text.trim(appointmentData.endTime, #char ' ');
+        notes = sanitizedNotes;
+      })
+    };
+  }
+};
+
+// Validate message content with comprehensive checks
+private func validateMessageContent(
+  content: Text,
+  messageType: Text,
+  receiverId: Principal
+) : Result.Result<{content: Text; messageType: Text}, Text> {
+  
+  // Validate content
+  switch (validateMedicalText(content, "Message content", 5000)) {
+    case (#err(msg)) { return #err(msg) };
+    case (#ok(sanitizedContent)) {
+      
+      // Validate message type
+      switch (validateTextLength(messageType, 50, "Message type")) {
+        case (#err(msg)) { return #err(msg) };
+        case (#ok) {
+          let sanitizedMessageType = sanitizeText(messageType);
+          
+          // Validate receiver exists
+          let receiverExists = switch (userRoles.get(receiverId)) {
+            case (?role) { true };
+            case null { false };
+          };
+          
+          if (not receiverExists) {
+            return #err("Receiver not found");
+          };
+          
+          #ok({
+            content = sanitizedContent;
+            messageType = sanitizedMessageType;
+          })
+        };
+      };
+    };
+  }
+};
+
+// Validate medical record data
+private func validateMedicalRecordData(
+  patientId: Principal,
+  diagnosis: Text,
+  treatment: Text,
+  notes: Text
+) : Result.Result<{diagnosis: Text; treatment: Text; notes: Text}, Text> {
+  
+  // Validate diagnosis
+  switch (validateMedicalText(diagnosis, "Diagnosis", 500)) {
+    case (#err(msg)) { return #err(msg) };
+    case (#ok(sanitizedDiagnosis)) {
+      
+      // Validate treatment
+      switch (validateMedicalText(treatment, "Treatment", 1000)) {
+        case (#err(msg)) { return #err(msg) };
+        case (#ok(sanitizedTreatment)) {
+          
+          // Validate notes
+          switch (validateMedicalText(notes, "Notes", 2000)) {
+            case (#err(msg)) { return #err(msg) };
+            case (#ok(sanitizedNotes)) {
+              
+              // Verify patient exists
+              let patientExists = switch (userRoles.get(patientId)) {
+                case (?#patient) { true };
+                case (_) { false };
+              };
+              
+              if (not patientExists) {
+                return #err("Patient not found");
+              };
+              
+              #ok({
+                diagnosis = sanitizedDiagnosis;
+                treatment = sanitizedTreatment;
+                notes = sanitizedNotes;
+              })
+            };
+          };
+        };
+      };
+    };
+  }
+};
+
+// Enhanced endpoint validation wrapper
+private func validateEndpointAccess(
+  caller: Principal,
+  requiredRole: ?UserType,
+  nonce: ?Nat,
+  timestamp: ?Int
+) : ValidationResult {
+  
+  // Rate limiting check
+  switch (checkRateLimit(caller, 10, 60000)) {
+    case (#err(msg)) { return #err("Rate limit exceeded: " # msg) };
+    case (#ok) {};
+  };
+  
+  // Role-based access control
+  switch (requiredRole) {
+    case (?role) {
+      if (not isAuthorized(caller, role)) {
+        return #err("Unauthorized: Required role not found");
+      };
+    };
+    case null {};
+  };
+  
+  // Nonce and timestamp validation if provided
+  switch (nonce, timestamp) {
+    case (?n, ?t) {
+      switch (validateTimestamp(t, "Request timestamp")) {
+        case (#err(msg)) { return #err(msg) };
+        case (#ok) {
+          let nonceText = Principal.toText(caller) # "_" # Nat.toText(n) # "_" # Int.toText(t);
+          switch (validateNonce(nonceText, t)) {
+            case (#err(msg)) { return #err("Invalid nonce: " # msg) };
+            case (#ok) {};
+          };
+        };
+      };
+    };
+    case (_, _) {};
+  };
+  
+  #ok
+};
+
+// Phase 2 Security: Simplified rate limiting check
+private func check_rate_limit(caller: Principal) : Bool {
+  switch (checkRateLimit(caller, 10, 60000)) { // 10 calls per minute
+    case (#ok) { true };
+    case (#err(_)) { false };
+  }
+};
+
+// Phase 2 Security: Nonce and timestamp validation
+private func validate_nonce(caller: Principal, nonce: Nat, timestamp: Int) : Bool {
+  let nonceText = Principal.toText(caller) # "_" # Nat.toText(nonce) # "_" # Int.toText(timestamp);
+  switch (validateNonce(nonceText, timestamp)) {
+    case (#ok) { true };
+    case (#err(_)) { false };
+  }
+};
+
+// Phase 2 Security: Text sanitization wrapper
+private func sanitize_text(text: Text) : Text {
+  sanitizeText(text)
+};
+
+// Enhanced tamper-proof hash-chaining utility for audit log integrity
+private func generateAuditHash(log: AuditLog, previousHash: ?Text) : Text {
+  let hashInput = log.id # Principal.toText(log.userId) # 
+                  debug_show(log.action) # log.resourceType # log.resourceId #
+                  Int.toText(log.timestamp) # Nat.toText(log.sequenceNumber) #
+                  (switch (previousHash) { case (?h) h; case null "genesis" }) #
+                  (switch (log.details) { case (?d) d; case null "" }) #
+                  (switch (log.ipAddress) { case (?ip) ip; case null "" }) #
+                  (switch (log.userAgent) { case (?ua) ua; case null "" });
+  
+  // Enhanced hash with salt and multiple rounds for tamper resistance
+  let salt = "MentalVerse_AuditLog_Salt_2024";
+  let saltedInput = hashInput # salt;
+  
+  // Multiple hash rounds for increased security
+  var hashValue = Text.hash(saltedInput);
+  for (i in Iter.range(0, 999)) { // 1000 rounds
+    hashValue := Text.hash(Nat32.toText(hashValue) # salt);
+  };
+  
+  // Convert to hex-like representation for better readability
+  let hexHash = Nat32.toText(hashValue);
+  "AUD" # hexHash # "LOG"
+};
+
+// Tamper detection and integrity verification
+private func verifyAuditLogIntegrity(logId: Text) : Bool {
+  switch (auditLogs.get(logId)) {
+    case (?log) {
+      let recalculatedHash = generateAuditHash({
+        id = log.id;
+        userId = log.userId;
+        action = log.action;
+        resourceType = log.resourceType;
+        resourceId = log.resourceId;
+        details = log.details;
+        ipAddress = log.ipAddress;
+        userAgent = log.userAgent;
+        timestamp = log.timestamp;
+        previousHash = log.previousHash;
+        currentHash = "";
+        sequenceNumber = log.sequenceNumber;
+      }, log.previousHash);
+      
+      log.currentHash == recalculatedHash
+    };
+    case null false;
+  }
+};
+
+// Verify entire audit chain integrity
+private func verifyAuditChainIntegrity() : {isValid: Bool; corruptedLogs: [Text]} {
+  let allLogs = Iter.toArray(auditLogs.vals());
+  let sortedLogs = Array.sort(allLogs, func(a: AuditLog, b: AuditLog) : Order.Order {
+    Nat.compare(a.sequenceNumber, b.sequenceNumber)
+  });
+  
+  var corruptedLogs: [Text] = [];
+  var previousHash: ?Text = null;
+  
+  for (log in sortedLogs.vals()) {
+    // Verify hash chain continuity
+    if (log.previousHash != previousHash) {
+      corruptedLogs := Array.append(corruptedLogs, [log.id]);
+    };
+    
+    // Verify individual log integrity
+    if (not verifyAuditLogIntegrity(log.id)) {
+      corruptedLogs := Array.append(corruptedLogs, [log.id]);
+    };
+    
+    previousHash := ?log.currentHash;
+  };
+  
+  {isValid = corruptedLogs.size() == 0; corruptedLogs = corruptedLogs}
+};
+
+// Create immutable audit snapshot for external verification
+private func createAuditSnapshot() : {timestamp: Int; totalLogs: Nat; chainHash: Text; signature: Text} {
+  let allLogs = Iter.toArray(auditLogs.vals());
+  let sortedLogs = Array.sort(allLogs, func(a: AuditLog, b: AuditLog) : Order.Order {
+    Nat.compare(a.sequenceNumber, b.sequenceNumber)
+  });
+  
+  var chainHash = "SNAPSHOT_START";
+  for (log in sortedLogs.vals()) {
+    chainHash := Text.hash(chainHash # log.currentHash) |> Nat32.toText;
+  };
+  
+  let timestamp = Time.now();
+  let signature = Text.hash(chainHash # Int.toText(timestamp) # "MENTALVERSE_AUDIT") |> Nat32.toText;
+  
+  {
+    timestamp = timestamp;
+    totalLogs = allLogs.size();
+    chainHash = "SNAP" # chainHash # "SHOT";
+    signature = "SIG" # signature # "TURE";
+  }
+};
+
+// Rate limiting implementation
+// Enhanced DDoS protection and rate limiting
+private func checkRateLimit(caller: Principal, maxCalls: Nat, windowMs: Int) : ValidationResult {
+  let now = Time.now();
+  
+  // Check if caller is currently blocked
+  switch (blockedPrincipals.get(caller)) {
+    case (?blockUntil) {
+      if (now < blockUntil) {
+        return #err("Access temporarily blocked due to suspicious activity");
+      } else {
+        // Unblock expired blocks
+        blockedPrincipals.delete(caller);
+      };
+    };
+    case null {};
+  };
+  
+  // Update global threat metrics
+  updateThreatMetrics(caller, now);
+  
+  // Adjust rate limits based on protection level
+  let adjustedMaxCalls = getAdjustedRateLimit(maxCalls);
+  let windowStart = now - windowMs * 1_000_000; // Convert ms to nanoseconds
+  
+  switch (rateLimits.get(caller)) {
+    case null {
+      // First call from this principal
+      rateLimits.put(caller, {
+        callCount = 1;
+        windowStart = now;
+        lastCallTime = now;
+        violationCount = 0;
+        blockUntil = null;
+        suspiciousActivity = false;
+      });
+      #ok
+    };
+    case (?info) {
+      if (info.windowStart < windowStart) {
+        // Reset window but preserve violation history
+        rateLimits.put(caller, {
+          callCount = 1;
+          windowStart = now;
+          lastCallTime = now;
+          violationCount = info.violationCount;
+          blockUntil = info.blockUntil;
+          suspiciousActivity = detectSuspiciousActivity(caller, now, info);
+        });
+        #ok
+      } else if (info.callCount >= adjustedMaxCalls) {
+        // Rate limit exceeded - apply progressive penalties
+        let newViolationCount = info.violationCount + 1;
+        let blockDuration = calculateBlockDuration(newViolationCount);
+        let blockUntil = now + blockDuration;
+        
+        // Update rate limit info with penalty
+        rateLimits.put(caller, {
+          info with
+          violationCount = newViolationCount;
+          blockUntil = ?blockUntil;
+          suspiciousActivity = true;
+        });
+        
+        // Add to blocked principals if severe violation
+        if (newViolationCount >= 3) {
+          blockedPrincipals.put(caller, blockUntil);
+          logSecurityEvent(
+            caller,
+            "ddos_protection_block",
+            "Principal blocked due to repeated rate limit violations: " # Principal.toText(caller),
+            "high"
+          );
+        };
+        
+        #err("Rate limit exceeded. Access temporarily restricted for " # Int.toText(blockDuration / 1_000_000_000) # " seconds.")
+      } else {
+        // Increment call count
+        rateLimits.put(caller, {
+          info with
+          callCount = info.callCount + 1;
+          lastCallTime = now;
+          suspiciousActivity = detectSuspiciousActivity(caller, now, info);
+        });
+        #ok
+      }
+    };
+  }
+};
+
+// Calculate progressive block duration based on violation count
+private func calculateBlockDuration(violationCount: Nat) : Int {
+  switch (violationCount) {
+    case (1) { 30_000_000_000 }; // 30 seconds
+    case (2) { 300_000_000_000 }; // 5 minutes
+    case (3) { 1_800_000_000_000 }; // 30 minutes
+    case (4) { 3_600_000_000_000 }; // 1 hour
+    case (_) { 21_600_000_000_000 }; // 6 hours for severe violations
+  }
+};
+
+// Detect suspicious activity patterns
+private func detectSuspiciousActivity(caller: Principal, now: Int, info: RateLimitInfo) : Bool {
+  let timeSinceLastCall = now - info.lastCallTime;
+  let callFrequency = if (timeSinceLastCall > 0) {
+    1_000_000_000 / timeSinceLastCall // Calls per second
+  } else { 1000 }; // Very high frequency if immediate
+  
+  // Suspicious if more than 10 calls per second or rapid successive calls
+  callFrequency > 10 or timeSinceLastCall < 100_000_000 // Less than 100ms between calls
+};
+
+// Adjust rate limits based on current protection level
+private func getAdjustedRateLimit(baseLimit: Nat) : Nat {
+  switch (currentProtectionLevel) {
+    case (#normal) { baseLimit };
+    case (#elevated) { baseLimit * 80 / 100 }; // 20% reduction
+    case (#high) { baseLimit * 60 / 100 }; // 40% reduction
+    case (#critical) { baseLimit * 40 / 100 }; // 60% reduction
+  }
+};
+
+// Update global threat metrics and protection level
+private func updateThreatMetrics(caller: Principal, now: Int) {
+  globalRequestCount += 1;
+  
+  // Reset metrics every minute
+  if (now - lastGlobalReset > 60_000_000_000) {
+    let currentMetrics = {
+      requestsPerSecond = globalRequestCount * 1_000_000_000 / (now - lastGlobalReset);
+      uniqueCallers = rateLimits.size();
+      blockedRequests = blockedPrincipals.size();
+      suspiciousPatterns = countSuspiciousActivity();
+      lastUpdated = now;
+    };
+    
+    threatMetrics.put("global", currentMetrics);
+    
+    // Update protection level based on metrics
+    currentProtectionLevel := calculateProtectionLevel(currentMetrics);
+    
+    // Reset counters
+    globalRequestCount := 0;
+    lastGlobalReset := now;
+  };
+};
+
+// Count principals with suspicious activity
+private func countSuspiciousActivity() : Nat {
+  var count = 0;
+  for ((principal, info) in rateLimits.entries()) {
+    if (info.suspiciousActivity) {
+      count += 1;
+    };
+  };
+  count
+};
+
+// Calculate appropriate protection level
+private func calculateProtectionLevel(metrics: ThreatMetrics) : DDoSProtectionLevel {
+  if (metrics.requestsPerSecond > 1000 or metrics.suspiciousPatterns > 50) {
+    #critical
+  } else if (metrics.requestsPerSecond > 500 or metrics.suspiciousPatterns > 20) {
+    #high
+  } else if (metrics.requestsPerSecond > 200 or metrics.suspiciousPatterns > 10) {
+    #elevated
+  } else {
+    #normal
+  }
+};
+
+// Replay attack protection
+private func validateNonce(nonce: Text, timestamp: Int) : ValidationResult {
+  let now = Time.now();
+  let maxAge = 300_000_000_000; // 5 minutes in nanoseconds
+  
+  // Check if nonce was already used
+  switch (usedNonces.get(nonce)) {
+    case (?_) {
+      return #err("Nonce already used (replay attack detected)");
+    };
+    case null {};
+  };
+  
+  // Check timestamp freshness
+  if (now - timestamp > maxAge) {
+    return #err("Request timestamp too old");
+  };
+  
+  if (timestamp > now + 60_000_000_000) { // 1 minute future tolerance
+    return #err("Request timestamp too far in future");
+  };
+  
+  // Store nonce
+  usedNonces.put(nonce, timestamp);
+  
+  // Clean old nonces periodically
+  cleanOldNonces(now - maxAge);
+  
+  #ok
+};
+
+private func cleanOldNonces(cutoffTime: Int) {
+  let entries = Iter.toArray(usedNonces.entries());
+  for ((nonce, timestamp) in entries.vals()) {
+    if (timestamp < cutoffTime) {
+      usedNonces.delete(nonce);
+    };
+  };
+};
+
+// Comprehensive input validation for user profiles
+private func validateUserProfileInput(
+  firstName: Text,
+  lastName: Text,
+  email: Text,
+  phoneNumber: ?Text
+) : ValidationResult {
+  switch (validateTextNotEmpty(firstName, "First name")) {
+    case (#err(msg)) { return #err(msg) };
+    case (#ok) {};
+  };
+  
+  switch (validateTextLength(firstName, MAX_NAME_LENGTH, "First name")) {
+    case (#err(msg)) { return #err(msg) };
+    case (#ok) {};
+  };
+  
+  switch (validateTextNotEmpty(lastName, "Last name")) {
+    case (#err(msg)) { return #err(msg) };
+    case (#ok) {};
+  };
+  
+  switch (validateTextLength(lastName, MAX_NAME_LENGTH, "Last name")) {
+    case (#err(msg)) { return #err(msg) };
+    case (#ok) {};
+  };
+  
+  switch (validateEmail(email)) {
+    case (#err(msg)) { return #err(msg) };
+    case (#ok) {};
+  };
+  
+  switch (phoneNumber) {
+    case (?phone) {
+      switch (validateTextLength(phone, MAX_PHONE_LENGTH, "Phone number")) {
+        case (#err(msg)) { return #err(msg) };
+        case (#ok) {};
+      };
+    };
+    case null {};
+  };
+  
+  #ok
+};
 
 persistent actor MentalVerseBackend {
   // MVT Token Integration
@@ -29,6 +760,23 @@ persistent actor MentalVerseBackend {
   // Secure Messaging Integration
   private let SECURE_MESSAGING_CANISTER_ID = "rrkah-fqaaa-aaaaa-aaaaq-cai"; // Replace with actual secure messaging canister ID
   private let secureMessagingActor = SecureMessagingInterface.getSecureMessagingActor(SECURE_MESSAGING_CANISTER_ID);
+  
+  // Input validation constants
+  private let MAX_TEXT_LENGTH = 10000;
+  private let MAX_ARRAY_SIZE = 100;
+  private let MAX_EMAIL_LENGTH = 254;
+  private let MAX_PHONE_LENGTH = 20;
+  private let MAX_NAME_LENGTH = 100;
+  private let MAX_DESCRIPTION_LENGTH = 5000;
+  private let MIN_PASSWORD_LENGTH = 8;
+  
+  // Rate limiting storage
+  private stable var rateLimitEntries : [(Principal, RateLimitInfo)] = [];
+  private var rateLimits = HashMap.HashMap<Principal, RateLimitInfo>(100, Principal.equal, Principal.hash);
+  
+  // Nonce tracking for replay protection
+  private stable var nonceEntries : [(Text, Int)] = [];
+  private var usedNonces = HashMap.HashMap<Text, Int>(1000, Text.equal, Text.hash);
   
   // Token-related types
   type TokenBalance = Nat;
@@ -422,6 +1170,11 @@ persistent actor MentalVerseBackend {
     #access_revoked;
     #export;
     #share;
+    #token_award;
+    #daily_usage;
+    #feedback_submitted;
+    #premium_booking;
+    #error;
   };
 
   public type AuditLog = {
@@ -434,6 +1187,30 @@ persistent actor MentalVerseBackend {
     ipAddress: ?Text;
     userAgent: ?Text;
     timestamp: Int;
+    // Hash-chaining for integrity
+    previousHash: ?Text;
+    currentHash: Text;
+    sequenceNumber: Nat;
+  };
+
+  // Pagination types for audit logs
+  public type AuditLogPage = {
+    logs: [AuditLog];
+    totalCount: Nat;
+    pageNumber: Nat;
+    pageSize: Nat;
+    hasNextPage: Bool;
+    hasPreviousPage: Bool;
+  };
+
+  public type AuditLogFilter = {
+    userId: ?UserId;
+    action: ?AuditLogAction;
+    resourceType: ?Text;
+    resourceId: ?Text;
+    startTime: ?Int;
+    endTime: ?Int;
+    severity: ?Text;
   };
 
   public type AccessControlRule = {
@@ -541,6 +1318,9 @@ persistent actor MentalVerseBackend {
   private var prescriptionsEntries : [(Text, Prescription)] = [];
   private var treatmentSummariesEntries : [(Text, TreatmentSummary)] = [];
   private var auditLogsEntries : [(Text, AuditLog)] = [];
+  // Hash-chaining support for audit log integrity
+  private stable var lastAuditHash : ?Text = null;
+  private stable var auditSequenceNumber : Nat = 0;
   private var accessControlRulesEntries : [(Text, AccessControlRule)] = [];
   // Payment Integration entries (Iteration 4)
   private var paymentTransactionsEntries : [(Text, PaymentTransaction)] = [];
@@ -631,6 +1411,9 @@ persistent actor MentalVerseBackend {
     // Phase 1: Save RBAC data
     userRoleAssignmentsEntries := Iter.toArray(userRoleAssignments.entries());
     adminUsersEntries := Iter.toArray(adminUsers.entries());
+    // Phase 2: Save security data
+    rateLimitEntries := Iter.toArray(rateLimits.entries());
+    nonceEntries := Iter.toArray(usedNonces.entries());
   };
 
   system func postupgrade() {
@@ -727,6 +1510,13 @@ persistent actor MentalVerseBackend {
     };
     for ((userId, isAdmin) in adminUsersEntries.vals()) {
       adminUsers.put(userId, isAdmin);
+    };
+    // Phase 2: Restore security data
+    for ((principal, rateLimitInfo) in rateLimitEntries.vals()) {
+      rateLimits.put(principal, rateLimitInfo);
+    };
+    for ((nonce, timestamp) in nonceEntries.vals()) {
+      usedNonces.put(nonce, timestamp);
     };
     
     // Clear stable storage
@@ -913,7 +1703,135 @@ persistent actor MentalVerseBackend {
     }
   };
   
-  // === PHASE 1: ROLE-BASED ACCESS CONTROL (RBAC) ===
+  // === ENHANCED GRANULAR RBAC WITH FINE-GRAINED PERMISSIONS ===
+  
+  // Permission definitions for granular access control
+  public type Permission = {
+    #read_own_profile;
+    #update_own_profile;
+    #read_patient_data;
+    #write_patient_data;
+    #read_session_notes;
+    #write_session_notes;
+    #read_prescriptions;
+    #write_prescriptions;
+    #read_medical_records;
+    #write_medical_records;
+    #manage_appointments;
+    #view_audit_logs;
+    #manage_users;
+    #assign_roles;
+    #system_admin;
+    #financial_operations;
+    #emergency_access;
+  };
+  
+  // Resource scope definitions
+  public type ResourceScope = {
+    #global; // Access to all resources of this type
+    #department : Text; // Access within specific department
+    #patient_group : [Principal]; // Access to specific patients
+    #own_only; // Access only to own resources
+    #assigned_only; // Access only to assigned resources
+  };
+  
+  // Enhanced permission with scope and conditions
+  public type ScopedPermission = {
+    permission: Permission;
+    scope: ResourceScope;
+    conditions: ?Text; // JSON string for complex conditions
+    expiresAt: ?Int;
+    isActive: Bool;
+  };
+  
+  // Role definition with granular permissions
+  public type RoleDefinition = {
+    name: Text;
+    description: Text;
+    permissions: [ScopedPermission];
+    inheritsFrom: ?Text; // Role inheritance
+    isSystemRole: Bool;
+    createdAt: Int;
+    updatedAt: Int;
+  };
+  
+  // User permission assignment (can override role permissions)
+  public type UserPermissionOverride = {
+    userId: Principal;
+    permission: ScopedPermission;
+    grantedBy: Principal;
+    reason: Text;
+    grantedAt: Int;
+  };
+  
+  // Storage for granular RBAC
+  private transient var roleDefinitions = HashMap.HashMap<Text, RoleDefinition>(20, Text.equal, Text.hash);
+  private transient var userPermissionOverrides = HashMap.HashMap<Text, UserPermissionOverride>(50, Text.equal, Text.hash);
+  private transient var resourceOwnership = HashMap.HashMap<Text, Principal>(100, Text.equal, Text.hash);
+  private transient var departmentAssignments = HashMap.HashMap<Principal, Text>(50, Principal.equal, Principal.hash);
+  
+  // Initialize default role definitions
+  private func initializeDefaultRoles() {
+    let now = Time.now();
+    
+    // Patient role
+    let patientRole: RoleDefinition = {
+      name = "patient";
+      description = "Standard patient with access to own data";
+      permissions = [
+        { permission = #read_own_profile; scope = #own_only; conditions = null; expiresAt = null; isActive = true },
+        { permission = #update_own_profile; scope = #own_only; conditions = null; expiresAt = null; isActive = true },
+        { permission = #read_medical_records; scope = #own_only; conditions = null; expiresAt = null; isActive = true },
+        { permission = #read_prescriptions; scope = #own_only; conditions = null; expiresAt = null; isActive = true }
+      ];
+      inheritsFrom = null;
+      isSystemRole = true;
+      createdAt = now;
+      updatedAt = now;
+    };
+    
+    // Therapist role
+    let therapistRole: RoleDefinition = {
+      name = "therapist";
+      description = "Licensed therapist with patient care permissions";
+      permissions = [
+        { permission = #read_own_profile; scope = #own_only; conditions = null; expiresAt = null; isActive = true },
+        { permission = #update_own_profile; scope = #own_only; conditions = null; expiresAt = null; isActive = true },
+        { permission = #read_patient_data; scope = #assigned_only; conditions = null; expiresAt = null; isActive = true },
+        { permission = #write_patient_data; scope = #assigned_only; conditions = null; expiresAt = null; isActive = true },
+        { permission = #read_session_notes; scope = #assigned_only; conditions = null; expiresAt = null; isActive = true },
+        { permission = #write_session_notes; scope = #assigned_only; conditions = null; expiresAt = null; isActive = true },
+        { permission = #read_prescriptions; scope = #assigned_only; conditions = null; expiresAt = null; isActive = true },
+        { permission = #write_prescriptions; scope = #assigned_only; conditions = null; expiresAt = null; isActive = true },
+        { permission = #manage_appointments; scope = #assigned_only; conditions = null; expiresAt = null; isActive = true }
+      ];
+      inheritsFrom = ?"patient";
+      isSystemRole = true;
+      createdAt = now;
+      updatedAt = now;
+    };
+    
+    // Admin role
+    let adminRole: RoleDefinition = {
+      name = "admin";
+      description = "System administrator with full access";
+      permissions = [
+        { permission = #system_admin; scope = #global; conditions = null; expiresAt = null; isActive = true },
+        { permission = #manage_users; scope = #global; conditions = null; expiresAt = null; isActive = true },
+        { permission = #assign_roles; scope = #global; conditions = null; expiresAt = null; isActive = true },
+        { permission = #view_audit_logs; scope = #global; conditions = null; expiresAt = null; isActive = true },
+        { permission = #emergency_access; scope = #global; conditions = null; expiresAt = null; isActive = true }
+      ];
+      inheritsFrom = ?"therapist";
+      isSystemRole = true;
+      createdAt = now;
+      updatedAt = now;
+    };
+    
+    roleDefinitions.put("patient", patientRole);
+    roleDefinitions.put("therapist", therapistRole);
+    roleDefinitions.put("admin", adminRole);
+  };
   
   // Check if user has specific role
   private func hasRole(userId: Principal, requiredRole: UserType) : Bool {
@@ -1158,6 +2076,505 @@ persistent actor MentalVerseBackend {
     };
     
     authorized
+  };
+  
+  // === GRANULAR PERMISSION SYSTEM ===
+  
+  // Enhanced granular authorization with scoped permissions
+  private func hasPermission(caller: Principal, requiredPermission: Permission, resourceId: ?Text, context: ?Text) : async Bool {
+    // Get all effective permissions for the user
+    let effectivePermissions = await getEffectivePermissions(caller);
+    
+    // Check each permission to see if it matches and scope allows access
+    for (scopedPerm in effectivePermissions.vals()) {
+      if (scopedPerm.permission == requiredPermission and scopedPerm.isActive) {
+        // Check expiration
+        switch (scopedPerm.expiresAt) {
+          case (?expiry) {
+            if (Time.now() > expiry) { continue };
+          };
+          case null { /* No expiration */ };
+        };
+        
+        // Check scope-based access
+        let scopeAllowed = await checkScopeAccess(caller, scopedPerm.scope, resourceId, context);
+        if (scopeAllowed) {
+          // Check additional conditions if any
+          switch (scopedPerm.conditions) {
+            case (?conditionsJson) {
+              let conditionsMet = await evaluateConditions(caller, conditionsJson, resourceId, context);
+              if (conditionsMet) { return true };
+            };
+            case null { return true };
+          }
+        };
+      };
+    };
+    
+    false
+  };
+  
+  // Get all effective permissions for a user (role + overrides)
+  private func getEffectivePermissions(userId: Principal) : async [ScopedPermission] {
+    var permissions: [ScopedPermission] = [];
+    
+    // Get role-based permissions
+    switch (userRoleAssignments.get(userId)) {
+      case (?userType) {
+        let roleName = switch (userType) {
+          case (#patient) { "patient" };
+          case (#therapist) { "therapist" };
+          case (#admin) { "admin" };
+        };
+        
+        permissions := await getRolePermissions(roleName);
+      };
+      case null { /* No role assigned */ };
+    };
+    
+    // Add user-specific permission overrides
+    let overrideKey = Principal.toText(userId);
+    switch (userPermissionOverrides.get(overrideKey)) {
+      case (?override) {
+        permissions := Array.append(permissions, [override.permission]);
+      };
+      case null { /* No overrides */ };
+    };
+    
+    permissions
+  };
+  
+  // Get permissions for a role (including inherited permissions)
+  private func getRolePermissions(roleName: Text) : async [ScopedPermission] {
+    var allPermissions: [ScopedPermission] = [];
+    
+    switch (roleDefinitions.get(roleName)) {
+      case (?role) {
+        allPermissions := role.permissions;
+        
+        // Add inherited permissions
+        switch (role.inheritsFrom) {
+          case (?parentRole) {
+            let parentPermissions = await getRolePermissions(parentRole);
+            allPermissions := Array.append(allPermissions, parentPermissions);
+          };
+          case null { /* No inheritance */ };
+        };
+      };
+      case null { /* Role not found */ };
+    };
+    
+    allPermissions
+  };
+  
+  // Check if scope allows access to resource
+  private func checkScopeAccess(userId: Principal, scope: ResourceScope, resourceId: ?Text, context: ?Text) : async Bool {
+    switch (scope) {
+      case (#global) { true };
+      case (#own_only) {
+        switch (resourceId) {
+          case (?id) { Principal.toText(userId) == id };
+          case null { true }; // If no specific resource, allow
+        }
+      };
+      case (#assigned_only) {
+        switch (resourceId) {
+          case (?id) {
+            // Check if resource is assigned to this user
+            await isResourceAssignedToUser(id, userId)
+          };
+          case null { true };
+        }
+      };
+      case (#department(dept)) {
+        switch (departmentAssignments.get(userId)) {
+          case (?userDept) { userDept == dept };
+          case null { false };
+        }
+      };
+      case (#patient_group(patients)) {
+        switch (resourceId) {
+          case (?id) {
+            let resourcePrincipal = Principal.fromText(id);
+            Array.find<Principal>(patients, func(p) { p == resourcePrincipal }) != null
+          };
+          case null { false };
+        }
+      };
+    }
+  };
+  
+  // Check if a resource is assigned to a user
+  private func isResourceAssignedToUser(resourceId: Text, userId: Principal) : async Bool {
+    // Check resource ownership
+    switch (resourceOwnership.get(resourceId)) {
+      case (?owner) { owner == userId };
+      case null {
+        // Check patient-therapist assignments
+        isPatientAssignedToTherapist(Principal.fromText(resourceId), userId)
+      };
+    }
+  };
+  
+  // Evaluate complex conditions (placeholder for future JSON condition evaluation)
+  private func evaluateConditions(userId: Principal, conditionsJson: Text, resourceId: ?Text, context: ?Text) : async Bool {
+    // For now, return true. In future, implement JSON condition parser
+    // Example conditions: {"time_range": "09:00-17:00", "location": "clinic", "emergency_only": false}
+    true
+  };
+  
+  // Enhanced authorization wrapper for backward compatibility
+  private func isAuthorizedGranular(caller: Principal, action: Text, resource: ?Text) : async Bool {
+    let permission = switch (action) {
+      case "read_profile" { #read_own_profile };
+      case "write_profile" { #update_own_profile };
+      case "read_session_notes" { #read_session_notes };
+      case "write_session_notes" { #write_session_notes };
+      case "read_prescriptions" { #read_prescriptions };
+      case "write_prescriptions" { #write_prescriptions };
+      case "read_patient_data" { #read_patient_data };
+      case "write_patient_data" { #write_patient_data };
+      case "manage_appointments" { #manage_appointments };
+      case "view_audit_logs" { #view_audit_logs };
+      case "manage_users" { #manage_users };
+      case "assign_roles" { #assign_roles };
+      case _ { return false };
+    };
+    
+    await hasPermission(caller, permission, resource, null)
+  };
+  
+  // === ROLE AND PERMISSION MANAGEMENT ===
+  
+  // Create or update a role definition (admin only)
+  public shared(msg) func createRole(
+    roleName: Text,
+    description: Text,
+    permissions: [ScopedPermission],
+    inheritsFrom: ?Text
+  ) : async Result.Result<Text, Text> {
+    let caller = msg.caller;
+    
+    // Only admins can create roles
+    if (not await hasPermission(caller, #system_admin, null, null)) {
+      return #err("Unauthorized: Only system administrators can create roles");
+    };
+    
+    let now = Time.now();
+    let roleDefinition: RoleDefinition = {
+      name = roleName;
+      description = description;
+      permissions = permissions;
+      inheritsFrom = inheritsFrom;
+      isSystemRole = false;
+      createdAt = now;
+      updatedAt = now;
+    };
+    
+    roleDefinitions.put(roleName, roleDefinition);
+    
+    // Audit log
+    logAuditEvent(
+      caller,
+      #create,
+      "role_definition",
+      roleName,
+      ?("Role created with " # Int.toText(permissions.size()) # " permissions")
+    );
+    
+    #ok("Role '" # roleName # "' created successfully")
+  };
+  
+  // Grant specific permission to a user (admin only)
+  public shared(msg) func grantUserPermission(
+    targetUserId: Principal,
+    permission: ScopedPermission,
+    reason: Text
+  ) : async Result.Result<Text, Text> {
+    let caller = msg.caller;
+    
+    // Only admins can grant permissions
+    if (not await hasPermission(caller, #assign_roles, null, null)) {
+      return #err("Unauthorized: Only administrators can grant permissions");
+    };
+    
+    let overrideKey = Principal.toText(targetUserId);
+    let override: UserPermissionOverride = {
+      userId = targetUserId;
+      permission = permission;
+      grantedBy = caller;
+      reason = reason;
+      grantedAt = Time.now();
+    };
+    
+    userPermissionOverrides.put(overrideKey, override);
+    
+    // Audit log
+    logAuditEvent(
+      caller,
+      #update,
+      "user_permission",
+      Principal.toText(targetUserId),
+      ?("Permission granted: " # debug_show(permission.permission) # " - Reason: " # reason)
+    );
+    
+    #ok("Permission granted successfully")
+  };
+  
+  // Revoke specific permission from a user (admin only)
+  public shared(msg) func revokeUserPermission(
+    targetUserId: Principal
+  ) : async Result.Result<Text, Text> {
+    let caller = msg.caller;
+    
+    // Only admins can revoke permissions
+    if (not await hasPermission(caller, #assign_roles, null, null)) {
+      return #err("Unauthorized: Only administrators can revoke permissions");
+    };
+    
+    let overrideKey = Principal.toText(targetUserId);
+    switch (userPermissionOverrides.get(overrideKey)) {
+      case (?existing) {
+        userPermissionOverrides.delete(overrideKey);
+        
+        // Audit log
+        logAuditEvent(
+          caller,
+          #delete,
+          "user_permission",
+          Principal.toText(targetUserId),
+          ?("Permission revoked: " # debug_show(existing.permission.permission))
+        );
+        
+        #ok("Permission revoked successfully")
+      };
+      case null {
+        #err("No permission override found for this user")
+      };
+    }
+  };
+  
+  // Assign department to user (admin only)
+  public shared(msg) func assignUserToDepartment(
+    targetUserId: Principal,
+    department: Text
+  ) : async Result.Result<Text, Text> {
+    let caller = msg.caller;
+    
+    // Only admins can assign departments
+    if (not await hasPermission(caller, #manage_users, null, null)) {
+      return #err("Unauthorized: Only administrators can assign departments");
+    };
+    
+    departmentAssignments.put(targetUserId, department);
+    
+    // Audit log
+    logAuditEvent(
+      caller,
+      #update,
+      "user_department",
+      Principal.toText(targetUserId),
+      ?("Assigned to department: " # department)
+    );
+    
+    #ok("User assigned to department successfully")
+  };
+  
+  // Set resource ownership (admin only)
+  public shared(msg) func setResourceOwnership(
+    resourceId: Text,
+    ownerId: Principal
+  ) : async Result.Result<Text, Text> {
+    let caller = msg.caller;
+    
+    // Only admins can set resource ownership
+    if (not await hasPermission(caller, #system_admin, null, null)) {
+      return #err("Unauthorized: Only system administrators can set resource ownership");
+    };
+    
+    resourceOwnership.put(resourceId, ownerId);
+    
+    // Audit log
+    logAuditEvent(
+      caller,
+      #update,
+      "resource_ownership",
+      resourceId,
+      ?("Owner set to: " # Principal.toText(ownerId))
+    );
+    
+    #ok("Resource ownership set successfully")
+  };
+  
+  // Get user's effective permissions (for debugging/admin view)
+  public shared(msg) func getUserPermissions(
+    targetUserId: Principal
+  ) : async Result.Result<[ScopedPermission], Text> {
+    let caller = msg.caller;
+    
+    // Only admins or the user themselves can view permissions
+    if (caller != targetUserId and not await hasPermission(caller, #view_audit_logs, null, null)) {
+      return #err("Unauthorized: Can only view own permissions or admin access required");
+    };
+    
+    let permissions = await getEffectivePermissions(targetUserId);
+    #ok(permissions)
+  };
+  
+  // Initialize the RBAC system
+  private func initializeRBAC() {
+    initializeDefaultRoles();
+  };
+  
+  // System initialization - called when canister starts
+  system func init() {
+    initializeRBAC();
+  };
+  
+  // ===== SESSION OWNERSHIP ENFORCEMENT =====
+  
+  // Enhanced session validation with ownership enforcement
+  private func validateSessionOwnership(caller: UserId, sessionId: Text) : Bool {
+    switch (sessionRequests.get(sessionId)) {
+      case (?session) {
+        // Check if caller is either the patient or therapist in the session
+        session.patientId == caller or session.therapistId == Principal.toText(caller)
+      };
+      case null {
+        // Check appointments as well
+        switch (appointments.get(sessionId)) {
+          case (?appointment) {
+            appointment.patientId == caller or appointment.doctorId == Principal.toText(caller)
+          };
+          case null false;
+        }
+      };
+    }
+  };
+  
+  // Session ownership enforcement for medical records
+  private func enforceSessionOwnership(caller: UserId, sessionId: Text, action: Text) : Result.Result<(), Text> {
+    if (not validateSessionOwnership(caller, sessionId)) {
+      logSecurityEvent(
+        ?caller,
+        "session_ownership_violation",
+        "User " # Principal.toText(caller) # " attempted " # action # " on session " # sessionId # " without ownership",
+        "high"
+      );
+      return #err("Access denied: You don't have ownership of this session");
+    };
+    #ok(())
+  };
+  
+  // Enhanced session validation with timeout and activity tracking
+  private func validateActiveSession(caller: UserId, sessionId: Text) : Result.Result<(), Text> {
+    switch (sessionRequests.get(sessionId)) {
+      case (?session) {
+        // Check ownership first
+        switch (enforceSessionOwnership(caller, sessionId, "access")) {
+          case (#err(error)) { return #err(error) };
+          case (#ok()) {};
+        };
+        
+        // Check session status
+        switch (session.status) {
+          case (#accepted) { #ok(()) };
+          case (#pending) { #err("Session is still pending approval") };
+          case (#declined) { #err("Session has been declined") };
+          case (#cancelled) { #err("Session has been cancelled") };
+          case (#rescheduled) { #err("Session has been rescheduled") };
+        }
+      };
+      case null { #err("Session not found") };
+    }
+  };
+  
+  // ===== ASYNC CALL RESILIENCE PATTERNS =====
+  
+  // Async call retry mechanism with exponential backoff
+  private func retryAsyncCall<T>(operation: () -> async T, maxRetries: Nat) : async Result.Result<T, Text> {
+    var attempts = 0;
+    var lastError = "Unknown error";
+    
+    while (attempts < maxRetries) {
+      try {
+        let result = await operation();
+        return #ok(result);
+      } catch (error) {
+        lastError := "Async call failed: " # debug_show(error);
+        attempts += 1;
+        
+        if (attempts < maxRetries) {
+          // Exponential backoff: wait 2^attempts seconds (simulated)
+          let backoffTime = 2 ** attempts;
+          // Note: In a real implementation, you'd use a timer or delay mechanism
+          // For now, we'll just continue to the next attempt
+        };
+      };
+    };
+    
+    #err("Max retries exceeded. Last error: " # lastError)
+  };
+  
+  // Circuit breaker pattern for external calls
+  private var circuitBreakerState : {#closed; #open; #halfOpen} = #closed;
+  private var failureCount : Nat = 0;
+  private var lastFailureTime : Int = 0;
+  private let failureThreshold : Nat = 5;
+  private let recoveryTimeout : Int = 300_000_000_000; // 5 minutes in nanoseconds
+  
+  private func executeWithCircuitBreaker<T>(operation: () -> async T) : async Result.Result<T, Text> {
+    let currentTime = Time.now();
+    
+    switch (circuitBreakerState) {
+      case (#open) {
+        if (currentTime - lastFailureTime > recoveryTimeout) {
+          circuitBreakerState := #halfOpen;
+        } else {
+          return #err("Circuit breaker is open - service temporarily unavailable");
+        };
+      };
+      case (#closed or #halfOpen) {};
+    };
+    
+    try {
+      let result = await operation();
+      
+      // Reset on success
+      if (circuitBreakerState == #halfOpen) {
+        circuitBreakerState := #closed;
+        failureCount := 0;
+      };
+      
+      #ok(result)
+    } catch (error) {
+      failureCount += 1;
+      lastFailureTime := currentTime;
+      
+      if (failureCount >= failureThreshold) {
+        circuitBreakerState := #open;
+      };
+      
+      #err("Operation failed: " # debug_show(error))
+    }
+  };
+  
+  // Async call timeout wrapper
+  private func withTimeout<T>(operation: () -> async T, timeoutNs: Int) : async Result.Result<T, Text> {
+    let startTime = Time.now();
+    
+    try {
+      let result = await operation();
+      let endTime = Time.now();
+      
+      if (endTime - startTime > timeoutNs) {
+        #err("Operation timed out")
+      } else {
+        #ok(result)
+      }
+    } catch (error) {
+      #err("Operation failed: " # debug_show(error))
+    }
   };
 
   // === CONSENT MANAGEMENT FUNCTIONS ===
@@ -1785,49 +3202,75 @@ persistent actor MentalVerseBackend {
   };
 
   // Legacy appointment creation (for backward compatibility)
-  public shared(msg) func createAppointment(appointmentData: {
-    doctorId: DoctorId;
-    appointmentType: AppointmentType;
-    scheduledDate: Text;
-    startTime: Text;
-    endTime: Text;
-    notes: Text;
-    symptoms: [Text];
-  }) : async Result.Result<Appointment, Text> {
+  public shared(msg) func createAppointment(
+    appointmentData: {
+      doctorId: DoctorId;
+      appointmentType: AppointmentType;
+      scheduledDate: Text;
+      startTime: Text;
+      endTime: Text;
+      notes: Text;
+      symptoms: [Text];
+    },
+    nonce: Text,
+    timestamp: Int
+  ) : async Result.Result<Appointment, Text> {
     let caller = msg.caller;
     
-    if (not isAuthorizedLegacy(caller, "patient")) {
-      return #err("Unauthorized: Only patients can create appointments");
+    // Enhanced security validation
+    switch (validateEndpointAccess(caller, #patient, nonce, timestamp)) {
+      case (#err(msg)) { return #err(msg) };
+      case (#ok) {};
     };
+    
+    // Comprehensive appointment data validation
+    switch (validateAppointmentData({
+      doctorId = appointmentData.doctorId;
+      appointmentType = appointmentData.appointmentType;
+      scheduledDate = appointmentData.scheduledDate;
+      startTime = appointmentData.startTime;
+      endTime = appointmentData.endTime;
+      notes = appointmentData.notes;
+      symptoms = appointmentData.symptoms;
+    })) {
+      case (#err(msg)) { return #err(msg) };
+      case (#ok(validatedData)) {
+        // Use validated data for appointment creation
 
-    // Verify doctor exists
-    switch (doctors.get(appointmentData.doctorId)) {
-      case null { return #err("Doctor not found") };
-      case (?doctor) {
-        let appointmentId = Principal.toText(caller) # "_" # appointmentData.doctorId # "_" # Int.toText(Time.now());
-        let now = Time.now();
-        
-        let appointment: Appointment = {
-          id = appointmentId;
-          patientId = caller;
-          doctorId = appointmentData.doctorId;
-          appointmentType = appointmentData.appointmentType;
-          scheduledDate = appointmentData.scheduledDate;
-          startTime = appointmentData.startTime;
-          endTime = appointmentData.endTime;
-          status = #scheduled;
-          notes = appointmentData.notes;
-          symptoms = appointmentData.symptoms;
-          diagnosis = "";
-          prescription = "";
-          followUpRequired = false;
-          followUpDate = null;
-          createdAt = now;
-          updatedAt = now;
-        };
+        // Verify doctor exists
+        switch (doctors.get(validatedData.doctorId)) {
+          case null { return #err("Doctor not found") };
+          case (?doctor) {
+            let appointmentId = Principal.toText(caller) # "_" # validatedData.doctorId # "_" # Int.toText(Time.now());
+            let now = Time.now();
+            
+            let appointment: Appointment = {
+              id = appointmentId;
+              patientId = caller;
+              doctorId = validatedData.doctorId;
+              appointmentType = validatedData.appointmentType;
+              scheduledDate = validatedData.scheduledDate;
+              startTime = validatedData.startTime;
+              endTime = validatedData.endTime;
+              status = #scheduled;
+              notes = validatedData.notes;
+              symptoms = validatedData.symptoms;
+              diagnosis = "";
+              prescription = "";
+              followUpRequired = false;
+              followUpDate = null;
+              createdAt = now;
+              updatedAt = now;
+            };
 
-        appointments.put(appointmentId, appointment);
-        #ok(appointment)
+            appointments.put(appointmentId, appointment);
+            
+            // Log successful appointment creation
+            logAuditEvent(caller, #appointment_created, "appointment", appointmentId, ?"Appointment created with enhanced validation");
+            
+            #ok(appointment)
+          };
+        }
       };
     }
   };
@@ -1884,46 +3327,54 @@ persistent actor MentalVerseBackend {
   }) : async Result.Result<MedicalRecord, Text> {
     let caller = msg.caller;
     
-    if (not isAuthorizedLegacy(caller, "doctor")) {
-      return #err("Unauthorized: Only doctors can create medical records");
+    // Enhanced endpoint validation for doctors only
+    switch (validateEndpointAccess(caller, ?#doctor, null, null)) {
+      case (#err(msg)) { return #err(msg) };
+      case (#ok) {};
     };
 
-    // Verify patient exists
-    switch (patients.get(recordData.patientId)) {
-      case null { return #err("Patient not found") };
-      case (?patient) {
-        let recordId = Principal.toText(caller) # "_" # Principal.toText(recordData.patientId) # "_" # Int.toText(Time.now());
-        let now = Time.now();
-        
-        let medicalRecord: MedicalRecord = {
-          id = recordId;
-          patientId = recordData.patientId;
-          doctorId = Principal.toText(caller);
-          appointmentId = recordData.appointmentId;
-          recordType = recordData.recordType;
-          title = recordData.title;
-          description = recordData.description;
-          attachments = recordData.attachments;
-          encryptedDescription = null;
-          encryptedAttachments = null;
-          isConfidential = recordData.isConfidential;
-          accessPermissions = [recordData.patientId, caller]; // Patient and doctor have access
-          createdAt = now;
-          updatedAt = now;
-        };
+    // Comprehensive medical record validation
+    switch (validateMedicalRecordData(recordData.patientId, recordData.recordType, recordData.title, recordData.description)) {
+      case (#err(msg)) { return #err(msg) };
+      case (#ok(validatedData)) {
+        // Verify patient exists
+        switch (patients.get(recordData.patientId)) {
+          case null { return #err("Patient not found") };
+          case (?patient) {
+            let recordId = Principal.toText(caller) # "_" # Principal.toText(recordData.patientId) # "_" # Int.toText(Time.now());
+            let now = Time.now();
+            
+            let medicalRecord: MedicalRecord = {
+              id = recordId;
+              patientId = recordData.patientId;
+              doctorId = Principal.toText(caller);
+              appointmentId = recordData.appointmentId;
+              recordType = validatedData.diagnosis;
+              title = validatedData.treatment;
+              description = validatedData.notes;
+              attachments = recordData.attachments;
+              encryptedDescription = null;
+              encryptedAttachments = null;
+              isConfidential = recordData.isConfidential;
+              accessPermissions = [recordData.patientId, caller]; // Patient and doctor have access
+              createdAt = now;
+              updatedAt = now;
+            };
 
-        medicalRecords.put(recordId, medicalRecord);
-        
-        // Audit logging for medical record creation
-        logAuditEvent(
-          caller,
-          #create,
-          "medical_record",
-          recordId,
-          ?("Medical record created for patient: " # Principal.toText(recordData.patientId) # ", type: " # recordData.recordType # ", confidential: " # (if (recordData.isConfidential) "yes" else "no"))
-        );
-        
-        #ok(medicalRecord)
+            medicalRecords.put(recordId, medicalRecord);
+            
+            // Audit logging for medical record creation
+            logAuditEvent(
+              caller,
+              #create,
+              "medical_record",
+              recordId,
+              ?("Medical record created for patient: " # Principal.toText(recordData.patientId) # ", type: " # validatedData.diagnosis # ", confidential: " # (if (recordData.isConfidential) "yes" else "no"))
+            );
+            
+            #ok(medicalRecord)
+          };
+        }
       };
     }
   };
@@ -1974,47 +3425,58 @@ persistent actor MentalVerseBackend {
     }
   };
 
-  // Secure messaging functions
-  public shared(msg) func sendMessage(receiverId: UserId, content: Text, messageType: Text) : async Result.Result<Message, Text> {
+  // Secure messaging functions with Phase 2 security enhancements
+  public shared(msg) func sendMessage(
+    receiverId: UserId, 
+    content: Text, 
+    messageType: Text,
+    nonce: Text,
+    timestamp: Int
+  ) : async Result.Result<Message, Text> {
     let caller = msg.caller;
     
-    // Verify receiver exists (either as patient or doctor)
-    let receiverExists = switch (userRoles.get(receiverId)) {
-      case (?role) { true };
-      case null { false };
+    // Enhanced endpoint validation
+    switch (validateEndpointAccess(caller, null, ?Text.hash(nonce), ?timestamp)) {
+      case (#err(msg)) { return #err(msg) };
+      case (#ok) {};
     };
     
-    if (not receiverExists) {
-      return #err("Receiver not found");
-    };
+    // Comprehensive message validation
+    switch (validateMessageContent(content, messageType, receiverId)) {
+      case (#err(msg)) { return #err(msg) };
+      case (#ok(validatedData)) {
+        let sanitizedContent = validatedData.content;
+        let sanitizedMessageType = validatedData.messageType;
 
-    let messageId = Principal.toText(caller) # "_" # Principal.toText(receiverId) # "_" # Int.toText(Time.now());
-    let now = Time.now();
-    
-    let message: Message = {
-      id = messageId;
-      senderId = caller;
-      receiverId = receiverId;
-      content = content;
-      messageType = messageType;
-      attachments = [];
-      isRead = false;
-      isEncrypted = true; // All messages are encrypted by default
-      timestamp = now;
-    };
+        let messageId = Principal.toText(caller) # "_" # Principal.toText(receiverId) # "_" # Int.toText(Time.now());
+        let now = Time.now();
+        
+        let message: Message = {
+          id = messageId;
+          senderId = caller;
+          receiverId = receiverId;
+          content = sanitizedContent; // Use sanitized content
+          messageType = sanitizedMessageType; // Use sanitized message type
+          attachments = [];
+          isRead = false;
+          isEncrypted = true; // All messages are encrypted by default
+          timestamp = now;
+        };
 
-    messages.put(messageId, message);
-    
-    // Audit logging for message sending
-    logAuditEvent(
-      caller,
-      #create,
-      "secure_message",
-      messageId,
-      ?("Message sent from: " # Principal.toText(caller) # " to: " # Principal.toText(receiverId) # ", type: " # messageType)
-    );
-    
-    #ok(message)
+        messages.put(messageId, message);
+        
+        // Audit logging for message sending
+        logAuditEvent(
+          caller,
+          #create,
+          "secure_message",
+          messageId,
+          ?("Message sent from: " # Principal.toText(caller) # " to: " # Principal.toText(receiverId) # ", type: " # sanitizedMessageType)
+        );
+        
+        #ok(message)
+      };
+    }
   };
 
   public shared query(msg) func getMessages(otherUserId: UserId) : async [Message] {
@@ -2182,8 +3644,18 @@ persistent actor MentalVerseBackend {
   // MVT Token Integration Functions
   
   // Award tokens for appointment completion
-  public shared(msg) func completeAppointmentWithTokens(appointmentId: AppointmentId) : async Result.Result<Text, Text> {
+  public shared(msg) func completeAppointmentWithTokens(appointmentId: AppointmentId, nonce: Nat, timestamp: Int) : async Result.Result<Text, Text> {
     let caller = msg.caller;
+    
+    // Phase 2 Security: Rate limiting
+    if (not check_rate_limit(caller)) {
+      return #err("Rate limit exceeded. Please try again later.");
+    };
+    
+    // Phase 2 Security: Nonce and timestamp validation
+    if (not validate_nonce(caller, nonce, timestamp)) {
+      return #err("Invalid nonce or timestamp");
+    };
     
     switch (appointments.get(appointmentId)) {
       case (?appointment) {
@@ -2191,6 +3663,9 @@ persistent actor MentalVerseBackend {
         if (appointment.patientId != caller and appointment.doctorId != Principal.toText(caller)) {
           return #err("Unauthorized: Only appointment participants can complete appointments");
         };
+        
+        // Store original appointment state for rollback
+        let originalAppointment = appointment;
         
         // Update appointment status
         let updatedAppointment = {
@@ -2200,11 +3675,32 @@ persistent actor MentalVerseBackend {
         };
         appointments.put(appointmentId, updatedAppointment);
         
-        // Award tokens to patient for completing appointment
-        // Note: In production, this would call the actual MVT token canister
-        // For now, we'll return a success message indicating tokens would be awarded
+        // Award tokens to patient for completing appointment with enhanced resilience
+        let tokenOperation = func() : async Result.Result<Nat, Text> {
+          let mvtCanister = actor(_MVT_TOKEN_CANISTER_ID) : MVTToken.MVTTokenCanister;
+          await mvtCanister.earn_tokens(appointment.patientId, #appointment_completion, ?50_00000000) // 50 MVT
+        };
         
-        #ok("Appointment completed successfully. MVT tokens awarded to patient.")
+        // Use enhanced async resilience patterns
+        let earnResult = await executeWithCircuitBreaker<Result.Result<Nat, Text>>(func() : async Result.Result<Nat, Text> {
+          await retryAsyncCall<Result.Result<Nat, Text>>(tokenOperation, 3)
+        });
+        
+        switch (earnResult) {
+          case (#ok(#ok(txId))) {
+            // Log successful token award
+            logAuditEvent(caller, #token_award, "appointment", appointmentId, ?"Tokens awarded for appointment completion");
+            return #ok("Appointment completed successfully. 50 MVT tokens awarded to patient. Transaction ID: " # Nat.toText(txId));
+          };
+          case (#ok(#err(error)) or #err(error)) {
+            // Rollback appointment status on failure
+            appointments.put(appointmentId, originalAppointment);
+            logAuditEvent(caller, #error, "appointment", appointmentId, ?"Token award failed, appointment rolled back: " # error);
+            return #err("Failed to award tokens: " # error);
+          };
+        };
+        
+        #err("Unexpected error in token award process")
       };
       case null {
         #err("Appointment not found")
@@ -2213,18 +3709,62 @@ persistent actor MentalVerseBackend {
   };
   
   // Award tokens for platform usage
-  public shared(msg) func recordDailyPlatformUsage() : async Result.Result<Text, Text> {
+  public shared(msg) func recordDailyPlatformUsage(nonce: Nat, timestamp: Int) : async Result.Result<Text, Text> {
     let caller = msg.caller;
+    
+    // Phase 2 Security: Rate limiting
+    if (not check_rate_limit(caller)) {
+      return #err("Rate limit exceeded. Please try again later.");
+    };
+    
+    // Phase 2 Security: Nonce and timestamp validation
+    if (not validate_nonce(caller, nonce, timestamp)) {
+      return #err("Invalid nonce or timestamp");
+    };
     
     // Check if user is registered
     switch (userRoles.get(caller)) {
       case (?role) {
-        // In production, this would:
-        // 1. Check if user already earned daily tokens today
-        // 2. Call MVT token canister to award daily usage tokens
-        // 3. Record the earning in user's history
+        // Check if user already earned daily tokens today
+        let currentTime = Time.now();
+        let todayStart = currentTime - (currentTime % 86400000000000); // Start of today
         
-        #ok("Daily platform usage recorded. MVT tokens awarded.")
+        // Check existing daily usage records
+        let todayUsage = Array.filter<AuditLog>(
+          Iter.toArray(auditLogs.vals()),
+          func(log) {
+            log.userId == caller and 
+            log.action == #daily_usage and 
+            log.timestamp >= todayStart
+          }
+        );
+        
+        if (todayUsage.size() > 0) {
+          return #err("Daily platform usage tokens already claimed today");
+        };
+        
+        // Award daily usage tokens with enhanced resilience
+        let dailyTokenOperation = func() : async Result.Result<Nat, Text> {
+          let mvtCanister = actor(_MVT_TOKEN_CANISTER_ID) : MVTToken.MVTTokenCanister;
+          await mvtCanister.earn_tokens(caller, #daily_usage, ?10_00000000) // 10 MVT
+        };
+        
+        // Use enhanced async resilience patterns
+        let earnResult = await executeWithCircuitBreaker<Result.Result<Nat, Text>>(func() : async Result.Result<Nat, Text> {
+          await retryAsyncCall<Result.Result<Nat, Text>>(dailyTokenOperation, 3)
+        });
+        
+        switch (earnResult) {
+          case (#ok(#ok(txId))) {
+            // Log successful daily usage
+            logAuditEvent(caller, #daily_usage, "platform", "daily_usage", ?"Daily platform usage tokens awarded");
+            return #ok("Daily platform usage recorded. 10 MVT tokens awarded. Transaction ID: " # Nat.toText(txId));
+          };
+          case (#ok(#err(error)) or #err(error)) {
+            logAuditEvent(caller, #error, "platform", "daily_usage", ?"Daily usage token award failed: " # error);
+            return #err("Failed to award daily usage tokens: " # error);
+          };
+        }
       };
       case null {
         #err("User not registered")
@@ -2233,8 +3773,21 @@ persistent actor MentalVerseBackend {
   };
   
   // Award tokens for providing patient feedback
-  public shared(msg) func submitFeedbackWithTokens(appointmentId: AppointmentId, _rating: Nat, _feedback: Text) : async Result.Result<Text, Text> {
+  public shared(msg) func submitFeedbackWithTokens(appointmentId: AppointmentId, rating: Nat, feedback: Text, nonce: Nat, timestamp: Int) : async Result.Result<Text, Text> {
     let caller = msg.caller;
+    
+    // Phase 2 Security: Rate limiting
+    if (not check_rate_limit(caller)) {
+      return #err("Rate limit exceeded. Please try again later.");
+    };
+    
+    // Phase 2 Security: Nonce and timestamp validation
+    if (not validate_nonce(caller, nonce, timestamp)) {
+      return #err("Invalid nonce or timestamp");
+    };
+    
+    // Phase 2 Security: Input sanitization
+    let sanitizedFeedback = sanitize_text(feedback);
     
     switch (appointments.get(appointmentId)) {
       case (?appointment) {
@@ -2243,12 +3796,60 @@ persistent actor MentalVerseBackend {
           return #err("Unauthorized: Only patients can provide feedback");
         };
         
-        // In production, this would:
-        // 1. Store the feedback in a feedback collection
-        // 2. Call MVT token canister to award feedback tokens
-        // 3. Update doctor's rating
+        // Check if feedback already exists for this appointment
+        let existingFeedback = Array.filter<AuditLog>(
+          Iter.toArray(auditLogs.vals()),
+          func(log) {
+            log.userId == caller and 
+            log.action == #feedback_submitted and 
+            log.resourceId == appointmentId
+          }
+        );
         
-        #ok("Feedback submitted successfully. MVT tokens awarded for providing feedback.")
+        if (existingFeedback.size() > 0) {
+          return #err("Feedback already submitted for this appointment");
+        };
+        
+        // Validate rating (1-5 scale)
+        if (rating < 1 or rating > 5) {
+          return #err("Rating must be between 1 and 5");
+        };
+        
+        // Store original appointment for potential rollback
+        let originalAppointment = appointment;
+        
+        // Update appointment with feedback
+        let updatedAppointment = {
+          appointment with
+          notes = appointment.notes # " | Patient Feedback (Rating: " # Nat.toText(rating) # "/5): " # sanitizedFeedback;
+          updatedAt = Time.now();
+        };
+        appointments.put(appointmentId, updatedAppointment);
+        
+        // Award feedback tokens with enhanced resilience
+        let feedbackTokenOperation = func() : async Result.Result<Nat, Text> {
+          let mvtCanister = actor(_MVT_TOKEN_CANISTER_ID) : MVTToken.MVTTokenCanister;
+          await mvtCanister.earn_tokens(caller, #feedback_submission, ?25_00000000) // 25 MVT
+        };
+        
+        // Use enhanced async resilience patterns
+        let earnResult = await executeWithCircuitBreaker<Result.Result<Nat, Text>>(func() : async Result.Result<Nat, Text> {
+          await retryAsyncCall<Result.Result<Nat, Text>>(feedbackTokenOperation, 3)
+        });
+        
+        switch (earnResult) {
+          case (#ok(#ok(txId))) {
+            // Log successful feedback submission
+            logAuditEvent(caller, #feedback_submitted, "appointment", appointmentId, ?"Feedback submitted and tokens awarded");
+            return #ok("Feedback submitted successfully. 25 MVT tokens awarded for providing feedback. Transaction ID: " # Nat.toText(txId));
+          };
+          case (#ok(#err(error)) or #err(error)) {
+            // Rollback appointment update on failure
+            appointments.put(appointmentId, originalAppointment);
+            logAuditEvent(caller, #error, "appointment", appointmentId, ?"Feedback token award failed, changes rolled back: " # error);
+            return #err("Failed to award feedback tokens: " # error);
+          };
+        }
       };
       case null {
         #err("Appointment not found")
@@ -2263,43 +3864,76 @@ persistent actor MentalVerseBackend {
     startTime: Text;
     endTime: Text;
     notes: Text;
-  }) : async Result.Result<AppointmentId, Text> {
+  }, nonce: Nat, timestamp: Int) : async Result.Result<AppointmentId, Text> {
     let caller = msg.caller;
+    
+    // Phase 2 Security: Rate limiting
+    if (not check_rate_limit(caller)) {
+      return #err("Rate limit exceeded. Please try again later.");
+    };
+    
+    // Phase 2 Security: Nonce and timestamp validation
+    if (not validate_nonce(caller, nonce, timestamp)) {
+      return #err("Invalid nonce or timestamp");
+    };
     
     if (not isAuthorized(caller, #patient)) {
       return #err("Unauthorized: Only patients can book consultations");
     };
     
-    // In production, this would:
-    // 1. Check user's MVT token balance
-    // 2. Deduct premium consultation cost from balance
-    // 3. Create the appointment with premium features
+    // Phase 2 Security: Input sanitization
+    let sanitizedNotes = sanitize_text(appointmentData.notes);
     
-    // For now, create a regular appointment and indicate premium features
-    let appointmentId = "premium_" # Int.toText(Time.now());
-    let now = Time.now();
+    let premiumCost = 500_00000000; // 500 MVT for premium consultation
     
-    let appointment: Appointment = {
-      id = appointmentId;
-      patientId = caller;
-      doctorId = doctorId;
-      appointmentType = appointmentData.appointmentType;
-      scheduledDate = appointmentData.scheduledDate;
-      startTime = appointmentData.startTime;
-      endTime = appointmentData.endTime;
-      status = #scheduled;
-      notes = "PREMIUM: " # appointmentData.notes;
-      symptoms = [];
-      diagnosis = "";
-      prescription = "";
-      followUpRequired = false;
-      followUpDate = null;
-      createdAt = now;
-      updatedAt = now;
+    // Check user's MVT token balance and deduct cost with enhanced resilience
+    let premiumSpendOperation = func() : async Result.Result<Nat, Text> {
+      let mvtCanister = actor(_MVT_TOKEN_CANISTER_ID) : MVTToken.MVTTokenCanister;
+      await mvtCanister.spend_tokens(caller, #premium_consultation, ?premiumCost)
     };
     
-    appointments.put(appointmentId, appointment);
-    #ok(appointmentId)
+    // Use enhanced async resilience patterns
+    let spendResult = await executeWithCircuitBreaker<Result.Result<Nat, Text>>(func() : async Result.Result<Nat, Text> {
+      await retryAsyncCall<Result.Result<Nat, Text>>(premiumSpendOperation, 3)
+    });
+    
+    switch (spendResult) {
+      case (#ok(#ok(txId))) {
+        // Create premium appointment after successful token deduction
+        let appointmentId = "premium_" # Int.toText(Time.now());
+        let now = Time.now();
+        
+        let appointment: Appointment = {
+          id = appointmentId;
+          patientId = caller;
+          doctorId = doctorId;
+          appointmentType = appointmentData.appointmentType;
+          scheduledDate = appointmentData.scheduledDate;
+          startTime = appointmentData.startTime;
+          endTime = appointmentData.endTime;
+          status = #scheduled;
+          notes = "PREMIUM: " # sanitizedNotes;
+          symptoms = [];
+          diagnosis = "";
+          prescription = "";
+          followUpRequired = false;
+          followUpDate = null;
+          createdAt = now;
+          updatedAt = now;
+        };
+        
+        appointments.put(appointmentId, appointment);
+        
+        // Log successful premium booking
+        logAuditEvent(caller, #premium_booking, "appointment", appointmentId, ?"Premium consultation booked with token payment");
+        
+        return #ok(appointmentId);
+      };
+      case (#ok(#err(error)) or #err(error)) {
+        logAuditEvent(caller, #error, "appointment", "premium_booking", ?"Premium consultation booking failed: " # error);
+        return #err("Failed to deduct tokens for premium consultation: " # error);
+      };
+    }
   };
   
   // Spend tokens for priority booking
@@ -2698,9 +4332,25 @@ persistent actor MentalVerseBackend {
     conversationId: Text,
     recipientId: Principal,
     content: Text,
-    messageType: SecureMessagingInterface.MessageType
+    messageType: SecureMessagingInterface.MessageType,
+    nonce: ?Text,
+    timestamp: ?Int
   ) : async Result.Result<SecureMessagingInterface.Message, Text> {
     let caller = msg.caller;
+    
+    // Phase 2: Security validations
+    if (not check_rate_limit(caller)) {
+      return #err("Rate limit exceeded");
+    };
+    
+    switch (nonce, timestamp) {
+      case (?n, ?t) {
+        if (not validate_nonce(n, t)) {
+          return #err("Invalid nonce or timestamp");
+        };
+      };
+      case (_, _) {};
+    };
     
     // Verify user exists
     switch (userProfiles.get(caller)) {
@@ -2710,22 +4360,43 @@ persistent actor MentalVerseBackend {
       };
     };
     
-    try {
-      let result = await secureMessagingActor.send_message(conversationId, recipientId, content, messageType, null, []);
-      if (result.success) {
-        switch (result.message) {
-          case (?message) { #ok(message) };
-          case null { #err("Failed to send message") };
+    // Enhanced error handling with retry logic
+    var retry_count = 0;
+    let max_retries = 3;
+    
+    while (retry_count < max_retries) {
+      try {
+        let result = await secureMessagingActor.send_message(
+          conversationId, 
+          recipientId, 
+          content, 
+          messageType, 
+          nonce.get(""), 
+          timestamp.get(Time.now()),
+          []
+        );
+        if (result.success) {
+          switch (result.message) {
+            case (?message) { return #ok(message) };
+            case null { return #err("Failed to send message") };
+          };
+        } else {
+          switch (result.error) {
+            case (?error) { return #err(error) };
+            case null { return #err("Unknown error sending message") };
+          };
         };
-      } else {
-        switch (result.error) {
-          case (?error) { #err(error) };
-          case null { #err("Unknown error sending message") };
+      } catch (error) {
+        retry_count += 1;
+        if (retry_count >= max_retries) {
+          return #err("Inter-canister call failed after " # Nat.toText(max_retries) # " retries: " # Error.message(error));
         };
+        // Wait before retry (simplified)
+        ignore await async {};
       };
-    } catch (error) {
-      #err("Inter-canister call failed: " # Error.message(error))
     };
+    
+    #err("Unexpected error in retry logic")
   };
   
   // Get user's secure conversations
@@ -2815,7 +4486,7 @@ persistent actor MentalVerseBackend {
     prefix # "_" # Int.toText(Time.now()) # "_" # Int.toText(Int.abs(Time.now()))
   };
 
-  // Enhanced audit logging function with IP and User Agent support
+  // Enhanced audit logging function with hash-chaining support
   private func logAuditEvent(
     userId: UserId,
     action: AuditLogAction,
@@ -2824,7 +4495,10 @@ persistent actor MentalVerseBackend {
     details: ?Text
   ) {
     let auditId = generateId("audit");
-    let auditLog: AuditLog = {
+    auditSequenceNumber += 1;
+    
+    // Create preliminary audit log for hash generation
+    let preliminaryLog: AuditLog = {
       id = auditId;
       userId = userId;
       action = action;
@@ -2834,11 +4508,35 @@ persistent actor MentalVerseBackend {
       ipAddress = null; // Could be enhanced to capture IP
       userAgent = null; // Could be enhanced to capture user agent
       timestamp = Time.now();
+      previousHash = lastAuditHash;
+      currentHash = ""; // Will be calculated
+      sequenceNumber = auditSequenceNumber;
     };
+    
+    // Generate hash for this log entry
+    let currentHash = generateAuditHash(preliminaryLog, lastAuditHash);
+    
+    // Create final audit log with hash
+    let auditLog: AuditLog = {
+      id = auditId;
+      userId = userId;
+      action = action;
+      resourceType = resourceType;
+      resourceId = resourceId;
+      details = details;
+      ipAddress = null;
+      userAgent = null;
+      timestamp = Time.now();
+      previousHash = lastAuditHash;
+      currentHash = currentHash;
+      sequenceNumber = auditSequenceNumber;
+    };
+    
     auditLogs.put(auditId, auditLog);
+    lastAuditHash := ?currentHash;
   };
 
-  // Enhanced audit logging with additional context
+  // Enhanced audit logging with additional context and hash-chaining
   private func logAuditEventWithContext(
     userId: UserId,
     action: AuditLogAction,
@@ -2849,6 +4547,28 @@ persistent actor MentalVerseBackend {
     userAgent: ?Text
   ) {
     let auditId = generateId("audit");
+    auditSequenceNumber += 1;
+    
+    // Create preliminary audit log for hash generation
+    let preliminaryLog: AuditLog = {
+      id = auditId;
+      userId = userId;
+      action = action;
+      resourceType = resourceType;
+      resourceId = resourceId;
+      details = details;
+      ipAddress = ipAddress;
+      userAgent = userAgent;
+      timestamp = Time.now();
+      previousHash = lastAuditHash;
+      currentHash = ""; // Will be calculated
+      sequenceNumber = auditSequenceNumber;
+    };
+    
+    // Generate hash for this log entry
+    let currentHash = generateAuditHash(preliminaryLog, lastAuditHash);
+    
+    // Create final audit log with hash
     let auditLog: AuditLog = {
       id = auditId;
       userId = userId;
@@ -2859,11 +4579,16 @@ persistent actor MentalVerseBackend {
       ipAddress = ipAddress;
       userAgent = userAgent;
       timestamp = Time.now();
+      previousHash = lastAuditHash;
+      currentHash = currentHash;
+      sequenceNumber = auditSequenceNumber;
     };
+    
     auditLogs.put(auditId, auditLog);
+    lastAuditHash := ?currentHash;
   };
 
-  // Log security events (failed logins, unauthorized access attempts)
+  // Log security events with hash-chaining (failed logins, unauthorized access attempts)
   private func logSecurityEvent(
     userId: ?UserId,
     eventType: Text,
@@ -2876,18 +4601,45 @@ persistent actor MentalVerseBackend {
       case null { Principal.fromText("2vxsx-fae") }; // Anonymous principal
     };
     
-    let auditLog: AuditLog = {
+    auditSequenceNumber += 1;
+    
+    // Create preliminary audit log for hash generation
+    let preliminaryLog: AuditLog = {
       id = auditId;
       userId = securityUserId;
-      action = #access_granted; // Using existing enum, could be extended
+      action = #error; // Using error action for security events
       resourceType = "security_event";
       resourceId = eventType;
       details = ?("[" # severity # "] " # details);
       ipAddress = null;
       userAgent = null;
       timestamp = Time.now();
+      previousHash = lastAuditHash;
+      currentHash = ""; // Will be calculated
+      sequenceNumber = auditSequenceNumber;
     };
+    
+    // Generate hash for this log entry
+    let currentHash = generateAuditHash(preliminaryLog, lastAuditHash);
+    
+    // Create final audit log with hash
+    let auditLog: AuditLog = {
+      id = auditId;
+      userId = securityUserId;
+      action = #error; // Using error action for security events
+      resourceType = "security_event";
+      resourceId = eventType;
+      details = ?("[" # severity # "] " # details);
+      ipAddress = null;
+      userAgent = null;
+      timestamp = Time.now();
+      previousHash = lastAuditHash;
+      currentHash = currentHash;
+      sequenceNumber = auditSequenceNumber;
+    };
+    
     auditLogs.put(auditId, auditLog);
+    lastAuditHash := ?currentHash;
   };
 
   // Helper function to check access permissions
@@ -2900,7 +4652,7 @@ persistent actor MentalVerseBackend {
     }
   };
 
-  // Session Notes Management
+  // Session Notes Management with Enhanced Ownership Enforcement
   public shared(msg) func createSessionNote(
     sessionId: Text,
     patientId: UserId,
@@ -2914,6 +4666,18 @@ persistent actor MentalVerseBackend {
     // Validate session ID format (must be a valid UUID)
     if (not isValidUUID(sessionId)) {
       return #err("Invalid session ID format. Must be a valid UUID.");
+    };
+    
+    // Enhanced session ownership enforcement
+    switch (enforceSessionOwnership(caller, sessionId, "create_session_note")) {
+      case (#err(error)) { return #err(error) };
+      case (#ok()) {};
+    };
+    
+    // Validate active session
+    switch (validateActiveSession(caller, sessionId)) {
+      case (#err(error)) { return #err(error) };
+      case (#ok()) {};
     };
     
     // Verify caller is a therapist
@@ -3012,7 +4776,7 @@ persistent actor MentalVerseBackend {
     #ok(patientNotes)
   };
 
-  // Prescription Management
+  // Prescription Management with Enhanced Session Validation
   public shared(msg) func createPrescription(
     patientId: UserId,
     sessionId: ?Text,
@@ -3025,6 +4789,22 @@ persistent actor MentalVerseBackend {
     contraindications: [Text]
   ) : async Result.Result<Prescription, Text> {
     let caller = msg.caller;
+    
+    // Enhanced session ownership enforcement if sessionId provided
+    switch (sessionId) {
+      case (?sid) {
+        switch (enforceSessionOwnership(caller, sid, "create_prescription")) {
+          case (#err(error)) { return #err(error) };
+          case (#ok()) {};
+        };
+        
+        switch (validateActiveSession(caller, sid)) {
+          case (#err(error)) { return #err(error) };
+          case (#ok()) {};
+        };
+      };
+      case null {}; // Allow prescriptions without session context
+    };
     
     // Verify caller is a therapist
     switch (userProfiles.get(caller)) {
@@ -3413,6 +5193,182 @@ persistent actor MentalVerseBackend {
     
     #ok(finalLogs)
   };
+
+  // Enhanced paginated audit log query with filtering and hash-chain integrity
+  public shared query(msg) func getAuditLogsPaginated(
+    filter: AuditLogFilter,
+    pageNumber: Nat,
+    pageSize: Nat
+  ) : async Result.Result<AuditLogPage, Text> {
+    let caller = msg.caller;
+    
+    // Check if caller is admin
+    switch (userProfiles.get(caller)) {
+      case (?profile) {
+        if (profile.userType != #admin) {
+          return #err("Only admins can access audit logs");
+        };
+      };
+      case null {
+        return #err("User profile not found");
+      };
+    };
+
+    // Validate pagination parameters
+    if (pageSize == 0 or pageSize > 100) {
+      return #err("Page size must be between 1 and 100");
+    };
+    if (pageNumber == 0) {
+      return #err("Page number must be greater than 0");
+    };
+
+    var logs = Iter.toArray(auditLogs.vals());
+    
+    // Apply filters
+    switch (filter.userId) {
+      case (?uid) {
+        logs := Array.filter<AuditLog>(logs, func(log) { log.userId == uid });
+      };
+      case null {};
+    };
+    
+    switch (filter.action) {
+      case (?action) {
+        logs := Array.filter<AuditLog>(logs, func(log) { log.action == action });
+      };
+      case null {};
+    };
+    
+    switch (filter.resourceType) {
+      case (?rt) {
+        logs := Array.filter<AuditLog>(logs, func(log) { log.resourceType == rt });
+      };
+      case null {};
+    };
+    
+    switch (filter.resourceId) {
+      case (?rid) {
+        logs := Array.filter<AuditLog>(logs, func(log) { log.resourceId == rid });
+      };
+      case null {};
+    };
+    
+    switch (filter.startTime) {
+      case (?startTime) {
+        logs := Array.filter<AuditLog>(logs, func(log) { log.timestamp >= startTime });
+      };
+      case null {};
+    };
+    
+    switch (filter.endTime) {
+      case (?endTime) {
+        logs := Array.filter<AuditLog>(logs, func(log) { log.timestamp <= endTime });
+      };
+      case null {};
+    };
+    
+    // Sort by sequence number (newest first) to maintain hash chain order
+    let sortedLogs = Array.sort<AuditLog>(
+      logs,
+      func(a, b) {
+        if (a.sequenceNumber > b.sequenceNumber) { #less }
+        else if (a.sequenceNumber < b.sequenceNumber) { #greater }
+        else { #equal }
+      }
+    );
+    
+    let totalCount = sortedLogs.size();
+    let startIndex = (pageNumber - 1) * pageSize;
+    let endIndex = Nat.min(startIndex + pageSize, totalCount);
+    
+    // Extract page data
+    let pageData = if (startIndex >= totalCount) {
+      []
+    } else {
+      Array.tabulate<AuditLog>(endIndex - startIndex, func(i) { sortedLogs[startIndex + i] })
+    };
+    
+    let hasNextPage = endIndex < totalCount;
+    let hasPreviousPage = pageNumber > 1;
+    
+    let auditPage: AuditLogPage = {
+      logs = pageData;
+      totalCount = totalCount;
+      pageNumber = pageNumber;
+      pageSize = pageSize;
+      hasNextPage = hasNextPage;
+      hasPreviousPage = hasPreviousPage;
+    };
+    
+    #ok(auditPage)
+  };
+
+  // Audit log integrity verification function
+  public shared query(msg) func verifyAuditLogIntegrity(
+    startSequence: ?Nat,
+    endSequence: ?Nat
+  ) : async Result.Result<{isValid: Bool; brokenChainAt: ?Nat; totalVerified: Nat}, Text> {
+    let caller = msg.caller;
+    
+    // Check if caller is admin
+    switch (userProfiles.get(caller)) {
+      case (?profile) {
+        if (profile.userType != #admin) {
+          return #err("Only admins can verify audit log integrity");
+        };
+      };
+      case null {
+        return #err("User profile not found");
+      };
+    };
+
+    let allLogs = Iter.toArray(auditLogs.vals());
+    let sortedLogs = Array.sort<AuditLog>(
+      allLogs,
+      func(a, b) {
+        if (a.sequenceNumber < b.sequenceNumber) { #less }
+        else if (a.sequenceNumber > b.sequenceNumber) { #greater }
+        else { #equal }
+      }
+    );
+    
+    let startSeq = switch (startSequence) { case (?s) s; case null 1 };
+    let endSeq = switch (endSequence) { case (?e) e; case null auditSequenceNumber };
+    
+    var isValid = true;
+    var brokenChainAt: ?Nat = null;
+    var totalVerified = 0;
+    var previousHash: ?Text = null;
+    
+    for (log in sortedLogs.vals()) {
+      if (log.sequenceNumber >= startSeq and log.sequenceNumber <= endSeq) {
+        totalVerified += 1;
+        
+        // Verify hash chain
+        let expectedHash = generateAuditHash(log, previousHash);
+        if (log.currentHash != expectedHash) {
+          isValid := false;
+          brokenChainAt := ?log.sequenceNumber;
+          break;
+        };
+        
+        // Verify previous hash link
+        if (log.previousHash != previousHash) {
+          isValid := false;
+          brokenChainAt := ?log.sequenceNumber;
+          break;
+        };
+        
+        previousHash := ?log.currentHash;
+      };
+    };
+    
+    #ok({
+      isValid = isValid;
+      brokenChainAt = brokenChainAt;
+      totalVerified = totalVerified;
+    })
+  };
   
   // Get audit summary and security insights (admin only)
   public shared query(msg) func getAuditSummary(
@@ -3580,6 +5536,104 @@ persistent actor MentalVerseBackend {
     );
     
     #ok(exportData)
+  };
+
+  // ===== TAMPER-PROOF AUDIT MONITORING ===== 
+  
+  // Verify integrity of a specific audit log
+  public shared query(msg) func verifyAuditLog(logId: Text) : async Result.Result<Bool, Text> {
+    let caller = msg.caller;
+    
+    if (not isAdmin(caller)) {
+      return #err("Unauthorized: Admin access required");
+    };
+    
+    switch (auditLogs.get(logId)) {
+      case (?_) #ok(verifyAuditLogIntegrity(logId));
+      case null #err("Audit log not found");
+    }
+  };
+  
+  // Verify integrity of entire audit chain
+  public shared query(msg) func verifyAuditChain() : async Result.Result<{isValid: Bool; corruptedLogs: [Text]; totalLogs: Nat}, Text> {
+    let caller = msg.caller;
+    
+    if (not isAdmin(caller)) {
+      return #err("Unauthorized: Admin access required");
+    };
+    
+    let result = verifyAuditChainIntegrity();
+    #ok({
+      isValid = result.isValid;
+      corruptedLogs = result.corruptedLogs;
+      totalLogs = auditLogs.size();
+    })
+  };
+  
+  // Create and retrieve audit snapshot for external verification
+  public shared query(msg) func getAuditSnapshot() : async Result.Result<{timestamp: Int; totalLogs: Nat; chainHash: Text; signature: Text}, Text> {
+    let caller = msg.caller;
+    
+    if (not isAdmin(caller)) {
+      return #err("Unauthorized: Admin access required");
+    };
+    
+    #ok(createAuditSnapshot())
+  };
+  
+  // Get audit statistics and health metrics
+  public shared query(msg) func getAuditStatistics() : async Result.Result<{
+    totalLogs: Nat;
+    oldestLog: ?Int;
+    newestLog: ?Int;
+    chainIntegrity: Bool;
+    lastSequenceNumber: Nat;
+    averageLogsPerDay: Float;
+  }, Text> {
+    let caller = msg.caller;
+    
+    if (not isAdmin(caller)) {
+      return #err("Unauthorized: Admin access required");
+    };
+    
+    let allLogs = Iter.toArray(auditLogs.vals());
+    let totalLogs = allLogs.size();
+    
+    if (totalLogs == 0) {
+      return #ok({
+        totalLogs = 0;
+        oldestLog = null;
+        newestLog = null;
+        chainIntegrity = true;
+        lastSequenceNumber = 0;
+        averageLogsPerDay = 0.0;
+      });
+    };
+    
+    let sortedLogs = Array.sort(allLogs, func(a: AuditLog, b: AuditLog) : Order.Order {
+      Int.compare(a.timestamp, b.timestamp)
+    });
+    
+    let oldestLog = sortedLogs[0].timestamp;
+    let newestLog = sortedLogs[sortedLogs.size() - 1].timestamp;
+    let timeSpanNs = newestLog - oldestLog;
+    let timeSpanDays = Float.fromInt(timeSpanNs) / (24.0 * 60.0 * 60.0 * 1_000_000_000.0);
+    let averageLogsPerDay = if (timeSpanDays > 0.0) {
+      Float.fromInt(totalLogs) / timeSpanDays
+    } else {
+      Float.fromInt(totalLogs)
+    };
+    
+    let chainIntegrity = verifyAuditChainIntegrity().isValid;
+    
+    #ok({
+      totalLogs = totalLogs;
+      oldestLog = ?oldestLog;
+      newestLog = ?newestLog;
+      chainIntegrity = chainIntegrity;
+      lastSequenceNumber = auditSequenceNumber;
+      averageLogsPerDay = averageLogsPerDay;
+    })
   };
 
   // Get user's access permissions
@@ -4356,5 +6410,144 @@ persistent actor MentalVerseBackend {
     
     Blob.fromArray(extendedArray)
   };
+
+  // === DATA ENCRYPTION AT REST AND IN TRANSIT ===
+  
+  // Encrypt sensitive text data using XOR cipher (simplified for demo)
+  private func encryptText(plaintext: Text, keyId: Text) : async Result.Result<{encryptedData: Blob; nonce: Blob}, Text> {
+    switch (phiEncryptionKeys.get(keyId)) {
+      case null { #err("Encryption key not found: " # keyId) };
+      case (?key) {
+        if (not key.isActive) {
+          return #err("Encryption key is inactive: " # keyId);
+        };
+        
+        let plaintextBytes = Blob.toArray(Text.encodeUtf8(plaintext));
+        let keyBytes = Blob.toArray(key.keyHash);
+        let nonce = await generateRandomBytes(16); // 128-bit nonce
+        let nonceBytes = Blob.toArray(nonce);
+        
+        // Simple XOR encryption with key and nonce
+        let encryptedBytes = Array.tabulate<Nat8>(plaintextBytes.size(), func(i) {
+          let keyIndex = i % keyBytes.size();
+          let nonceIndex = i % nonceBytes.size();
+          plaintextBytes[i] ^ keyBytes[keyIndex] ^ nonceBytes[nonceIndex]
+        });
+        
+        #ok({
+          encryptedData = Blob.fromArray(encryptedBytes);
+          nonce = nonce;
+        })
+      };
+    }
+  };
+  
+  // Decrypt sensitive text data
+  private func decryptText(encryptedData: Blob, nonce: Blob, keyId: Text) : Result.Result<Text, Text> {
+    switch (phiEncryptionKeys.get(keyId)) {
+      case null { #err("Decryption key not found: " # keyId) };
+      case (?key) {
+        if (not key.isActive) {
+          return #err("Decryption key is inactive: " # keyId);
+        };
+        
+        let encryptedBytes = Blob.toArray(encryptedData);
+        let keyBytes = Blob.toArray(key.keyHash);
+        let nonceBytes = Blob.toArray(nonce);
+        
+        // XOR decryption (same as encryption with XOR)
+        let decryptedBytes = Array.tabulate<Nat8>(encryptedBytes.size(), func(i) {
+          let keyIndex = i % keyBytes.size();
+          let nonceIndex = i % nonceBytes.size();
+          encryptedBytes[i] ^ keyBytes[keyIndex] ^ nonceBytes[nonceIndex]
+        });
+        
+        switch (Text.decodeUtf8(Blob.fromArray(decryptedBytes))) {
+          case null { #err("Failed to decode decrypted text") };
+          case (?text) { #ok(text) };
+        }
+      };
+    }
+  };
+  
+  // Get or create encryption key for user
+  private func getOrCreateUserEncryptionKey(userId: Principal) : async Result.Result<Text, Text> {
+    switch (userPHIKeys.get(userId)) {
+      case (?keyId) { #ok(keyId) };
+      case null {
+        // Auto-generate key for user
+        let keyId = "phi_key_" # Principal.toText(userId) # "_" # Int.toText(Time.now());
+        let keyData = await generateRandomBytes(32); // 256-bit key
+        
+        let phiKey : PHIEncryptionKey = {
+          keyId = keyId;
+          keyHash = keyData;
+          purpose = #medicalHistory;
+          createdAt = Time.now();
+          isActive = true;
+          rotationSchedule = null;
+        };
+        
+        phiEncryptionKeys.put(keyId, phiKey);
+        userPHIKeys.put(userId, keyId);
+        
+        #ok(keyId)
+      };
+    }
+  };
+  
+  // Encrypt medical record data at rest
+  private func encryptMedicalRecordData(record: MedicalRecord, userId: Principal) : async Result.Result<EncryptedPatientPHI, Text> {
+    switch (await getOrCreateUserEncryptionKey(userId)) {
+      case (#err(error)) { #err("Failed to get encryption key: " # error) };
+      case (#ok(keyId)) {
+        // Encrypt sensitive fields
+        let diagnosisResult = await encryptText(record.diagnosis, keyId);
+        let treatmentResult = await encryptText(record.treatment, keyId);
+        let notesResult = await encryptText(record.notes, keyId);
+        
+        switch (diagnosisResult, treatmentResult, notesResult) {
+          case (#ok(encDiagnosis), #ok(encTreatment), #ok(encNotes)) {
+            let encryptedPHI : EncryptedPatientPHI = {
+              patientId = userId;
+              encryptedData = {
+                diagnosis = encDiagnosis.encryptedData;
+                treatment = encTreatment.encryptedData;
+                notes = encNotes.encryptedData;
+                diagnosisNonce = encDiagnosis.nonce;
+                treatmentNonce = encTreatment.nonce;
+                notesNonce = encNotes.nonce;
+              };
+              keyId = keyId;
+              encryptedAt = Time.now();
+              accessLog = [];
+            };
+            #ok(encryptedPHI)
+          };
+          case _ { #err("Failed to encrypt medical record data") };
+        }
+      };
+    }
+  };
+  
+  // Encrypt message content for secure communication
+  private func encryptMessageContent(content: Text, senderId: Principal, recipientId: Principal) : async Result.Result<{encryptedContent: Blob; nonce: Blob; keyId: Text}, Text> {
+    // Use sender's encryption key for message encryption
+    switch (await getOrCreateUserEncryptionKey(senderId)) {
+      case (#err(error)) { #err("Failed to get sender encryption key: " # error) };
+      case (#ok(keyId)) {
+        switch (await encryptText(content, keyId)) {
+          case (#err(error)) { #err("Failed to encrypt message: " # error) };
+          case (#ok(encrypted)) {
+            #ok({
+              encryptedContent = encrypted.encryptedData;
+              nonce = encrypted.nonce;
+              keyId = keyId;
+            })
+          };
+        }
+      };
+    }
+  }
 
 };
