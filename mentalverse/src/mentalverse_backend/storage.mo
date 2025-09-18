@@ -1,10 +1,7 @@
 import HashMap "mo:base/HashMap";
-import Result "mo:base/Result";
 import Principal "mo:base/Principal";
 import Text "mo:base/Text";
-import Time "mo:base/Time";
 import Iter "mo:base/Iter";
-import Array "mo:base/Array";
 import Nat "mo:base/Nat";
 import Int "mo:base/Int";
 import Blob "mo:base/Blob";

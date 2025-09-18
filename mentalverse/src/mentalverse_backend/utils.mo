@@ -1,7 +1,6 @@
 import Text "mo:base/Text";
 import Result "mo:base/Result";
 import Time "mo:base/Time";
-import Principal "mo:base/Principal";
 import Nat32 "mo:base/Nat32";
 import Int "mo:base/Int";
 import Nat "mo:base/Nat";
