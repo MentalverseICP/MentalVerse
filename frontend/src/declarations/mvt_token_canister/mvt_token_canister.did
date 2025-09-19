@@ -135,10 +135,18 @@ type Account =
    subaccount: opt vec nat8;
  };
 service : {
+  add_authorized_canister: (canister_id: principal) -> (Result_1);
   burn_tokens: (from: Account, amount: nat) -> (Result_2);
   claim_staking_rewards: (user: principal) -> (Result);
+  distribute_daily_rewards: () -> (Result);
   earn_tokens: (user: principal, earning_type: EarningType, custom_amount:
    opt nat) -> (Result_2);
+  enhanced_burn_tokens: (from: Account, amount: nat, reason: text) ->
+   (Result_2);
+  get_canister_call_stats: () -> (vec record {
+                                        principal;
+                                        nat;
+                                      }) query;
   get_earning_rates: () ->
    (record {
       appointment_completion: nat;
@@ -148,6 +156,7 @@ service : {
       referral_bonus: nat;
       system_participation: nat;
     }) query;
+  get_reward_eligibility: (user: principal) -> (bool) query;
   get_spending_costs: () ->
    (record {
       advanced_features_monthly: nat;
@@ -167,6 +176,7 @@ service : {
     }) query;
   get_transaction_history: (start: opt TxIndex, limit: opt nat) ->
    (vec Transaction) query;
+  get_user_activity_status: (user: principal) -> (opt int) query;
   get_user_earning_history: (user: principal) -> (vec EarningRecord) query;
   get_user_spending_history: (user: principal) -> (vec SpendingRecord) query;
   get_user_stake: (user: principal) -> (opt StakeInfo) query;
@@ -192,6 +202,7 @@ service : {
   icrc1_symbol: () -> (text) query;
   icrc1_total_supply: () -> (nat) query;
   icrc1_transfer: (args: TransferArgs) -> (TransferResult);
+  mark_user_active: (user: principal) -> (Result_1);
   mint_tokens: (to: Account, amount: nat) -> (Result_2);
   spend_tokens: (user: principal, spending_type: SpendingType, custom_amount:
    opt nat) -> (Result_2);

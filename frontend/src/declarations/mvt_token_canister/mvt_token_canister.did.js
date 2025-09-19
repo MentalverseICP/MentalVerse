@@ -1,4 +1,5 @@
 export const idlFactory = ({ IDL }) => {
+  const Result_1 = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
   const Account = IDL.Record({
     'owner' : IDL.Principal,
     'subaccount' : IDL.Opt(IDL.Vec(IDL.Nat8)),
@@ -102,14 +103,25 @@ export const idlFactory = ({ IDL }) => {
     'InsufficientFunds' : IDL.Record({ 'balance' : IDL.Nat }),
   });
   const TransferResult = IDL.Variant({ 'ok' : TxIndex, 'err' : TransferError });
-  const Result_1 = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
   return IDL.Service({
+    'add_authorized_canister' : IDL.Func([IDL.Principal], [Result_1], []),
     'burn_tokens' : IDL.Func([Account, IDL.Nat], [Result_2], []),
     'claim_staking_rewards' : IDL.Func([IDL.Principal], [Result], []),
+    'distribute_daily_rewards' : IDL.Func([], [Result], []),
     'earn_tokens' : IDL.Func(
         [IDL.Principal, EarningType, IDL.Opt(IDL.Nat)],
         [Result_2],
         [],
+      ),
+    'enhanced_burn_tokens' : IDL.Func(
+        [Account, IDL.Nat, IDL.Text],
+        [Result_2],
+        [],
+      ),
+    'get_canister_call_stats' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Nat))],
+        ['query'],
       ),
     'get_earning_rates' : IDL.Func(
         [],
@@ -125,6 +137,7 @@ export const idlFactory = ({ IDL }) => {
         ],
         ['query'],
       ),
+    'get_reward_eligibility' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
     'get_spending_costs' : IDL.Func(
         [],
         [
@@ -152,6 +165,11 @@ export const idlFactory = ({ IDL }) => {
     'get_transaction_history' : IDL.Func(
         [IDL.Opt(TxIndex), IDL.Opt(IDL.Nat)],
         [IDL.Vec(Transaction)],
+        ['query'],
+      ),
+    'get_user_activity_status' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Opt(IDL.Int)],
         ['query'],
       ),
     'get_user_earning_history' : IDL.Func(
@@ -200,6 +218,7 @@ export const idlFactory = ({ IDL }) => {
     'icrc1_symbol' : IDL.Func([], [IDL.Text], ['query']),
     'icrc1_total_supply' : IDL.Func([], [IDL.Nat], ['query']),
     'icrc1_transfer' : IDL.Func([TransferArgs], [TransferResult], []),
+    'mark_user_active' : IDL.Func([IDL.Principal], [Result_1], []),
     'mint_tokens' : IDL.Func([Account, IDL.Nat], [Result_2], []),
     'spend_tokens' : IDL.Func(
         [IDL.Principal, SpendingType, IDL.Opt(IDL.Nat)],

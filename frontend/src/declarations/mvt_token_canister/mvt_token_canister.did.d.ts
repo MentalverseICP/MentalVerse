@@ -106,12 +106,16 @@ export type TransferResult = { 'ok' : TxIndex } |
   { 'err' : TransferError };
 export type TxIndex = bigint;
 export interface _SERVICE {
+  'add_authorized_canister' : ActorMethod<[Principal], Result_1>,
   'burn_tokens' : ActorMethod<[Account, bigint], Result_2>,
   'claim_staking_rewards' : ActorMethod<[Principal], Result>,
+  'distribute_daily_rewards' : ActorMethod<[], Result>,
   'earn_tokens' : ActorMethod<
     [Principal, EarningType, [] | [bigint]],
     Result_2
   >,
+  'enhanced_burn_tokens' : ActorMethod<[Account, bigint, string], Result_2>,
+  'get_canister_call_stats' : ActorMethod<[], Array<[Principal, bigint]>>,
   'get_earning_rates' : ActorMethod<
     [],
     {
@@ -123,6 +127,7 @@ export interface _SERVICE {
       'system_participation' : bigint,
     }
   >,
+  'get_reward_eligibility' : ActorMethod<[Principal], boolean>,
   'get_spending_costs' : ActorMethod<
     [],
     {
@@ -142,6 +147,7 @@ export interface _SERVICE {
     [[] | [TxIndex], [] | [bigint]],
     Array<Transaction>
   >,
+  'get_user_activity_status' : ActorMethod<[Principal], [] | [bigint]>,
   'get_user_earning_history' : ActorMethod<[Principal], Array<EarningRecord>>,
   'get_user_spending_history' : ActorMethod<[Principal], Array<SpendingRecord>>,
   'get_user_stake' : ActorMethod<[Principal], [] | [StakeInfo]>,
@@ -161,6 +167,7 @@ export interface _SERVICE {
   'icrc1_symbol' : ActorMethod<[], string>,
   'icrc1_total_supply' : ActorMethod<[], bigint>,
   'icrc1_transfer' : ActorMethod<[TransferArgs], TransferResult>,
+  'mark_user_active' : ActorMethod<[Principal], Result_1>,
   'mint_tokens' : ActorMethod<[Account, bigint], Result_2>,
   'spend_tokens' : ActorMethod<
     [Principal, SpendingType, [] | [bigint]],
