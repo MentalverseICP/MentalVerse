@@ -26,7 +26,7 @@ export default defineConfig({
     ],
   },
   build: {
-    outDir: 'dist',
+    outDir: '../mentalverse/frontend_dist',
     emptyOutDir: true,
     rollupOptions: {
       output: {
