@@ -14,7 +14,7 @@ import { idlFactory as messagingIdl, type _SERVICE as MessagingService } from '.
 const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
 const IC_HOST = isLocal 
-  ? import.meta.env.VITE_IC_HOST ?? 'http://127.0.0.1:4943'
+  ? (globalThis as any).VITE_IC_HOST ?? 'http://127.0.0.1:4943'
   : 'https://ic0.app';
 
 const NETWORK = isLocal ? 'local' : 'ic';
@@ -57,7 +57,7 @@ const getCanisterId = (envVar: string | undefined, canisterName: keyof typeof PR
   let canisterId = envVar;
   
   if (!canisterId) {
-    const isProduction = NETWORK === 'ic' || import.meta.env.VITE_IC_NETWORK === 'ic';
+    const isProduction = NETWORK === 'ic' || (globalThis as any).VITE_IC_NETWORK === 'ic';
     canisterId = isProduction 
       ? PRODUCTION_CANISTER_IDS[canisterName]
       : DEFAULT_CANISTER_IDS[canisterName];
@@ -68,19 +68,19 @@ const getCanisterId = (envVar: string | undefined, canisterName: keyof typeof PR
 
 // Resolve canister IDs with validation and production fallbacks
 const MENTALVERSE_CANISTER = getCanisterId(
-  import.meta.env.VITE_CANISTER_MENTALVERSE_BACKEND,
+  (globalThis as any).VITE_CANISTER_MENTALVERSE_BACKEND,
   'mentalverse',
   'MentalVerse Backend'
 );
 
 const MVT_TOKEN_CANISTER = getCanisterId(
-  import.meta.env.VITE_CANISTER_MVT_TOKEN,
+  (globalThis as any).VITE_CANISTER_MVT_TOKEN,
   'token',
   'MVT Token'
 );
 
 const SECURE_MESSAGING_CANISTER = getCanisterId(
-  import.meta.env.VITE_CANISTER_SECURE_MESSAGING,
+  (globalThis as any).VITE_CANISTER_SECURE_MESSAGING,
   'messaging',
   'Secure Messaging'
 );
@@ -95,9 +95,9 @@ console.log('Canister Configuration:', {
     messaging: SECURE_MESSAGING_CANISTER
   },
   environment: {
-    mentalverse_env: import.meta.env.VITE_CANISTER_MENTALVERSE_BACKEND,
-    token_env: import.meta.env.VITE_CANISTER_MVT_TOKEN,
-    messaging_env: import.meta.env.VITE_CANISTER_SECURE_MESSAGING
+    mentalverse_env: (globalThis as any).VITE_CANISTER_MENTALVERSE_BACKEND,
+    token_env: (globalThis as any).VITE_CANISTER_MVT_TOKEN,
+    messaging_env: (globalThis as any).VITE_CANISTER_SECURE_MESSAGING
   }
 });
 

@@ -11,9 +11,9 @@ import { idlFactory, _SERVICE as MentalverseService } from '../declarations/ment
 // Backend service interface
 export interface BackendService {
   // Authentication
-  initializeUser: (userData: { firstName: string; lastName: string; email: string; phoneNumber: [] | [string]; userType: { patient?: null; therapist?: null; admin?: null } }) => Promise<{ Ok?: string; Err?: string }>;
-  completeOnboarding: (userType: { patient?: null; therapist?: null; admin?: null }, additionalData: { bio?: string; profilePicture?: string }) => Promise<{ Ok?: string; Err?: string }>;
-  getCurrentUser: () => Promise<{ Ok?: { id: Principal; role: string }; Err?: string }>;
+  registerUser: (userData: { firstName: string; lastName: string; email: string; userType: { patient?: null; therapist?: null; admin?: null } }) => Promise<{ ok?: string; err?: string }>;
+  completeOnboarding: (userType: { patient?: null; therapist?: null; admin?: null }, additionalData: { bio?: string; profilePicture?: string }) => Promise<{ ok?: string; err?: string }>;
+  getCurrentUser: () => Promise<{ ok?: { id: Principal; role: string }; err?: string }>;
   
   // Token operations
   getTokenBalance: () => Promise<{ Ok?: TokenBalance; Err?: string }>;
@@ -379,7 +379,7 @@ export class AuthService {
 
     return new Promise((resolve) => {
       this.authClient!.login({
-        identityProvider: import.meta.env.VITE_INTERNET_IDENTITY_URL || 'https://identity.ic0.app/#authorize',
+        identityProvider: (globalThis as any).VITE_INTERNET_IDENTITY_URL || 'https://identity.ic0.app/#authorize',
         onSuccess: async () => {
           await this.handleAuthenticated();
           resolve(true);
@@ -413,16 +413,16 @@ export class AuthService {
     // Create actor with authenticated identity
     const agent = new HttpAgent({
       identity,
-      host: import.meta.env.VITE_IC_HOST || 'http://localhost:4943',
+      host: (globalThis as any).VITE_IC_HOST || 'http://localhost:4943',
     });
 
     // In development, fetch root key
-    if (import.meta.env.DEV) {
+    if ((globalThis as any).DEV || process.env.NODE_ENV === 'development') {
       await agent.fetchRootKey();
     }
 
     // Use the statically imported idlFactory and type the actor with MentalverseService
-    const canisterId = import.meta.env.VITE_CANISTER_MENTALVERSE_BACKEND || 'u6s2n-gx777-77774-qaaba-cai';
+    const canisterId = (globalThis as any).VITE_CANISTER_MENTALVERSE_BACKEND || 'u6s2n-gx777-77774-qaaba-cai';
     this.actor = Actor.createActor(idlFactory, { agent, canisterId }) as MentalverseService & BackendService;
     
     // Mock actor is no longer needed as we're using the real implementation
@@ -439,11 +439,11 @@ export class AuthService {
     // Get user role and check if user is already registered
     try {
       const result = await this.actor.getCurrentUser();
-      if ('Ok' in result && result.Ok) {
-        this.userRole = result.Ok.role;
-        // Store user role in localStorage for routing logic
-        localStorage.setItem('userRole', result.Ok.role === 'doctor' ? 'therapist' : result.Ok.role);
-        console.log('✅ User already registered with role:', result.Ok.role);
+      if ('ok' in result && result.ok) {
+        this.userRole = result.ok.role;
+        // Store user role in localStorage for immediate access
+        localStorage.setItem('userRole', result.ok.role === 'doctor' ? 'therapist' : result.ok.role);
+        console.log('✅ User already registered with role:', result.ok.role);
       }
     } catch (error) {
       console.error('Failed to get user role (user may not be registered yet):', error);
@@ -498,27 +498,23 @@ export class AuthService {
         firstName: userData.firstName,
         lastName: userData.lastName,
         email: userData.email,
-        phoneNumber: userData.phoneNumber ? [userData.phoneNumber] : [],
         userType: userTypeVariant
       };
       
       console.log('🔍 Sending to backend:', backendData);
       
-      const result = await this.actor.initializeUser({
-        ...backendData,
-        phoneNumber: backendData.phoneNumber.length > 0 ? [backendData.phoneNumber[0]] : []
-      });
+      const result = await this.actor.registerUser(backendData);
       
       console.log('🔍 Backend response:', result);
       
-      if (('Ok' in result && result.Ok) || ('ok' in result && result.ok)) {
+      if ('ok' in result && result.ok) {
         this.userRole = userData.userType;
         // Store user role in localStorage for immediate access
         localStorage.setItem('userRole', this.userRole === 'therapist' ? 'therapist' : 'patient');
         console.log('✅ Registration successful');
         return { success: true, message: 'User registered successfully' };
-      } else if ('Err' in result && result.Err) {
-        const errorMessage = result.Err;
+      } else if ('err' in result && result.err) {
+        const errorMessage = result.err;
         console.error('❌ Backend returned error:', errorMessage);
         
         // Handle "User already registered" case
@@ -530,8 +526,8 @@ export class AuthService {
             const userResult = await this.actor.getCurrentUser();
             console.log('🔍 Existing user result:', userResult);
             
-            if ('Ok' in userResult && userResult.Ok) {
-              const userData = userResult.Ok;
+            if ('ok' in userResult && userResult.ok) {
+              const userData = userResult.ok;
               const existingRole = userData.role;
               this.userRole = existingRole === 'doctor' ? 'therapist' : existingRole;
               
@@ -543,7 +539,7 @@ export class AuthService {
                 success: true, 
                 message: 'User already registered', 
                 isExistingUser: true, 
-                userRole: this.userRole 
+                userRole: this.userRole || undefined 
               };
             } else {
               console.error('❌ Failed to get existing user role');

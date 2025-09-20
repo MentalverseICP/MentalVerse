@@ -244,7 +244,7 @@ export class SecureMessagingClient {
   constructor(canisterId?: string) {
     // Validate canister ID format
     const defaultCanisterId = 'jzwty-fqaaa-aaaac-a4goq-cai';
-    const providedCanisterId = canisterId || import.meta.env.VITE_CANISTER_SECURE_MESSAGING || defaultCanisterId;
+    const providedCanisterId = canisterId || (globalThis as any).VITE_CANISTER_SECURE_MESSAGING || defaultCanisterId;
     
     // Basic canister ID validation
     if (this.isValidCanisterId(providedCanisterId)) {
@@ -291,11 +291,11 @@ export class SecureMessagingClient {
       
       this.agent = new HttpAgent({
         identity,
-        host: import.meta.env.VITE_IC_HOST || 'http://localhost:4943',
+        host: (globalThis as any).VITE_IC_HOST || 'http://localhost:4943',
       });
 
       // In development, fetch root key with retry logic
-      if (import.meta.env.DEV) {
+      if ((globalThis as any).DEV || process.env.NODE_ENV === 'development') {
         let rootKeyFetched = false;
         let retryCount = 0;
         const maxRetries = 3;

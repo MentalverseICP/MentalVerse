@@ -67,6 +67,9 @@ export interface _SERVICE {
   'storePatientData' : ActorMethod<[UserId, string], Result_1>,
   'updateUserProfile' : ActorMethod<[UserProfileUpdates], Result>,
   'validateEmail' : ActorMethod<[string], ValidationResult>,
+  'healthCheck' : ActorMethod<[], Result_1>,
+  'updateUserStats' : ActorMethod<[any], Result_1>,
+  'completeOnboarding' : ActorMethod<[UserType, { bio?: string; profilePicture?: string }], Result_1>,
 }
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

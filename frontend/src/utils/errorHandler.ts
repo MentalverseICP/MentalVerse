@@ -396,7 +396,7 @@ class ErrorHandler {
   private sendToMonitoring(error: MentalVerseError): void {
     // Send to external monitoring service (implement as needed)
     // This could be Sentry, LogRocket, or custom analytics
-    if (import.meta.env.PROD && error.severity === ErrorSeverity.CRITICAL) {
+    if ((globalThis as any).PROD && error.severity === ErrorSeverity.CRITICAL) {
       // Example: Send to monitoring service
       console.log('Sending critical error to monitoring service:', error.id);
     }
