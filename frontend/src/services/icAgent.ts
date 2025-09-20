@@ -334,13 +334,20 @@ class ICAgentService {
   }
   
   private async validateActorConnectivity(): Promise<void> {
+    // Skip health checks in production if they're causing issues
+    if (NETWORK === 'ic' && this.state.initializationAttempts > 1) {
+      console.log('Skipping health checks for production network after failed attempts');
+      return;
+    }
+    
     const connectivityTests: Promise<void>[] = [];
     
     // Test MentalVerse actor
     if (this.state.mentalverseActor) {
       connectivityTests.push(
         this.testActorHealth('mentalverse', async () => {
-          await this.state.mentalverseActor!.healthCheck();
+          const result = await this.state.mentalverseActor!.healthCheck();
+          console.log('MentalVerse health check result:', result);
         })
       );
     }
@@ -349,7 +356,8 @@ class ICAgentService {
     if (this.state.tokenActor) {
       connectivityTests.push(
         this.testActorHealth('token', async () => {
-          await this.state.tokenActor!.health_check();
+          const result = await this.state.tokenActor!.health_check();
+          console.log('Token health check result:', result);
         })
       );
     }
@@ -358,7 +366,8 @@ class ICAgentService {
     if (this.state.messagingActor) {
       connectivityTests.push(
         this.testActorHealth('messaging', async () => {
-          await this.state.messagingActor!.health_check();
+          const result = await this.state.messagingActor!.health_check();
+          console.log('Messaging health check result:', result);
         })
       );
     }
@@ -378,13 +387,30 @@ class ICAgentService {
       await Promise.race([
         healthCheck(),
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Health check timeout')), 5000)
+          setTimeout(() => reject(new Error('Health check timeout')), 10000)
         )
       ]);
       console.log(`✓ ${actorName} actor connectivity verified`);
     } catch (error) {
-      console.warn(`⚠ ${actorName} actor connectivity test failed:`, error);
-      // Don't throw - this is just a warning
+      // Categorize the error for better debugging
+      let errorCategory = 'unknown';
+      let errorMessage = error instanceof Error ? error.message : String(error);
+      
+      if (errorMessage.includes('timeout')) {
+        errorCategory = 'timeout';
+      } else if (errorMessage.includes('not a function')) {
+        errorCategory = 'method_not_found';
+      } else if (errorMessage.includes('canister') && errorMessage.includes('not found')) {
+        errorCategory = 'canister_not_found';
+      } else if (errorMessage.includes('network') || errorMessage.includes('connection')) {
+        errorCategory = 'network_error';
+      }
+      
+      console.warn(`⚠ ${actorName} actor connectivity test failed [${errorCategory}]:`, error);
+      
+      // Health checks are optional - don't fail initialization
+      // This allows the app to work even if some canisters are temporarily unavailable
+      // In production, actors may not have health check methods implemented
     }
   }
   
