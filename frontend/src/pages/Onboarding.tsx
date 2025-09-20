@@ -212,13 +212,10 @@ const Onboarding: React.FC = () => {
           // User is already registered, redirect to their dashboard
           const userRole = registrationResult.userRole;
           localStorage.setItem('userRole', userRole);
+          localStorage.setItem('userOnboardingComplete', 'true');
           
-          // Redirect based on existing user's role
-          if (userRole === 'therapist') {
-            navigate('/therapist/home');
-          } else {
-            navigate('/patients/home');
-          }
+          // Redirect to dashboard which will route to appropriate home page
+          navigate('/dashboard');
           return;
         }
         throw new Error(registrationResult.message || 'Failed to register user');
@@ -227,13 +224,10 @@ const Onboarding: React.FC = () => {
       // Store user data locally for immediate use (new user registration)
       localStorage.setItem('userRole', formData.role);
       localStorage.setItem('userProfile', JSON.stringify(formData));
+      localStorage.setItem('userOnboardingComplete', 'true');
       
-      // Redirect based on role
-      if (formData.role === 'therapist') {
-        navigate('/therapist/home');
-      } else {
-        navigate('/patients/home');
-      }
+      // Redirect to dashboard which will route to appropriate home page
+      navigate('/dashboard');
     } catch (error) {
       console.error('Onboarding failed:', error);
       // Show error message to user

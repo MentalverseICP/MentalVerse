@@ -1,24 +1,36 @@
 import { motion } from 'framer-motion';
 import { ArrowUpRight, Star } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
         
 
-// Simple connect button component
-const SimpleConnectButton = () => {
+// Hero action buttons component
+const HeroActionButtons = () => {
   const { isAuthenticated, login, logout } = useAuth();
+  const navigate = useNavigate();
 
-  
   if (isAuthenticated) {
     return (
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={logout}
-        className="bg-destructive hover:bg-destructive/90 text-white px-8 py-3 rounded-2xl text-md font-semibold transition-all duration-300 flex items-center space-x-2"
-      >
-        <span>Disconnect</span>
-        <ArrowUpRight className="w-4 h-4" />
-      </motion.button>
+      <div className="flex flex-col sm:flex-row gap-4">
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => navigate('/app')}
+          className="bg-[#18E614] hover:bg-[#18E614]/90 text-white px-8 py-3 rounded-2xl text-md font-semibold transition-all duration-300 flex items-center justify-center space-x-2"
+        >
+          <span>Go to Dashboard</span>
+          <ArrowUpRight className="w-5 h-5" />
+        </motion.button>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={logout}
+          className="bg-destructive hover:bg-destructive/90 text-white px-8 py-3 rounded-2xl text-md font-semibold transition-all duration-300 flex items-center justify-center space-x-2"
+        >
+          <span>Disconnect</span>
+          <ArrowUpRight className="w-4 h-4" />
+        </motion.button>
+      </div>
     );
   }
   
@@ -96,7 +108,7 @@ export const Hero = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
             >
-              <SimpleConnectButton />
+              <HeroActionButtons />
             </motion.div>
           </div>
         </motion.div>

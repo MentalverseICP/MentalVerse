@@ -1,24 +1,36 @@
 import { Menu, X, ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { scrollToSection } from "./MotionComponent";
 import { ThemeToggle } from '../shared/theme-toggle';
 import { motion } from 'framer-motion';
 import MentalIcon from "@/images/mental_mobile.svg";
 import { useAuth } from "../../contexts/AuthContext";
 
-const SimpleConnectButton = () => {
+const AuthButtons = () => {
   const { isAuthenticated, login, logout } = useAuth();
+  const navigate = useNavigate();
 
   if (isAuthenticated) {
     return (
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={logout}
-        className="bg-destructive hover:bg-destructive/90 text-white px-6 py-2 rounded-lg transition-all duration-300 font-medium"
-      >
-        Disconnect
-      </motion.button>
+      <div className="flex items-center space-x-3">
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => navigate('/app')}
+          className="bg-[#18E614] hover:bg-[#18E614]/90 text-white px-6 py-2 rounded-lg transition-all duration-300 font-medium"
+        >
+          Go to Dashboard
+        </motion.button>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={logout}
+          className="bg-destructive hover:bg-destructive/90 text-white px-6 py-2 rounded-lg transition-all duration-300 font-medium"
+        >
+          Disconnect
+        </motion.button>
+      </div>
     );
   }
 
@@ -100,7 +112,7 @@ export const Header: React.FC<{ onWalletDisconnect?: () => void }> = () => {
 
           <div className="hidden lg:flex items-center space-x-4">
             <ThemeToggle />
-            <SimpleConnectButton />
+            <AuthButtons />
           </div>
 
           {/* Mobile Menu Button */}
@@ -143,7 +155,7 @@ export const Header: React.FC<{ onWalletDisconnect?: () => void }> = () => {
                   <ThemeToggle />
                 </div>
                 <div className="flex justify-center">
-                  <SimpleConnectButton />
+                  <AuthButtons />
                 </div>
               </div>
             </nav>

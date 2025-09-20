@@ -474,6 +474,28 @@ export class AuthService {
     return this.secureMessaging;
   }
 
+  async checkUserExists(): Promise<{ exists: boolean; userRole?: string }> {
+    if (!this.actor || !this.isAuthenticated) {
+      return { exists: false };
+    }
+
+    try {
+      const result = await this.actor.getCurrentUser();
+      if ('ok' in result && result.ok) {
+        // User exists and has a role
+        const userRole = result.ok.role === 'doctor' ? 'therapist' : result.ok.role;
+        this.userRole = userRole;
+        // Store user role in localStorage for immediate access
+        localStorage.setItem('userRole', userRole);
+        return { exists: true, userRole };
+      }
+      return { exists: false };
+    } catch (error) {
+      console.error('Failed to check if user exists:', error);
+      return { exists: false };
+    }
+  }
+
   async registerUser(userData: {
     firstName: string;
     lastName: string;

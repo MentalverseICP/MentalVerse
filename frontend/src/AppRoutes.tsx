@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Home from '@/pages/Patients/Home';
 import Login from '@/pages/Login'
 import Logout from '@/pages/Logout'
@@ -27,6 +27,17 @@ interface RouteProps {
   // className?: string
 }
 
+// Dashboard redirect component
+const DashboardRedirect: React.FC = () => {
+  const userRole = localStorage.getItem('userRole');
+  
+  if (userRole === 'therapist') {
+    return <Navigate to="/therapist/home" replace />;
+  } else {
+    return <Navigate to="/patients/home" replace />;
+  }
+};
+
 export const AppRoutes: React.FC<RouteProps> = () => {
   const { state } = useSidebar();
   const location = useLocation();
@@ -48,6 +59,9 @@ export const AppRoutes: React.FC<RouteProps> = () => {
     )}>
       <div className='w-full max-w-full'>
         <Routes>
+          {/* Dashboard Route */}
+          <Route path="/dashboard" element={<DashboardRedirect />} />
+          
           {/* Onboarding Route */}
           <Route path="/onboarding" element={<Onboarding />} />
           

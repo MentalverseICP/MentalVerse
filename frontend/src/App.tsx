@@ -53,39 +53,31 @@ function AppRouter() {
   // Check if user exists when authenticated
   useEffect(() => {
     const checkExistingUser = async () => {
-      if (isAuthenticated && !checkingUser && userExists === null) {
-        setCheckingUser(true)
-        try {
-          // Check if user already exists in backend
-          const result = await authService.getActor()?.getCurrentUser()
-          if (result && 'Ok' in result && result.Ok) {
-            // User exists, store their role and mark as existing
-            const userRole = result.Ok.role
-            localStorage.setItem('userRole', userRole)
-            localStorage.setItem('userOnboardingComplete', 'true')
-            setUserExists(true)
-            console.log('Existing user detected with role:', userRole)
-          } else {
-            // User doesn't exist, needs onboarding
-            setUserExists(false)
-            localStorage.removeItem('userRole')
-            localStorage.removeItem('userOnboardingComplete')
-            console.log('New user detected, needs onboarding')
-          }
-        } catch (error) {
-          console.error('Error checking existing user:', error)
-          // On error, assume new user to be safe
-          setUserExists(false)
-          localStorage.removeItem('userRole')
-          localStorage.removeItem('userOnboardingComplete')
-        } finally {
-          setCheckingUser(false)
+      if (!isAuthenticated || checkingUser) return;
+      
+      setCheckingUser(true);
+      try {
+        const result = await authService.checkUserExists();
+        console.log('User existence check result:', result);
+        setUserExists(result.exists);
+        
+        if (result.exists && result.userRole) {
+          // Store user role and mark onboarding as complete for existing users
+          localStorage.setItem('userRole', result.userRole);
+          localStorage.setItem('userOnboardingComplete', 'true');
+          console.log('Existing user found with role:', result.userRole);
         }
+      } catch (error) {
+        console.error('Failed to check user existence:', error);
+        // On error, assume user doesn't exist to trigger onboarding
+        setUserExists(false);
+      } finally {
+        setCheckingUser(false);
       }
-    }
+    };
 
-    checkExistingUser()
-  }, [isAuthenticated, checkingUser, userExists])
+    checkExistingUser();
+  }, [isAuthenticated, checkingUser, userExists]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -116,8 +108,14 @@ function AppRouter() {
       <Route
         path="/"
         element={
+          <LandingPage onWalletDisconnect={handleWalletDisconnect} />
+        }
+      />
+      <Route
+        path="/app"
+        element={
           !isAuthenticated ? (
-            <LandingPage onWalletDisconnect={handleWalletDisconnect} />
+            <Navigate to="/" replace />
           ) : userExists === true ? (
             // Existing user - bypass onboarding and go to dashboard
             <Navigate to="/dashboard" replace />
