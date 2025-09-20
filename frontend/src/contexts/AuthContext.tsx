@@ -95,6 +95,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setPrincipal(userPrincipal);
           setUser({ principal: userPrincipal });
           
+          // Expose auth context globally for httpClient
+          (window as any).__MENTALVERSE_AUTH_CONTEXT__ = {
+            identity: userIdentity,
+            principal: userPrincipal,
+            isAuthenticated: true
+          };
+          
           // Initialize IC agents with the authenticated identity
           try {
             await icAgent.initializeAgent(userIdentity);
@@ -247,6 +254,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIdentity(undefined);
       setPrincipal(undefined);
       setUser(null);
+      
+      // Clear global auth context
+      (window as any).__MENTALVERSE_AUTH_CONTEXT__ = null;
       
       // Clear any stored user data and session information
       localStorage.removeItem('userRole');

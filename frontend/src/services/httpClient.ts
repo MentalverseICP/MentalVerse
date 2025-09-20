@@ -34,10 +34,25 @@ class HttpClient {
     // Request interceptor for auth tokens
     this.client.interceptors.request.use(
       (config) => {
-        const token = localStorage.getItem("auth_token");
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
+        // Try to get IC identity token first, fallback to localStorage
+        let token = null;
+        
+        // Check if we have an IC identity available
+        try {
+          const authContext = (window as any).__MENTALVERSE_AUTH_CONTEXT__;
+          if (authContext?.identity && authContext?.principal) {
+            // Use IC principal as authentication
+            config.headers['X-IC-Principal'] = authContext.principal;
+            config.headers['X-IC-Identity'] = 'authenticated';
+          }
+        } catch (e) {
+          // Fallback to localStorage token for backward compatibility
+          token = localStorage.getItem("auth_token");
+          if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+          }
         }
+        
         return config;
       },
       (error) => Promise.reject(error)
