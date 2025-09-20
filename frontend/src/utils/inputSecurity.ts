@@ -362,7 +362,7 @@ export function getFormErrors(results: Record<string, ValidationResult>): string
  */
 class RateLimiter {
   private attempts: Map<string, number[]> = new Map();
-  private readonly maxAttempts = 2000; // Increased  to 2000
+  private readonly maxAttempts = 500; // Increased from 100 to 500
   private readonly windowMs = 60000; // 1 minute
 
   isAllowed(identifier: string): boolean {

@@ -13,8 +13,8 @@ import { idlFactory as messagingIdl, type _SERVICE as MessagingService } from '.
 // Environment detection based on hostname - automatically detects local vs mainnet
 const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
-const IC_HOST = isLocal 
-  ? (globalThis as any).VITE_IC_HOST ?? 'http://127.0.0.1:4943'
+const IC_HOST = isLocal
+  ? (globalThis as any).VITE_IC_HOST ?? 'https://ic0.app'
   : 'https://ic0.app';
 
 const NETWORK = isLocal ? 'local' : 'ic';
@@ -44,10 +44,10 @@ const PRODUCTION_CANISTER_IDS = {
   messaging: 'jzwty-fqaaa-aaaac-a4goq-cai'
 };
 
-// Default canister IDs for fallback (local development)
+// Default canister IDs for fallback (production values)
 const DEFAULT_CANISTER_IDS = {
-  mentalverse: 'rdmx6-jaaaa-aaaah-qdrqq-cai',
-  token: 'rrkah-fqaaa-aaaah-qcuqq-cai', 
+  mentalverse: 'cytcv-raaaa-aaaac-a4aoa-cai',
+  token: 'c7seb-4yaaa-aaaac-a4aoq-cai', 
   messaging: 'jzwty-fqaaa-aaaac-a4goq-cai'
 };
 

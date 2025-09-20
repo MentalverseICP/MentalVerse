@@ -413,7 +413,7 @@ export class AuthService {
     // Create actor with authenticated identity
     const agent = new HttpAgent({
       identity,
-      host: (globalThis as any).VITE_IC_HOST || 'http://localhost:4943',
+      host: (globalThis as any).VITE_IC_HOST || 'https://ic0.app',
     });
 
     // In development, fetch root key
@@ -422,7 +422,7 @@ export class AuthService {
     }
 
     // Use the statically imported idlFactory and type the actor with MentalverseService
-    const canisterId = (globalThis as any).VITE_CANISTER_MENTALVERSE_BACKEND || 'u6s2n-gx777-77774-qaaba-cai';
+    const canisterId = (globalThis as any).VITE_CANISTER_MENTALVERSE_BACKEND || 'cytcv-raaaa-aaaac-a4aoa-cai';
     this.actor = Actor.createActor(idlFactory, { agent, canisterId }) as MentalverseService & BackendService;
     
     // Mock actor is no longer needed as we're using the real implementation

@@ -7,7 +7,7 @@ import axios, {
   AxiosError,
 } from "axios";
 
-const BASE_URL = (globalThis as any).VITE_API_BASE_URL || 'http://localhost:3001';
+const BASE_URL = (globalThis as any).VITE_API_BASE_URL || 'https://mentalverse-backend.onrender.com';
 
 interface HttpClientConfig {
   baseURL?: string;

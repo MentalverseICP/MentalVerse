@@ -291,7 +291,7 @@ export class SecureMessagingClient {
       
       this.agent = new HttpAgent({
         identity,
-        host: (globalThis as any).VITE_IC_HOST || 'http://localhost:4943',
+        host: (globalThis as any).VITE_IC_HOST || 'https://ic0.app',
       });
 
       // In development, fetch root key with retry logic

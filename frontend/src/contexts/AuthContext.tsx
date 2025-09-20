@@ -38,7 +38,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [authClient, setAuthClient] = useState<AuthClient | undefined>();
   const [user, setUser] = useState<User | null>(null);
 
-  const INTERNET_IDENTITY_URL = import.meta.env.VITE_INTERNET_IDENTITY_URL || 'https://identity.ic0.app/#authorize';
+  const INTERNET_IDENTITY_URL = (globalThis as any).VITE_INTERNET_IDENTITY_URL || 'https://identity.ic0.app/#authorize';
   const MAX_TIME_TO_LIVE = BigInt(7 * 24 * 60 * 60 * 1000 * 1000 * 1000); // 7 days in nanoseconds
 
   useEffect(() => {
