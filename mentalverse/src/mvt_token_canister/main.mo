@@ -972,6 +972,23 @@ persistent actor MVTTokenCanister {
     MVTToken.SPENDING_COSTS
   };
 
+  // Faucet statistics
+  public query func get_faucet_stats() : async {
+    total_claims : Nat;
+    total_distributed : Nat;
+    daily_limit : Nat;
+    remaining_today : Nat;
+    last_reset : Int;
+  } {
+    {
+      total_claims = 0; // Placeholder - implement faucet tracking
+      total_distributed = 0; // Placeholder - implement faucet tracking
+      daily_limit = 1000000000; // 10 MVT daily limit
+      remaining_today = 1000000000; // Placeholder - implement daily tracking
+      last_reset = Time.now();
+    }
+  };
+
   // Health check
   public query func health_check() : async { status : Text; total_supply : Nat; total_accounts : Nat } {
     {

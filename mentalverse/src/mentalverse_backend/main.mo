@@ -231,6 +231,161 @@ persistent actor MentalVerseBackend {
         }
     };
     
+    // Get user's secure conversations
+    public shared(msg) func getUserSecureConversations() : async Result.Result<[SecureMessagingInterface.Conversation], Text> {
+        // Security check
+        if (not securityModule.checkRateLimitSimple(msg.caller)) {
+            return #err("Rate limit exceeded");
+        };
+        
+        // Get conversations through secure messaging canister
+        switch (secureMessagingCanister) {
+            case (null) { #err("Secure messaging service unavailable") };
+            case (?messagingCanister) {
+                try {
+                    let conversations = await messagingCanister.get_user_conversations();
+                    #ok(conversations)
+                } catch (_error) {
+                    #err("Error getting conversations")
+                }
+            };
+        }
+    };
+    
+    // Get messages from a secure conversation
+    public shared(msg) func getSecureConversationMessages(conversationId: Text, limit: ?Nat64, offset: ?Nat64) : async Result.Result<[SecureMessagingInterface.Message], Text> {
+        // Security check
+        if (not securityModule.checkRateLimitSimple(msg.caller)) {
+            return #err("Rate limit exceeded");
+        };
+        
+        // Get messages through secure messaging canister
+        switch (secureMessagingCanister) {
+            case (null) { #err("Secure messaging service unavailable") };
+            case (?messagingCanister) {
+                try {
+                    let messages = await messagingCanister.get_conversation_messages(conversationId, limit, offset);
+                    #ok(messages)
+                } catch (_error) {
+                    #err("Error getting conversation messages")
+                }
+            };
+        }
+    };
+    
+    // Create therapy conversation
+    public shared(msg) func createTherapyConversation(therapistId: Principal, sessionId: Text) : async Result.Result<Text, Text> {
+        // Security check
+        if (not securityModule.checkRateLimitSimple(msg.caller)) {
+            return #err("Rate limit exceeded");
+        };
+        
+        // Create conversation through secure messaging canister
+        switch (secureMessagingCanister) {
+            case (null) { #err("Secure messaging service unavailable") };
+            case (?messagingCanister) {
+                try {
+                    let participants = [msg.caller, therapistId];
+                    let metadata = {
+                        title = ?"Therapy Session";
+                        description = ?"Secure therapy conversation";
+                        session_id = ?sessionId;
+                        encryption_key_id = "default";
+                    };
+                    let result = await messagingCanister.create_conversation(participants, #SessionChat, metadata);
+                    switch (result.success) {
+                        case (true) {
+                            switch (result.conversation) {
+                                case (?conv) { #ok(conv.id) };
+                                case (null) { #err("Failed to create conversation") };
+                            }
+                        };
+                        case (false) {
+                            switch (result.error) {
+                                case (?error) { #err(error) };
+                                case (null) { #err("Unknown error creating conversation") };
+                            }
+                        };
+                    }
+                } catch (_error) {
+                    #err("Error creating therapy conversation")
+                }
+            };
+        }
+    };
+    
+    // === TOKEN ENDPOINTS ===
+    
+    // Get user's token balance
+    public shared(msg) func getTokenBalance() : async Result.Result<Nat, Text> {
+        // Security check
+        if (not securityModule.checkRateLimitSimple(msg.caller)) {
+            return #err("Rate limit exceeded");
+        };
+        
+        // Get balance through MVT token canister
+        switch (mvtTokenCanister) {
+            case (null) { #err("MVT Token service unavailable") };
+            case (?tokenCanister) {
+                try {
+                    let balance = await tokenCanister.icrc1_balance_of({
+                        owner = msg.caller;
+                        subaccount = null;
+                    });
+                    #ok(balance)
+                } catch (_error) {
+                    #err("Error getting token balance")
+                }
+            };
+        }
+    };
+    
+    // Get user's transaction history
+    public shared(msg) func getTransactionHistory(limit: ?Nat64, offset: ?Nat64) : async Result.Result<[MVTTokenInterface.Transaction], Text> {
+        // Security check
+        if (not securityModule.checkRateLimitSimple(msg.caller)) {
+            return #err("Rate limit exceeded");
+        };
+        
+        // Get transaction history through MVT token canister
+        switch (mvtTokenCanister) {
+            case (null) { #err("MVT Token service unavailable") };
+            case (?tokenCanister) {
+                try {
+                    // Convert Nat64 to Nat and TxIndex for the correct interface
+                    let limitNat = switch (limit) {
+                        case (null) { null };
+                        case (?l) { ?Nat64.toNat(l) };
+                    };
+                    let offsetTxIndex = switch (offset) {
+                        case (null) { null };
+                        case (?o) { ?Nat64.toNat(o) };
+                    };
+                    let history = await tokenCanister.get_transaction_history(offsetTxIndex, limitNat);
+                    #ok(history)
+                } catch (_error) {
+                    #err("Error getting transaction history")
+                }
+            };
+        }
+    };
+    
+    // Get faucet statistics
+    public func getFaucetStats() : async Result.Result<MVTTokenInterface.FaucetStats, Text> {
+        // Get faucet stats through MVT token canister
+        switch (mvtTokenCanister) {
+            case (null) { #err("MVT Token service unavailable") };
+            case (?tokenCanister) {
+                try {
+                    let stats = await tokenCanister.get_faucet_stats();
+                    #ok(stats)
+                } catch (_error) {
+                    #err("Error getting faucet stats")
+                }
+            };
+        }
+    };
+    
     // === SYSTEM HEALTH AND MONITORING ===
     
     public func getSystemHealth() : async SystemHealth {

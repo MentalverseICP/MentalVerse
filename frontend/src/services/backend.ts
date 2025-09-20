@@ -16,13 +16,13 @@ export interface BackendService {
   getCurrentUser: () => Promise<{ ok?: { id: Principal; role: string }; err?: string }>;
   
   // Token operations
-  getTokenBalance: () => Promise<{ Ok?: TokenBalance; Err?: string }>;
+  getTokenBalance: () => Promise<{ Ok?: number; Err?: string }>;
   transferTokens: (to: Principal, amount: number) => Promise<{ Ok?: string; Err?: string }>;
   stakeTokens: (amount: number, lockPeriod: number) => Promise<{ Ok?: string; Err?: string }>;
   unstakeTokens: (amount: number) => Promise<{ Ok?: string; Err?: string }>;
   claimStakingRewards: () => Promise<{ Ok?: number; Err?: string }>;
   getUserStake: () => Promise<{ Ok?: StakeInfo; Err?: string }>;
-  getTransactionHistory: (startIndex: number, limit: number) => Promise<{ Ok?: Transaction[]; Err?: string }>;
+  getTransactionHistory: (limit?: bigint[], offset?: bigint[]) => Promise<{ Ok?: any[]; Err?: string }>;
   getUserEarningHistory: () => Promise<{ Ok?: EarningRecord[]; Err?: string }>;
   getUserSpendingHistory: () => Promise<{ Ok?: SpendingRecord[]; Err?: string }>;
   earnTokens: (amount: number, reason: string) => Promise<{ Ok?: string; Err?: string }>;
@@ -596,8 +596,14 @@ export class AuthService {
 
     try {
       const result = await this.actor.getTokenBalance();
-      if ('Ok' in result && result.Ok) {
-        return result.Ok;
+      if ('Ok' in result && typeof result.Ok === 'number') {
+        return {
+          total: result.Ok,
+          available: result.Ok,
+          staked: 0,
+          pending: 0,
+          balance: result.Ok
+        };
       } else {
         throw new Error('Failed to get token balance');
       }
@@ -613,9 +619,18 @@ export class AuthService {
     }
 
     try {
-      const result = await this.actor.getTransactionHistory(0, 50);
+      const result = await this.actor.getTransactionHistory([BigInt(50)], [BigInt(0)]);
       if (result.Ok) {
-        return result.Ok;
+        return result.Ok.map((tx: any) => ({
+          id: tx.id || '',
+          type: tx.type || 'transfer',
+          amount: Number(tx.amount) || 0,
+          timestamp: Number(tx.timestamp) || Date.now(),
+          description: tx.description || '',
+          status: tx.status || 'completed',
+          from: tx.from,
+          to: tx.to
+        }));
       } else if (result.Err) {
         throw new Error(`Failed to get transaction history: ${result.Err}`);
       } else {
@@ -898,10 +913,17 @@ export class AuthService {
     
     try {
       const result = await this.actor.getUserSecureConversations();
-      return result;
+      
+      if ('Ok' in result) {
+        return { ok: result.Ok as SecureConversation[] };
+      } else if ('Err' in result) {
+        return { err: typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) };
+      } else {
+        return result;
+      }
     } catch (error) {
       console.error('Error getting secure conversations:', error);
-      throw error;
+      return { err: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
   
@@ -919,10 +941,17 @@ export class AuthService {
       const limitOpt = limit ? [BigInt(limit)] : [];
       const offsetOpt = offset ? [BigInt(offset)] : [];
       const result = await this.actor.getSecureConversationMessages(conversationId, limitOpt, offsetOpt);
-      return result;
+      
+      if ('Ok' in result) {
+        return { ok: result.Ok as SecureMessage[] };
+      } else if ('Err' in result) {
+        return { err: typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) };
+      } else {
+        return result;
+      }
     } catch (error) {
       console.error('Error getting secure conversation messages:', error);
-      throw error;
+      return { err: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
   

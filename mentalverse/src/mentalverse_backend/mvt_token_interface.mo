@@ -17,6 +17,15 @@ module {
     public type TxIndex = MVTToken.TxIndex;
     public type Duration = MVTToken.Duration;
 
+    // Faucet statistics type
+    public type FaucetStats = {
+        total_claims : Nat;
+        total_distributed : Nat;
+        daily_limit : Nat;
+        remaining_today : Nat;
+        last_reset : Int;
+    };
+
     // Inter-canister communication interface for MVT Token Canister
     public type MVTTokenCanisterInterface = actor {
         // ICRC-1 Standard Functions
@@ -75,6 +84,9 @@ module {
             premium_features : Nat;
             marketplace : Nat;
         };
+        
+        // Faucet Functions
+        get_faucet_stats : () -> async FaucetStats;
         
         // Health Check
         health_check : () -> async {
