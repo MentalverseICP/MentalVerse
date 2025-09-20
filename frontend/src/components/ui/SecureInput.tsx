@@ -72,9 +72,10 @@ const SecureInput: React.FC<SecureInputProps> = ({
     (inputValue: string) => {
       const now = Date.now();
       
-      // Rate limiting check
+      // Rate limiting check with field-specific identifier
       const userId = user?.toString() || 'anonymous';
-      if (!inputRateLimiter.isAllowed(userId)) {
+      const fieldIdentifier = `${userId}_${inputType}_${id || name || 'field'}`;
+      if (!inputRateLimiter.isAllowed(fieldIdentifier)) {
         console.warn('Rate limit exceeded for input validation');
         return;
       }
@@ -92,7 +93,7 @@ const SecureInput: React.FC<SecureInputProps> = ({
       
       // Audit suspicious input
       if (inputValue.trim()) {
-        auditSuspiciousInput(inputValue, inputType, userId);
+        auditSuspiciousInput(inputValue, inputType, fieldIdentifier);
       }
 
       // Notify parent components
