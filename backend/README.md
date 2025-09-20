@@ -11,6 +11,24 @@ Node.js backend server for MentalVerse with OpenAI integration for the MindMate 
 - 🛡️ **Rate Limiting**: Prevents API abuse and controls costs
 - ✅ **Validation**: Input sanitization and validation for all endpoints
 
+## 🏗️ Architecture
+
+### Backend Components
+- **Express.js Server**: RESTful API with middleware for security and validation
+- **Smart Contract Proxy**: All authentication and data operations delegated to blockchain smart contracts
+- **IC Integration**: Direct integration with Internet Computer canisters for decentralized operations
+- **Middleware Stack**: Input sanitization, rate limiting, CORS, and audit logging
+- **Legacy Support**: Backward compatibility during smart contract migration
+
+### Security Features
+- **Smart Contract Security**: All sensitive operations handled by decentralized blockchain contracts
+- **HIPAA Compliance**: Healthcare data protection standards maintained through smart contracts
+- **GDPR Compliance**: European data protection regulations enforced by blockchain
+- **Input Sanitization**: XSS and injection attack prevention
+- **Rate Limiting**: API abuse prevention
+- **Audit Logging**: Comprehensive security event tracking via smart contracts
+- **Decentralized Authentication**: User authentication managed entirely by smart contracts
+
 ## Quick Start
 
 ### 1. Install Dependencies

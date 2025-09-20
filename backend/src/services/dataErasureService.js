@@ -1,13 +1,12 @@
+// Data Erasure Service - Now proxied to smart contract
+// All data erasure operations are handled by the smart contract's data management system
+
 const crypto = require('crypto');
-const { encryptionService } = require('./encryptionService');
-const { auditService } = require('./auditService');
-const { consentService } = require('./consentService');
-const { icService } = require('./icService');
-const { phiDataService } = require('../models/phiData');
+const { icAgent } = require('../ic-integration/icAgent');
 
 /**
- * Data Erasure Service - GDPR 'Right to be Forgotten' Implementation
- * Provides secure, auditable data deletion with compliance guarantees
+ * Data Erasure Service - Now proxied to smart contract
+ * All GDPR 'Right to be Forgotten' operations are handled by the smart contract
  */
 class DataErasureService {
   constructor() {
@@ -31,190 +30,48 @@ class DataErasureService {
   }
 
   /**
-   * Process a complete data erasure request
+   * Process a complete data erasure request - Now handled by smart contract
    */
   async processErasureRequest(userId, requestData) {
+    console.warn('processErasureRequest: Data erasure now handled by smart contract');
+    
     try {
-      const requestId = crypto.randomUUID();
+      // Proxy to smart contract
+      const result = await icAgent.callCanisterMethod('mentalverse', 'processErasureRequest', {
+        userId,
+        requestData,
+        ipAddress: requestData.ipAddress,
+        userAgent: requestData.userAgent
+      });
       
-      console.log(`🗑️ Starting data erasure for user: ${userId.substring(0, 8)}... - Request: ${requestId.substring(0, 8)}...`);
-      
-      // Validate erasure request
-      const validation = await this.validateErasureRequest(userId, requestData);
-      if (!validation.valid) {
-        throw new Error(`Erasure request validation failed: ${validation.reason}`);
+      if (result.Err) {
+        throw new Error(`Smart contract erasure failed: ${result.Err}`);
       }
       
-      // Create erasure record
-      const erasureRecord = {
-        id: requestId,
-        userId,
-        requestedAt: new Date().toISOString(),
-        requestedBy: requestData.requestedBy || userId,
-        reason: requestData.reason || 'user_request',
-        legalBasis: requestData.legalBasis || 'gdpr_article_17',
-        dataCategories: requestData.dataCategories || Object.values(this.dataCategories),
-        deletionMethod: requestData.deletionMethod || this.deletionMethods.CRYPTOGRAPHIC_ERASURE,
-        retentionExceptions: requestData.retentionExceptions || [],
-        status: 'initiated',
-        steps: []
-      };
-      
-      // Log erasure initiation
-      await auditService.logDataOperation({
-        action: 'DATA_DELETE',
-        userId: requestData.requestedBy || userId,
-        dataSubject: userId,
-        ipAddress: requestData.ipAddress,
-        success: true,
-        dataTypes: erasureRecord.dataCategories,
-        recordCount: 0, // Will be updated as we process
-        requestId,
-        legalBasis: erasureRecord.legalBasis,
-        deletionMethod: erasureRecord.deletionMethod
-      });
-      
-      // Execute erasure steps
-      await this.executeErasureSteps(erasureRecord);
-      
-      // Finalize erasure
-      erasureRecord.status = 'completed';
-      erasureRecord.completedAt = new Date().toISOString();
-      
-      // Store erasure record (anonymized)
-      await this.storeErasureRecord(erasureRecord);
-      
-      console.log(`✅ Data erasure completed for user: ${userId.substring(0, 8)}...`);
-      
-      return {
-        requestId,
-        status: 'completed',
-        deletedCategories: erasureRecord.dataCategories,
-        retainedData: erasureRecord.retentionExceptions,
-        completedAt: erasureRecord.completedAt,
-        verificationHash: await this.generateVerificationHash(erasureRecord)
-      };
+      return result.Ok;
     } catch (error) {
       console.error('❌ Data erasure failed:', error);
-      
-      // Log erasure failure
-      await auditService.logDataOperation({
-        action: 'DATA_DELETE',
-        userId: requestData?.requestedBy || userId,
-        dataSubject: userId,
-        ipAddress: requestData?.ipAddress,
-        success: false,
-        dataTypes: requestData?.dataCategories || ['unknown'],
-        requestId: requestData?.requestId,
-        legalBasis: requestData?.legalBasis || 'gdpr_article_17'
-      });
       
       throw error;
     }
   }
 
   /**
-   * Validate erasure request
+   * Validate erasure request - Now handled by smart contract
    */
   async validateErasureRequest(userId, requestData) {
-    try {
-      // Check if user exists
-      const userExists = await this.checkUserExists(userId);
-      if (!userExists) {
-        return {
-          valid: false,
-          reason: 'User not found'
-        };
-      }
-      
-      // Check for legal retention requirements
-      const retentionCheck = await this.checkRetentionRequirements(userId);
-      if (retentionCheck.hasActiveRetention) {
-        return {
-          valid: false,
-          reason: 'Active legal retention requirements',
-          details: retentionCheck.requirements
-        };
-      }
-      
-      // Check for ongoing legal proceedings
-      const legalCheck = await this.checkLegalProceedings(userId);
-      if (legalCheck.hasActiveProceedings) {
-        return {
-          valid: false,
-          reason: 'Active legal proceedings',
-          details: legalCheck.proceedings
-        };
-      }
-      
-      // Validate deletion method
-      if (requestData.deletionMethod && 
-          !Object.values(this.deletionMethods).includes(requestData.deletionMethod)) {
-        return {
-          valid: false,
-          reason: 'Invalid deletion method'
-        };
-      }
-      
-      return {
-        valid: true,
-        retentionExceptions: retentionCheck.exceptions || []
-      };
-    } catch (error) {
-      console.error('❌ Erasure validation failed:', error);
-      return {
-        valid: false,
-        reason: 'Validation error'
-      };
-    }
+    console.warn('validateErasureRequest: Now handled by smart contract');
+    // Validation is now handled by the smart contract
+    return { valid: true, reason: 'delegated_to_smart_contract' };
   }
 
   /**
-   * Execute erasure steps
+   * Execute erasure steps - Now handled by smart contract
    */
   async executeErasureSteps(erasureRecord) {
-    const steps = [
-      { name: 'personal_data', handler: this.erasePersonalData },
-      { name: 'phi_data', handler: this.erasePHIData },
-      { name: 'chat_messages', handler: this.eraseChatMessages },
-      { name: 'session_notes', handler: this.eraseSessionNotes },
-      { name: 'medical_records', handler: this.eraseMedicalRecords },
-      { name: 'consent_records', handler: this.eraseConsentRecords },
-      { name: 'ic_canister_data', handler: this.eraseICCanisterData },
-      { name: 'backups', handler: this.scheduleBackupErasure },
-      { name: 'verification', handler: this.verifyErasure }
-    ];
-    
-    for (const step of steps) {
-      try {
-        console.log(`🔄 Executing erasure step: ${step.name}`);
-        
-        const stepResult = await step.handler.call(this, erasureRecord.userId, erasureRecord);
-        
-        erasureRecord.steps.push({
-          name: step.name,
-          status: 'completed',
-          completedAt: new Date().toISOString(),
-          recordsProcessed: stepResult.recordsProcessed || 0,
-          method: stepResult.method || erasureRecord.deletionMethod,
-          verificationHash: stepResult.verificationHash
-        });
-        
-        console.log(`✅ Completed erasure step: ${step.name} - ${stepResult.recordsProcessed || 0} records`);
-      } catch (error) {
-        console.error(`❌ Erasure step failed: ${step.name}`, error);
-        
-        erasureRecord.steps.push({
-          name: step.name,
-          status: 'failed',
-          failedAt: new Date().toISOString(),
-          error: error.message
-        });
-        
-        // Continue with other steps but mark overall status
-        erasureRecord.status = 'partial_failure';
-      }
-    }
+    console.warn('executeErasureSteps: Now handled by smart contract');
+    // This method is no longer used as erasure is handled by the smart contract
+    return { status: 'delegated_to_smart_contract' };
   }
 
   /**
@@ -299,12 +156,6 @@ class DataErasureService {
       // Simulate chat message deletion
       console.log(`🗑️ Deleting chat messages for user ${userId.substring(0, 8)}...`);
       
-      // In production, query and delete actual chat messages
-      // const messages = await chatService.getUserMessages(userId);
-      // for (const message of messages) {
-      //   await chatService.secureDelete(message.id);
-      //   recordsProcessed++;
-      // }
       
       recordsProcessed = 50; // Simulated count
       
@@ -586,58 +437,40 @@ class DataErasureService {
   }
 
   /**
-   * Store erasure record (anonymized)
+   * Store erasure record - Now handled by smart contract
    */
   async storeErasureRecord(erasureRecord) {
-    try {
-      // Anonymize the record before storage
-      const anonymizedRecord = {
-        ...erasureRecord,
-        userId: this.generateAnonymousId(erasureRecord.userId),
-        requestedBy: erasureRecord.requestedBy === erasureRecord.userId ? 
-          'data_subject' : 'authorized_representative'
-      };
-      
-      // Store in IC canister for tamper-resistant storage
-      await icService.storeErasureRecord(anonymizedRecord);
-      
-      console.log(`📋 Stored anonymized erasure record: ${erasureRecord.id.substring(0, 8)}...`);
-    } catch (error) {
-      console.error('❌ Failed to store erasure record:', error);
-      throw error;
-    }
+    console.warn('storeErasureRecord: Now handled by smart contract');
+    // Record storage is now handled by the smart contract
+    return { status: 'delegated_to_smart_contract' };
   }
 
   /**
-   * Generate verification hash
+   * Generate verification hash - Now handled by smart contract
    */
   async generateVerificationHash(erasureRecord) {
-    const hashInput = [
-      erasureRecord.id,
-      erasureRecord.userId,
-      erasureRecord.completedAt,
-      erasureRecord.steps.length,
-      erasureRecord.status
-    ].join('|');
-    
-    return crypto.createHash('sha256')
-      .update(hashInput)
-      .digest('hex');
+    console.warn('generateVerificationHash: Now handled by smart contract');
+    // Hash generation is now handled by the smart contract
+    return 'smart_contract_managed';
   }
 
   /**
-   * Get erasure status
+   * Get erasure status - Now handled by smart contract
    */
   async getErasureStatus(requestId) {
+    console.warn('getErasureStatus: Now handled by smart contract');
+    
     try {
-      // In production, query actual erasure records
-      return {
-        requestId,
-        status: 'completed',
-        progress: 100,
-        completedSteps: 9,
-        totalSteps: 9
-      };
+      // Proxy to smart contract
+      const result = await icAgent.callCanisterMethod('mentalverse', 'getErasureStatus', {
+        requestId
+      });
+      
+      if (result.Err) {
+        throw new Error(`Smart contract status check failed: ${result.Err}`);
+      }
+      
+      return result.Ok;
     } catch (error) {
       console.error('❌ Failed to get erasure status:', error);
       throw error;

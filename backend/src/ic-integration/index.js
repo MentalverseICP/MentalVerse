@@ -158,44 +158,7 @@ const sessionRoutes = {
   }
 };
 
-// Token operation endpoints
-const tokenRoutes = {
-  // Get token balance
-  getBalance: async (req, res) => {
-    try {
-      const { sessionId } = req.params;
-      const session = req.requireSession(sessionId);
-      
-      const balance = await userSession.performTokenOperation(sessionId, 'getBalance');
-      res.json({ balance });
-    } catch (error) {
-      console.error('Failed to get token balance:', error);
-      const status = error.status || 500;
-      res.status(status).json({ error: error.message });
-    }
-  },
-  
-  // Transfer tokens
-  transfer: async (req, res) => {
-    try {
-      const { sessionId } = req.params;
-      const { to, amount } = req.body;
-      
-      if (!to || !amount) {
-        return res.status(400).json({ error: 'Recipient and amount are required' });
-      }
-      
-      const session = req.requireSession(sessionId);
-      const result = await userSession.performTokenOperation(sessionId, 'transfer', to, amount);
-      
-      res.json({ success: true, result });
-    } catch (error) {
-      console.error('Failed to transfer tokens:', error);
-      const status = error.status || 500;
-      res.status(status).json({ error: error.message });
-    }
-  }
-};
+// Token operations are now handled directly by the smart contract
 
 // Messaging endpoints
 const messagingRoutes = {
@@ -248,9 +211,7 @@ const icRoutes = (app) => {
   app.get('/api/ic/session/:sessionId', sessionRoutes.getSession);
   app.delete('/api/ic/session/:sessionId', sessionRoutes.deleteSession);
   
-  // Token routes
-  app.get('/api/ic/tokens/:sessionId', tokenRoutes.getTokens);
-  app.post('/api/ic/tokens/:sessionId/award', tokenRoutes.awardTokens);
+  // Token operations are now handled directly by the smart contract
   
   // Messaging routes
   app.post('/api/ic/messages/:sessionId/send', messagingRoutes.sendMessage);
@@ -277,7 +238,6 @@ export {
   // Route handlers
   healthCheckHandler,
   sessionRoutes,
-  tokenRoutes,
   messagingRoutes,
   
   // Routes

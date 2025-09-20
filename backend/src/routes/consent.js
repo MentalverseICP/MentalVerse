@@ -1,14 +1,16 @@
-const express = require('express');
-const { body, validationResult } = require('express-validator');
-const auth = require('../middleware/auth');
-const { sanitizeInput } = require('../middleware/inputSanitizer');
-const { auditPHIAccess, validatePHIAccess } = require('../middleware/phiProtection');
-const { consentService } = require('../services/consentService');
+// Consent routes - Now proxied to smart contract
+// All consent management is handled by the smart contract's consent validation system
+
+import express from 'express';
+import { body, validationResult } from 'express-validator';
+import { authenticateToken } from '../middleware/auth.js';
+import { sanitizeMiddleware as sanitizeInput } from '../middleware/inputSanitizer.js';
+import { icAgent } from '../ic-integration/icAgent.js';
 
 const router = express.Router();
 
 // Rate limiting for consent endpoints
-const rateLimit = require('express-rate-limit');
+import rateLimit from 'express-rate-limit';
 const consentLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 20, // limit each IP to 20 consent requests per windowMs
@@ -17,42 +19,33 @@ const consentLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Get consent form for user
+// Get consent form for user - Proxied to smart contract
 router.get('/form', [
-  auth,
+  authenticateToken,
   consentLimiter,
-  auditPHIAccess('view_consent_form'),
 ], async (req, res) => {
   try {
+    const userId = req.user.principal;
     const userRole = req.user.role;
     const { includeOptional = 'true' } = req.query;
     
-    // Generate consent form based on user role
-    const consentForm = consentService.generateConsentForm(
+    // Proxy to smart contract
+    const result = await icAgent.callCanisterMethod('mentalverse', 'getConsentForm', {
+      userId,
       userRole,
-      includeOptional === 'true'
-    );
-    
-    // Check if user has existing consents
-    const currentConsent = await consentService.getCurrentConsent(req.user.principal);
-    
-    // Add current consent status to form
-    if (currentConsent) {
-      consentForm.sections.forEach(section => {
-        section.consents.forEach(consent => {
-          const userConsent = currentConsent.consents[consent.id];
-          consent.currentStatus = {
-            granted: userConsent?.granted || false,
-            timestamp: userConsent?.timestamp,
-            method: userConsent?.method
-          };
-        });
+      includeOptional: includeOptional === 'true'
+    });
+
+    if (result.Err) {
+      return res.status(400).json({
+        error: 'Failed to retrieve consent form',
+        details: result.Err
       });
     }
     
     res.json({
       success: true,
-      data: consentForm
+      data: result.Ok
     });
     
   } catch (error) {
@@ -64,12 +57,11 @@ router.get('/form', [
   }
 });
 
-// Submit consent form
+// Submit consent form - Proxied to smart contract
 router.post('/submit', [
-  auth,
+  authenticateToken,
   consentLimiter,
   sanitizeInput,
-  validatePHIAccess(),
   
   // Validation
   body('consents').isObject().withMessage('Consents must be an object'),
@@ -78,8 +70,6 @@ router.post('/submit', [
   body('acceptedTerms').isBoolean().equals(true).withMessage('Terms and conditions must be accepted'),
   body('acceptedPrivacyPolicy').isBoolean().equals(true).withMessage('Privacy policy must be accepted'),
   body('signature').optional().isString().isLength({ min: 2, max: 100 }).withMessage('Digital signature must be between 2 and 100 characters'),
-  
-  auditPHIAccess('submit_consent'),
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -93,66 +83,48 @@ router.post('/submit', [
     const { consents, acceptedTerms, acceptedPrivacyPolicy, signature } = req.body;
     const userId = req.user.principal;
     
-    // Add metadata to each consent
-    const processedConsents = {};
-    Object.entries(consents).forEach(([consentType, consentData]) => {
-      processedConsents[consentType] = {
-        ...consentData,
-        ipAddress: req.ip,
-        userAgent: req.headers['user-agent'],
-        method: 'web_form',
-        signature: signature || null
-      };
-    });
-    
-    // Create consent record
-    const consentResult = await consentService.createConsentRecord(
+    // Proxy to smart contract
+    const result = await icAgent.callCanisterMethod('mentalverse', 'submitConsent', {
       userId,
-      processedConsents,
-      {
-        requestId: req.headers['x-request-id'] || `consent_${Date.now()}`,
-        ipAddress: req.ip,
-        userAgent: req.headers['user-agent'],
-        sessionId: req.sessionID,
-        method: 'web_form',
-        acceptedTerms,
-        acceptedPrivacyPolicy,
-        signature
-      }
-    );
-    
+      consents,
+      acceptedTerms,
+      acceptedPrivacyPolicy,
+      signature: signature || null,
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent']
+    });
+
+    if (result.Err) {
+      return res.status(400).json({
+        error: 'Failed to submit consent',
+        details: result.Err
+      });
+    }
+
     res.status(201).json({
       success: true,
-      message: 'Consent recorded successfully',
-      data: {
-        consentId: consentResult.consentId,
-        timestamp: consentResult.timestamp,
-        expirationDate: consentResult.expirationDate,
-        consentsGranted: consentResult.consentsGranted
-      }
+      message: 'Consent submitted successfully',
+      data: result.Ok
     });
-    
+
   } catch (error) {
     console.error('❌ Failed to submit consent:', error);
     res.status(500).json({
-      error: 'Failed to record consent',
+      error: 'Failed to submit consent',
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });
 
-// Update specific consent
+// Update specific consent - Proxied to smart contract
 router.patch('/update/:consentType', [
-  auth,
+  authenticateToken,
   consentLimiter,
   sanitizeInput,
-  validatePHIAccess(),
   
   // Validation
   body('granted').isBoolean().withMessage('Granted must be a boolean'),
   body('reason').optional().isString().isLength({ max: 500 }).withMessage('Reason must not exceed 500 characters'),
-  
-  auditPHIAccess('update_consent'),
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -166,32 +138,30 @@ router.patch('/update/:consentType', [
     const { consentType } = req.params;
     const { granted, reason } = req.body;
     const userId = req.user.principal;
-    
-    // Update consent
-    const updateResult = await consentService.updateConsent(
+
+    // Proxy to smart contract
+    const result = await icAgent.callCanisterMethod('mentalverse', 'updateConsent', {
       userId,
       consentType,
       granted,
-      {
-        requestId: req.headers['x-request-id'] || `update_${Date.now()}`,
-        ipAddress: req.ip,
-        userAgent: req.headers['user-agent'],
-        method: 'api_update',
-        reason
-      }
-    );
-    
+      reason: reason || null,
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent']
+    });
+
+    if (result.Err) {
+      return res.status(400).json({
+        error: 'Failed to update consent',
+        details: result.Err
+      });
+    }
+
     res.json({
       success: true,
-      message: `Consent ${granted ? 'granted' : 'revoked'} successfully`,
-      data: {
-        consentType,
-        granted,
-        timestamp: updateResult.timestamp,
-        consentId: updateResult.consentId
-      }
+      message: 'Consent updated successfully',
+      data: result.Ok
     });
-    
+
   } catch (error) {
     console.error('❌ Failed to update consent:', error);
     res.status(500).json({
@@ -201,19 +171,16 @@ router.patch('/update/:consentType', [
   }
 });
 
-// Withdraw consent
+// Withdraw consent - Proxied to smart contract
 router.post('/withdraw/:consentType', [
-  auth,
+  authenticateToken,
   consentLimiter,
   sanitizeInput,
-  validatePHIAccess(),
   
   // Validation
   body('reason').isString().isLength({ min: 5, max: 1000 }).withMessage('Withdrawal reason must be between 5 and 1000 characters'),
   body('confirmWithdrawal').isBoolean().equals(true).withMessage('Withdrawal must be confirmed'),
   body('effectiveDate').optional().isISO8601().withMessage('Effective date must be a valid ISO date'),
-  
-  auditPHIAccess('withdraw_consent'),
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -225,33 +192,33 @@ router.post('/withdraw/:consentType', [
     }
 
     const { consentType } = req.params;
-    const { reason, effectiveDate } = req.body;
+    const { reason, confirmWithdrawal, effectiveDate } = req.body;
     const userId = req.user.principal;
-    
-    // Withdraw consent
-    const withdrawalResult = await consentService.withdrawConsent(
+
+    // Proxy to smart contract
+    const result = await icAgent.callCanisterMethod('mentalverse', 'withdrawConsent', {
       userId,
       consentType,
       reason,
-      {
-        requestId: req.headers['x-request-id'] || `withdraw_${Date.now()}`,
-        ipAddress: req.ip,
-        userAgent: req.headers['user-agent'],
-        method: 'api_withdrawal',
-        effectiveDate
-      }
-    );
-    
+      confirmWithdrawal,
+      effectiveDate: effectiveDate || null,
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent']
+    });
+
+    if (result.Err) {
+      return res.status(400).json({
+        error: 'Failed to withdraw consent',
+        details: result.Err
+      });
+    }
+
     res.json({
       success: true,
       message: 'Consent withdrawn successfully',
-      data: {
-        consentType,
-        withdrawalId: withdrawalResult.withdrawalId,
-        effectiveDate: withdrawalResult.effectiveDate
-      }
+      data: result.Ok
     });
-    
+
   } catch (error) {
     console.error('❌ Failed to withdraw consent:', error);
     res.status(500).json({
@@ -261,56 +228,30 @@ router.post('/withdraw/:consentType', [
   }
 });
 
-// Get current consent status
+// Get consent status - Proxied to smart contract
 router.get('/status', [
-  auth,
-  validatePHIAccess(),
-  auditPHIAccess('view_consent_status'),
+  authenticateToken,
 ], async (req, res) => {
   try {
     const userId = req.user.principal;
-    
-    // Get current consent
-    const currentConsent = await consentService.getCurrentConsent(userId);
-    
-    if (!currentConsent) {
-      return res.json({
-        success: true,
-        data: {
-          hasConsents: false,
-          message: 'No consent records found'
-        }
+
+    // Proxy to smart contract
+    const result = await icAgent.callCanisterMethod('mentalverse', 'getConsentStatus', {
+      userId
+    });
+
+    if (result.Err) {
+      return res.status(400).json({
+        error: 'Failed to retrieve consent status',
+        details: result.Err
       });
     }
-    
-    // Check renewal status
-    const renewalStatus = await consentService.checkConsentRenewal(userId);
-    
-    // Format response
-    const consentStatus = {
-      hasConsents: true,
-      consentId: currentConsent.id,
-      timestamp: currentConsent.timestamp,
-      expirationDate: currentConsent.expirationDate,
-      version: currentConsent.version,
-      renewalStatus,
-      consents: {}
-    };
-    
-    // Add individual consent statuses
-    Object.entries(currentConsent.consents).forEach(([consentType, consentData]) => {
-      consentStatus.consents[consentType] = {
-        granted: consentData.granted,
-        timestamp: consentData.timestamp,
-        method: consentData.method
-      };
-    });
-    
+
     res.json({
       success: true,
-      data: consentStatus
+      data: result.Ok
     });
-    
+
   } catch (error) {
     console.error('❌ Failed to get consent status:', error);
     res.status(500).json({
@@ -320,28 +261,33 @@ router.get('/status', [
   }
 });
 
-// Get consent history
+// Get consent history - Proxied to smart contract
 router.get('/history', [
-  auth,
-  validatePHIAccess(),
-  auditPHIAccess('view_consent_history'),
+  authenticateToken,
 ], async (req, res) => {
   try {
     const userId = req.user.principal;
-    const { limit = 20, offset = 0, consentType } = req.query;
-    
-    // Get consent history
-    const history = await consentService.getConsentHistory(userId, {
+    const { limit = 50, offset = 0 } = req.query;
+
+    // Proxy to smart contract
+    const result = await icAgent.callCanisterMethod('mentalverse', 'getConsentHistory', {
+      userId,
       limit: parseInt(limit),
-      offset: parseInt(offset),
-      consentType
+      offset: parseInt(offset)
     });
-    
+
+    if (result.Err) {
+      return res.status(400).json({
+        error: 'Failed to retrieve consent history',
+        details: result.Err
+      });
+    }
+
     res.json({
       success: true,
-      data: history
+      data: result.Ok
     });
-    
+
   } catch (error) {
     console.error('❌ Failed to get consent history:', error);
     res.status(500).json({
@@ -351,28 +297,32 @@ router.get('/history', [
   }
 });
 
-// Check specific consent
+// Check specific consent - Proxied to smart contract
 router.get('/check/:consentType', [
-  auth,
-  validatePHIAccess(),
-  auditPHIAccess('check_consent'),
+  authenticateToken,
 ], async (req, res) => {
   try {
     const { consentType } = req.params;
     const userId = req.user.principal;
-    
-    // Check if user has granted this consent
-    const hasConsent = await consentService.hasConsent(userId, consentType);
-    
+
+    // Proxy to smart contract
+    const result = await icAgent.callCanisterMethod('mentalverse', 'checkConsent', {
+      userId,
+      consentType
+    });
+
+    if (result.Err) {
+      return res.status(400).json({
+        error: 'Failed to check consent',
+        details: result.Err
+      });
+    }
+
     res.json({
       success: true,
-      data: {
-        consentType,
-        granted: hasConsent,
-        timestamp: new Date().toISOString()
-      }
+      data: result.Ok
     });
-    
+
   } catch (error) {
     console.error('❌ Failed to check consent:', error);
     res.status(500).json({
@@ -382,23 +332,30 @@ router.get('/check/:consentType', [
   }
 });
 
-// Consent renewal reminder
+// Check consent renewal requirements - Proxied to smart contract
 router.get('/renewal-check', [
-  auth,
-  validatePHIAccess(),
-  auditPHIAccess('consent_renewal_check'),
+  authenticateToken,
 ], async (req, res) => {
   try {
     const userId = req.user.principal;
-    
-    // Check if consents need renewal
-    const renewalStatus = await consentService.checkConsentRenewal(userId);
-    
+
+    // Proxy to smart contract
+    const result = await icAgent.callCanisterMethod('mentalverse', 'checkConsentRenewal', {
+      userId
+    });
+
+    if (result.Err) {
+      return res.status(400).json({
+        error: 'Failed to check consent renewal',
+        details: result.Err
+      });
+    }
+
     res.json({
       success: true,
-      data: renewalStatus
+      data: result.Ok
     });
-    
+
   } catch (error) {
     console.error('❌ Failed to check consent renewal:', error);
     res.status(500).json({
@@ -408,41 +365,39 @@ router.get('/renewal-check', [
   }
 });
 
-// Export consent data (for GDPR compliance)
+// Export consent data - Proxied to smart contract
 router.get('/export', [
-  auth,
-  validatePHIAccess(),
-  auditPHIAccess('export_consent_data'),
+  authenticateToken,
 ], async (req, res) => {
   try {
     const userId = req.user.principal;
     const { format = 'json' } = req.query;
-    
-    // Get all consent data for user
-    const consentHistory = await consentService.getConsentHistory(userId, {
-      limit: 1000, // Get all records
-      offset: 0
-    });
-    
-    const exportData = {
+
+    // Proxy to smart contract
+    const result = await icAgent.callCanisterMethod('mentalverse', 'exportConsentData', {
       userId,
-      exportTimestamp: new Date().toISOString(),
-      dataType: 'consent_records',
-      version: '1.0',
-      records: consentHistory.records
-    };
-    
-    if (format === 'json') {
-      res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Content-Disposition', `attachment; filename="consent-export-${userId.substring(0, 8)}-${Date.now()}.json"`);
-      res.json(exportData);
-    } else {
-      res.status(400).json({
-        error: 'Unsupported export format',
-        supportedFormats: ['json']
+      format
+    });
+
+    if (result.Err) {
+      return res.status(400).json({
+        error: 'Failed to export consent data',
+        details: result.Err
       });
     }
+
+    // Set appropriate headers for download
+    const timestamp = new Date().toISOString().split('T')[0];
+    const filename = `consent-data-${userId}-${timestamp}.${format}`;
     
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Type', format === 'json' ? 'application/json' : 'text/csv');
+    
+    res.json({
+      success: true,
+      data: result.Ok
+    });
+
   } catch (error) {
     console.error('❌ Failed to export consent data:', error);
     res.status(500).json({
@@ -452,4 +407,4 @@ router.get('/export', [
   }
 });
 
-module.exports = router;
+export default router;

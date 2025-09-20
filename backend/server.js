@@ -124,116 +124,118 @@ function getMentalHealthTip(emotionalTone) {
   return emotionTips[Math.floor(Math.random() * emotionTips.length)];
 }
 
-const app = express();
-const PORT = process.env.PORT || 3001;
+// Async server initialization
+async function startServer() {
+  // Initialize IC integration first
+  await initializeIC();
 
-// Initialize OpenAI
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+  const app = express();
+  const PORT = process.env.PORT || 3001;
 
-// Initialize IC integration
-initializeIC().catch(console.error);
-
-// Security middleware
-app.use(helmet());
-
-// CORS configuration
-app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://mental-verse-deploy.vercel.app', 'https://mentalverse.vercel.app']
-    : ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:5173'],
-  credentials: true,
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: {
-    error: 'Too many requests from this IP, please try again later.'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-// Audit middleware
-app.use(auditAllEvents());
-app.use(auditSecurityEvents());
-
-// Chat-specific rate limiting (more restrictive)
-const chatLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 10, // limit each IP to 10 chat requests per minute
-  message: {
-    error: 'Too many chat requests, please slow down.'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-app.use(limiter);
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
-
-// Use IC integration middleware
-app.use(icMiddleware);
-
-// Authentication routes (no auth required)
-app.use('/api/auth', authRoutes);
-
-// Chat routes
-app.use('/api/chat', chatRoutes);
-
-// Consent routes
-app.use('/api/consent', consentRoutes);
-
-// Data erasure routes (GDPR Right to be Forgotten)
-app.use('/api/data-erasure', dataErasureRoutes);
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    version: '1.0.0',
-    service: 'MentalVerse Backend'
+  // Initialize OpenAI
+  const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
   });
-});
 
-// IC integration routes
-app.use('/api/ic', icRoutes);
+  // Security middleware
+  app.use(helmet());
 
-// User registration is now handled by /api/auth/register
-// This endpoint is kept for backward compatibility but redirects to the new auth system
-app.post('/api/users/register', (req, res) => {
-  res.status(301).json({
-    message: 'User registration has moved to /api/auth/register',
-    redirectTo: '/api/auth/register'
+  // CORS configuration
+  app.use(cors({
+    origin: process.env.NODE_ENV === 'production' 
+      ? ['https://mental-verse-deploy.vercel.app', 'https://mentalverse.vercel.app']
+      : ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:5173'],
+    credentials: true,
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+  }));
+
+  // Rate limiting
+  const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: {
+      error: 'Too many requests from this IP, please try again later.'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
   });
-});
 
-// Appointment/session management endpoint
-app.post('/api/appointments',
-  authenticateToken,
-  requirePermission(PERMISSIONS.CREATE_APPOINTMENT),
-  suspiciousActivityLimiter,
-  sanitizeMiddleware({
-    body: {
-      patientId: { type: 'id', idType: 'principal' },
-      therapistId: { type: 'id', idType: 'principal' },
-      notes: { type: 'text', options: { maxLength: SECURITY_CONFIG.MAX_LENGTHS.notes } },
-      sessionType: { type: 'text', options: { pattern: /^(individual|group|family)$/, strict: true } },
-      scheduledDate: { type: 'text' },
-      duration: { type: 'text', options: { pattern: /^[0-9]+$/, maxLength: 3 } }
-    }
-  }),
-  createValidationRules('appointment'),
-  handleValidationErrors,
-  auditLog('CREATE_APPOINTMENT', 'appointment'),
-  async (req, res) => {
+  // Audit middleware
+  app.use(auditAllEvents());
+  app.use(auditSecurityEvents());
+
+  // Chat-specific rate limiting (more restrictive)
+  const chatLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minute
+    max: 10, // limit each IP to 10 chat requests per minute
+    message: {
+      error: 'Too many chat requests, please slow down.'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
+
+  app.use(limiter);
+  app.use(express.json({ limit: '10mb' }));
+  app.use(express.urlencoded({ extended: true }));
+
+  // Use IC integration middleware
+  app.use(icMiddleware);
+
+  // Authentication routes (no auth required)
+  app.use('/api/auth', authRoutes);
+
+  // Chat routes
+  app.use('/api/chat', chatRoutes);
+
+  // Consent routes
+  app.use('/api/consent', consentRoutes);
+
+  // Data erasure routes (GDPR Right to be Forgotten)
+  app.use('/api/data-erasure', dataErasureRoutes);
+
+  // Health check endpoint
+  app.get('/health', (req, res) => {
+    res.json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      version: '1.0.0',
+      service: 'MentalVerse Backend'
+    });
+  });
+
+  // IC integration routes
+  app.use('/api/ic', icRoutes);
+
+  // User registration is now handled by /api/auth/register
+  // This endpoint is kept for backward compatibility but redirects to the new auth system
+  app.post('/api/users/register', (req, res) => {
+    res.status(301).json({
+      message: 'User registration has moved to /api/auth/register',
+      redirectTo: '/api/auth/register'
+    });
+  });
+
+  // Appointment/session management endpoint
+  app.post('/api/appointments',
+    authenticateToken,
+    requirePermission(PERMISSIONS.CREATE_APPOINTMENT),
+    suspiciousActivityLimiter,
+    sanitizeMiddleware({
+      body: {
+        patientId: { type: 'id', idType: 'principal' },
+        therapistId: { type: 'id', idType: 'principal' },
+        notes: { type: 'text', options: { maxLength: SECURITY_CONFIG.MAX_LENGTHS.notes } },
+        sessionType: { type: 'text', options: { pattern: /^(individual|group|family)$/, strict: true } },
+        scheduledDate: { type: 'text' },
+        duration: { type: 'text', options: { pattern: /^[0-9]+$/, maxLength: 3 } }
+      }
+    }),
+    createValidationRules('appointment'),
+    handleValidationErrors,
+    auditLog('CREATE_APPOINTMENT', 'appointment'),
+    async (req, res) => {
     try {
       const {
         patientId,
@@ -342,22 +344,22 @@ app.post('/api/appointments',
   }
 );
 
-// Chat interaction logging endpoint
-app.post('/api/log-interaction',
-  authenticateToken,
-  requirePermission(PERMISSIONS.LOG_INTERACTION),
-  suspiciousActivityLimiter,
-  sanitizeMiddleware({ 
-    body: {
-      message: { type: 'text', options: { maxLength: SECURITY_CONFIG.MAX_LENGTHS.message } },
-      emotionalTone: { type: 'text', options: { pattern: /^[a-zA-Z]+$/ } },
-      sessionId: { type: 'id', idType: 'sessionId' }
-    }
-  }),
-  createValidationRules('logInteraction'),
-  handleValidationErrors,
-  auditLog('LOG_INTERACTION', 'interaction'),
-  async (req, res) => {
+  // Chat interaction logging endpoint
+  app.post('/api/log-interaction',
+    authenticateToken,
+    requirePermission(PERMISSIONS.LOG_INTERACTION),
+    suspiciousActivityLimiter,
+    sanitizeMiddleware({ 
+      body: {
+        message: { type: 'text', options: { maxLength: SECURITY_CONFIG.MAX_LENGTHS.message } },
+        emotionalTone: { type: 'text', options: { pattern: /^[a-zA-Z]+$/ } },
+        sessionId: { type: 'id', idType: 'sessionId' }
+      }
+    }),
+    createValidationRules('logInteraction'),
+    handleValidationErrors,
+    auditLog('LOG_INTERACTION', 'interaction'),
+    async (req, res) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -447,8 +449,8 @@ app.post('/api/log-interaction',
   }
 );
 
-// Get mental health resources endpoint
-app.get('/api/resources', (req, res) => {
+  // Get mental health resources endpoint
+  app.get('/api/resources', (req, res) => {
   res.json({
     crisis: {
       suicide_prevention: {
@@ -505,17 +507,17 @@ app.get('/api/resources', (req, res) => {
   });
 });
 
-// Chat endpoint with OpenAI integration
-app.post('/api/chat', 
-  authenticateToken,
-  requirePermission(PERMISSIONS.SEND_MESSAGE),
-  chatLimiter,
-  suspiciousActivityLimiter,
-  sanitizeMiddleware({
-    body: {
-      messages: { type: 'array' },
-      sessionId: { type: 'id', idType: 'sessionId' },
-      userId: { type: 'id', idType: 'principal' }
+  // Chat endpoint with OpenAI integration
+  app.post('/api/chat', 
+    authenticateToken,
+    requirePermission(PERMISSIONS.SEND_MESSAGE),
+    chatLimiter,
+    suspiciousActivityLimiter,
+    sanitizeMiddleware({
+      body: {
+        messages: { type: 'array' },
+        sessionId: { type: 'id', idType: 'sessionId' },
+        userId: { type: 'id', idType: 'principal' }
     }
   }),
   [
@@ -742,43 +744,37 @@ Remember: You're creating a safe, supportive space for mental health growth and 
   }
 );
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
-  res.status(500).json({
-    error: 'Internal server error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+  // Error handling middleware
+  app.use((err, req, res, next) => {
+    console.error('Unhandled error:', err);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+    });
   });
-});
 
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({
-    error: 'Endpoint not found',
-    message: `Cannot ${req.method} ${req.originalUrl}`
+  // 404 handler
+  app.use('*', (req, res) => {
+    res.status(404).json({
+      error: 'Endpoint not found',
+      message: `Cannot ${req.method} ${req.originalUrl}`
+    });
   });
-});
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 MentalVerse Backend Server running on port ${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/health`);
-  console.log(`💬 Chat API: http://localhost:${PORT}/api/chat`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  
-  // Start automatic token cleanup job (every 30 minutes)
-  setInterval(() => {
-    try {
-      const { JWTService } = require('./src/middleware/auth.js');
-      JWTService.cleanupExpiredTokens();
-      console.log(`🧹 Token cleanup completed at ${new Date().toISOString()}`);
-    } catch (error) {
-      console.error('Automatic token cleanup failed:', error);
-    }
-  }, 30 * 60 * 1000); // 30 minutes
-  
-  console.log('🔄 Automatic token cleanup job started (every 30 minutes)');
-});
+  // Start server
+  app.listen(PORT, () => {
+    console.log(`🚀 MentalVerse Backend Server running on port ${PORT}`);
+    console.log(`📊 Health check: http://localhost:${PORT}/health`);
+    console.log(`💬 Chat API: http://localhost:${PORT}/api/chat`);
+    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    
+    // Token cleanup is now handled by the smart contract
+    console.log('🔄 Token management is handled by the smart contract');
+  });
+}
+
+// Start the server
+startServer().catch(console.error);
 
 // Graceful shutdown
 process.on('SIGTERM', () => {

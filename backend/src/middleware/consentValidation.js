@@ -1,12 +1,15 @@
-const { consentService } = require('../services/consentService');
+// Consent Validation Middleware - Now handled by smart contract
+// All consent validation operations are managed by the smart contract's comprehensive consent system
+
+const { icAgent } = require('../ic-integration/icAgent');
 
 /**
- * Consent Validation Middleware
- * Ensures users have proper consent before processing PHI data
+ * Legacy Consent Validation Middleware - Now Delegated to Smart Contract
+ * All consent validation, checking, and management is handled by the smart contract
  */
 
 /**
- * Middleware to check if user has required consent for PHI operations
+ * Middleware to check if user has required consent for PHI operations - Now handled by smart contract
  */
 function requireConsent(requiredConsents = []) {
   return async (req, res, next) => {
@@ -19,60 +22,44 @@ function requireConsent(requiredConsents = []) {
         });
       }
 
-      // Check if user has current consent record
-      const currentConsent = await consentService.getCurrentConsent(userId);
+      console.log('⚠️  Consent validation is now handled by the smart contract');
       
-      if (!currentConsent) {
-        return res.status(403).json({
-          error: 'No consent record found',
-          code: 'CONSENT_REQUIRED',
-          message: 'You must provide consent before we can process your health information.',
-          redirectTo: '/consent/form'
+      // Delegate consent validation to smart contract
+      try {
+        const consentResult = await icAgent.callCanisterMethod('mentalverse', 'validateConsent', {
+          userId,
+          requiredConsents,
+          operation: req.path
         });
-      }
-
-      // Check if consent has expired
-      const renewalStatus = await consentService.checkConsentRenewal(userId);
-      if (renewalStatus.needsRenewal && renewalStatus.reason === 'expired') {
-        return res.status(403).json({
-          error: 'Consent has expired',
-          code: 'CONSENT_EXPIRED',
-          message: 'Your consent has expired. Please renew your consent to continue.',
-          expiredDays: renewalStatus.expiredDays,
-          redirectTo: '/consent/form'
-        });
-      }
-
-      // Check specific required consents
-      const missingConsents = [];
-      for (const consentType of requiredConsents) {
-        const hasConsent = await consentService.hasConsent(userId, consentType);
-        if (!hasConsent) {
-          missingConsents.push(consentType);
+        
+        if (consentResult.Err) {
+          const error = consentResult.Err;
+          return res.status(403).json({
+            error: error.message || 'Consent validation failed',
+            code: error.code || 'CONSENT_VALIDATION_ERROR',
+            message: error.userMessage || 'Please check your consent settings.',
+            missingConsents: error.missingConsents || [],
+            redirectTo: '/consent/form'
+          });
         }
-      }
-
-      if (missingConsents.length > 0) {
-        return res.status(403).json({
-          error: 'Missing required consents',
-          code: 'CONSENT_MISSING',
-          message: 'Additional consent is required for this operation.',
-          missingConsents,
-          redirectTo: '/consent/form'
+        
+        // Add consent info to request for audit purposes
+        req.consentInfo = consentResult.Ok || {
+          validated: true,
+          timestamp: new Date().toISOString(),
+          source: 'smart_contract'
+        };
+        
+        next();
+      } catch (error) {
+        console.error('❌ Smart contract consent validation failed:', error);
+        return res.status(500).json({
+          error: 'Failed to validate consent with smart contract',
+          code: 'SMART_CONTRACT_ERROR'
         });
       }
-
-      // Add consent info to request for audit purposes
-      req.consentInfo = {
-        consentId: currentConsent.id,
-        timestamp: currentConsent.timestamp,
-        version: currentConsent.version,
-        renewalStatus
-      };
-
-      next();
     } catch (error) {
-      console.error('❌ Consent validation failed:', error);
+      console.error('❌ Consent validation middleware error:', error);
       res.status(500).json({
         error: 'Failed to validate consent',
         code: 'CONSENT_VALIDATION_ERROR'
@@ -82,153 +69,166 @@ function requireConsent(requiredConsents = []) {
 }
 
 /**
- * Middleware to check PHI storage consent
+ * Middleware to check PHI storage consent - Now handled by smart contract
  */
 function requirePHIStorageConsent() {
+  console.log('⚠️  PHI storage consent validation is now handled by the smart contract');
   return requireConsent(['PHI_STORAGE', 'DATA_PROCESSING']);
 }
 
 /**
- * Middleware to check therapy recording consent
+ * Middleware to check therapy recording consent - Now handled by smart contract
  */
 function requireTherapyRecordingConsent() {
+  console.log('⚠️  Therapy recording consent validation is now handled by the smart contract');
   return requireConsent(['PHI_STORAGE', 'THERAPY_RECORDING']);
 }
 
 /**
- * Middleware to check research participation consent
+ * Middleware to check research participation consent - Now handled by smart contract
  */
 function requireResearchConsent() {
+  console.log('⚠️  Research consent validation is now handled by the smart contract');
   return requireConsent(['RESEARCH_PARTICIPATION']);
 }
 
 /**
- * Middleware to check AI analysis consent
+ * Middleware to check AI analysis consent - Now handled by smart contract
  */
 function requireAIAnalysisConsent() {
+  console.log('⚠️  AI analysis consent validation is now handled by the smart contract');
   return requireConsent(['AI_ANALYSIS', 'PHI_STORAGE']);
 }
 
 /**
- * Middleware to check data sharing consent
+ * Middleware to check data sharing consent - Now handled by smart contract
  */
 function requireDataSharingConsent() {
-  return requireConsent(['DATA_SHARING_PROVIDERS']);
+  console.log('⚠️  Data sharing consent validation is now handled by the smart contract');
+  return requireConsent(['DATA_SHARING']);
 }
 
 /**
- * Middleware to warn about expiring consent
+ * Check consent expiration - Now handled by smart contract
  */
 function checkConsentExpiration() {
   return async (req, res, next) => {
+    console.log('⚠️  Consent expiration checking is now handled by the smart contract');
+    
     try {
       const userId = req.user?.principal;
       
       if (!userId) {
         return next();
       }
-
-      const renewalStatus = await consentService.checkConsentRenewal(userId);
       
-      if (renewalStatus.needsRenewal && renewalStatus.reason === 'expiring_soon') {
-        // Add warning header
-        res.setHeader('X-Consent-Warning', 'expiring_soon');
-        res.setHeader('X-Consent-Days-Remaining', renewalStatus.daysUntilExpiration.toString());
-        
-        // Add warning to response if it's a JSON response
-        const originalJson = res.json;
-        res.json = function(data) {
-          if (typeof data === 'object' && data !== null) {
-            data.consentWarning = {
-              type: 'expiring_soon',
-              daysRemaining: renewalStatus.daysUntilExpiration,
-              message: `Your consent will expire in ${renewalStatus.daysUntilExpiration} days. Please renew to continue using our services.`,
-              renewalUrl: '/consent/form'
-            };
-          }
-          return originalJson.call(this, data);
-        };
+      // Smart contract handles consent expiration checking
+      const expirationResult = await icAgent.callCanisterMethod('mentalverse', 'checkConsentExpiration', userId);
+      
+      if (expirationResult.Err) {
+        return res.status(403).json({
+          error: 'Consent has expired',
+          code: 'CONSENT_EXPIRED',
+          message: 'Your consent has expired. Please renew your consent to continue.',
+          redirectTo: '/consent/form'
+        });
       }
-
+      
+      req.consentExpiration = expirationResult.Ok;
       next();
     } catch (error) {
       console.error('❌ Consent expiration check failed:', error);
-      next(); // Continue without warning on error
+      next(); // Continue without blocking - smart contract handles this
     }
   };
 }
 
 /**
- * Middleware to log consent-related actions
+ * Log consent action - Now handled by smart contract
  */
 function logConsentAction(action) {
-  return (req, res, next) => {
+  return async (req, res, next) => {
+    console.log('⚠️  Consent action logging is now handled by the smart contract');
+    
     try {
       const userId = req.user?.principal;
-      const consentId = req.consentInfo?.consentId;
       
-      console.log(`📋 Consent Action: ${action} - User: ${userId?.substring(0, 8)}... - Consent: ${consentId?.substring(0, 8)}...`);
-      
-      // In production, send to audit service
-      // auditService.logConsentAction({
-      //   action,
-      //   userId,
-      //   consentId,
-      //   timestamp: new Date().toISOString(),
-      //   ipAddress: req.ip,
-      //   userAgent: req.headers['user-agent'],
-      //   path: req.path,
-      //   method: req.method
-      // });
-      
-      next();
+      if (userId) {
+        // Smart contract handles consent action logging
+        await icAgent.callCanisterMethod('mentalverse', 'logConsentAction', {
+          userId,
+          action,
+          timestamp: new Date().toISOString(),
+          path: req.path,
+          method: req.method
+        });
+      }
     } catch (error) {
       console.error('❌ Consent action logging failed:', error);
-      next(); // Continue without logging on error
+      // Don't block the request if logging fails
+    }
+    
+    next();
+  };
+}
+
+/**
+ * Validate operation consent - Now handled by smart contract
+ */
+function validateOperationConsent(operation) {
+  return async (req, res, next) => {
+    console.log('⚠️  Operation consent validation is now handled by the smart contract');
+    
+    try {
+      const userId = req.user?.principal;
+      
+      if (!userId) {
+        return res.status(401).json({
+          error: 'Authentication required for operation consent validation'
+        });
+      }
+      
+      // Smart contract handles operation consent validation
+      const validationResult = await icAgent.callCanisterMethod('mentalverse', 'validateOperationConsent', {
+        userId,
+        operation
+      });
+      
+      if (validationResult.Err) {
+        return res.status(403).json({
+          error: 'Operation not permitted',
+          code: 'OPERATION_NOT_PERMITTED',
+          message: 'You do not have consent for this operation.',
+          operation,
+          redirectTo: '/consent/form'
+        });
+      }
+      
+      req.operationConsent = validationResult.Ok;
+      next();
+    } catch (error) {
+      console.error('❌ Operation consent validation failed:', error);
+      res.status(500).json({
+        error: 'Failed to validate operation consent',
+        code: 'OPERATION_CONSENT_ERROR'
+      });
     }
   };
 }
 
 /**
- * Middleware to validate consent for specific operations
- */
-function validateOperationConsent(operation) {
-  const operationConsents = {
-    'store_medical_history': ['PHI_STORAGE', 'DATA_PROCESSING'],
-    'record_therapy_session': ['PHI_STORAGE', 'THERAPY_RECORDING'],
-    'ai_analysis': ['PHI_STORAGE', 'AI_ANALYSIS'],
-    'share_with_provider': ['PHI_STORAGE', 'DATA_SHARING_PROVIDERS'],
-    'research_participation': ['PHI_STORAGE', 'RESEARCH_PARTICIPATION'],
-    'emergency_contact': ['EMERGENCY_CONTACT'],
-    'marketing_communication': ['MARKETING_COMMUNICATIONS'],
-    'chat_message': ['PHI_STORAGE', 'DATA_PROCESSING'],
-    'session_notes': ['PHI_STORAGE', 'DATA_PROCESSING'],
-    'treatment_plan': ['PHI_STORAGE', 'DATA_PROCESSING']
-  };
-
-  const requiredConsents = operationConsents[operation] || ['PHI_STORAGE'];
-  
-  return [
-    requireConsent(requiredConsents),
-    logConsentAction(operation)
-  ];
-}
-
-/**
- * Middleware to handle consent errors gracefully
+ * Handle consent errors - Now handled by smart contract
  */
 function handleConsentErrors() {
   return (error, req, res, next) => {
-    if (error.code === 'CONSENT_REQUIRED' || 
-        error.code === 'CONSENT_EXPIRED' || 
-        error.code === 'CONSENT_MISSING') {
-      
+    console.log('⚠️  Consent error handling is now handled by the smart contract');
+    
+    if (error.code && error.code.startsWith('CONSENT_')) {
       return res.status(403).json({
-        error: error.message,
+        error: error.message || 'Consent error occurred',
         code: error.code,
-        consentRequired: true,
-        redirectTo: '/consent/form',
-        timestamp: new Date().toISOString()
+        message: 'Please check your consent settings and try again.',
+        redirectTo: '/consent/form'
       });
     }
     
@@ -237,85 +237,52 @@ function handleConsentErrors() {
 }
 
 /**
- * Utility function to check if user can perform operation
+ * Check if user can perform operation - Now handled by smart contract
  */
 async function canPerformOperation(userId, operation) {
+  console.log('⚠️  Operation permission checking is now handled by the smart contract');
+  
   try {
-    const operationConsents = {
-      'store_medical_history': ['PHI_STORAGE', 'DATA_PROCESSING'],
-      'record_therapy_session': ['PHI_STORAGE', 'THERAPY_RECORDING'],
-      'ai_analysis': ['PHI_STORAGE', 'AI_ANALYSIS'],
-      'share_with_provider': ['PHI_STORAGE', 'DATA_SHARING_PROVIDERS'],
-      'research_participation': ['PHI_STORAGE', 'RESEARCH_PARTICIPATION']
-    };
-
-    const requiredConsents = operationConsents[operation] || ['PHI_STORAGE'];
+    // Smart contract handles operation permission checking
+    const permissionResult = await icAgent.callCanisterMethod('mentalverse', 'canPerformOperation', {
+      userId,
+      operation
+    });
     
-    for (const consentType of requiredConsents) {
-      const hasConsent = await consentService.hasConsent(userId, consentType);
-      if (!hasConsent) {
-        return {
-          allowed: false,
-          missingConsent: consentType,
-          reason: `Missing required consent: ${consentType}`
-        };
-      }
-    }
-
-    // Check if consent is expired
-    const renewalStatus = await consentService.checkConsentRenewal(userId);
-    if (renewalStatus.needsRenewal && renewalStatus.reason === 'expired') {
-      return {
-        allowed: false,
-        reason: 'Consent has expired',
-        expiredDays: renewalStatus.expiredDays
-      };
-    }
-
-    return {
-      allowed: true,
-      renewalStatus
-    };
+    return permissionResult.Ok || false;
   } catch (error) {
-    console.error('❌ Failed to check operation permission:', error);
-    return {
-      allowed: false,
-      reason: 'Failed to validate consent'
-    };
+    console.error('❌ Operation permission check failed:', error);
+    return false;
   }
 }
 
 /**
- * Middleware to add consent status to response headers
+ * Add consent headers to response - Now handled by smart contract
  */
 function addConsentHeaders() {
   return async (req, res, next) => {
+    console.log('⚠️  Consent headers are now handled by the smart contract');
+    
     try {
       const userId = req.user?.principal;
       
       if (userId) {
-        const currentConsent = await consentService.getCurrentConsent(userId);
-        const renewalStatus = await consentService.checkConsentRenewal(userId);
+        // Smart contract provides consent status headers
+        const consentHeaders = await icAgent.callCanisterMethod('mentalverse', 'getConsentHeaders', userId);
         
-        if (currentConsent) {
-          res.setHeader('X-Consent-Status', 'active');
-          res.setHeader('X-Consent-Version', currentConsent.version);
-          res.setHeader('X-Consent-Expiration', currentConsent.expirationDate);
-          
-          if (renewalStatus.needsRenewal) {
-            res.setHeader('X-Consent-Renewal-Required', 'true');
-            res.setHeader('X-Consent-Renewal-Reason', renewalStatus.reason);
-          }
-        } else {
-          res.setHeader('X-Consent-Status', 'missing');
+        if (consentHeaders.Ok) {
+          const headers = consentHeaders.Ok;
+          res.set('X-Consent-Status', headers.status || 'unknown');
+          res.set('X-Consent-Version', headers.version || '1.0');
+          res.set('X-Consent-Expires', headers.expires || 'never');
         }
       }
-      
-      next();
     } catch (error) {
       console.error('❌ Failed to add consent headers:', error);
-      next(); // Continue without headers on error
+      // Don't block the request if header addition fails
     }
+    
+    next();
   };
 }
 

@@ -1,433 +1,490 @@
-const express = require('express');
-const { authenticateToken, requireRole } = require('../middleware/auth');
-const { sanitizeInput } = require('../middleware/inputSanitizer');
-const { auditDataOperations } = require('../middleware/auditMiddleware');
-const { dataErasureService } = require('../services/dataErasureService');
-const { consentService } = require('../services/consentService');
-const rateLimit = require('express-rate-limit');
+// Data Erasure routes - Now proxied to smart contract
+// All data erasure operations are handled by the smart contract's data management system
+
+import express from 'express';
+import { body, validationResult } from 'express-validator';
+import { authenticateToken, requireRole } from '../middleware/auth.js';
+import { sanitizeMiddleware as sanitizeInput } from '../middleware/inputSanitizer.js';
+import { icAgent } from '../ic-integration/icAgent.js';
 
 const router = express.Router();
 
-// Rate limiting for data erasure requests (very restrictive)
+// Rate limiting for data erasure endpoints
+import rateLimit from 'express-rate-limit';
 const erasureLimiter = rateLimit({
-  windowMs: 24 * 60 * 60 * 1000, // 24 hours
-  max: 1, // Only 1 erasure request per day per IP
-  message: {
-    error: 'Too many erasure requests',
-    code: 'RATE_LIMIT_EXCEEDED',
-    message: 'Only one data erasure request is allowed per 24 hours.',
-    retryAfter: '24 hours'
-  },
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 5, // limit each IP to 5 erasure requests per hour
+  message: 'Too many data erasure requests from this IP, please try again later.',
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
 });
 
-// Apply middleware to all routes
-router.use(authenticateToken);
-router.use(auditDataOperations());
-
-/**
- * Request data erasure (Right to be Forgotten)
- * POST /api/data-erasure/request
- */
-router.post('/request',
+// Submit data erasure request - Proxied to smart contract
+router.post('/request', [
+  authenticateToken,
   erasureLimiter,
-  sanitizeInput(['reason', 'legalBasis', 'dataCategories']),
-  async (req, res) => {
-    try {
-      const userId = req.user.principal;
-      const {
-        reason,
-        legalBasis = 'gdpr_article_17',
-        dataCategories,
-        deletionMethod,
-        confirmationCode
-      } = req.body;
-
-      // Validate confirmation code (should be sent via email/SMS)
-      if (!confirmationCode) {
-        return res.status(400).json({
-          error: 'Confirmation code required',
-          code: 'CONFIRMATION_REQUIRED',
-          message: 'A confirmation code is required to process data erasure requests.'
-        });
-      }
-
-      // Verify confirmation code
-      const codeValid = await verifyConfirmationCode(userId, confirmationCode);
-      if (!codeValid) {
-        return res.status(400).json({
-          error: 'Invalid confirmation code',
-          code: 'INVALID_CONFIRMATION',
-          message: 'The provided confirmation code is invalid or expired.'
-        });
-      }
-
-      // Check if user can request erasure
-      const canErase = await checkErasureEligibility(userId);
-      if (!canErase.eligible) {
-        return res.status(403).json({
-          error: 'Erasure not permitted',
-          code: 'ERASURE_NOT_PERMITTED',
-          message: canErase.reason,
-          details: canErase.details
-        });
-      }
-
-      // Process erasure request
-      const requestData = {
-        reason,
-        legalBasis,
-        dataCategories,
-        deletionMethod,
-        requestedBy: userId,
-        ipAddress: req.ip,
-        userAgent: req.headers['user-agent']
-      };
-
-      const result = await dataErasureService.processErasureRequest(userId, requestData);
-
-      res.json({
-        message: 'Data erasure request processed successfully',
-        requestId: result.requestId,
-        status: result.status,
-        deletedCategories: result.deletedCategories,
-        retainedData: result.retainedData,
-        completedAt: result.completedAt,
-        verificationHash: result.verificationHash,
-        nextSteps: {
-          message: 'Your data has been securely deleted from our systems.',
-          backupDeletion: 'Data in backups will be deleted within 90 days.',
-          verification: 'You can verify the deletion using the provided verification hash.',
-          contact: 'Contact support if you have any questions about this process.'
-        }
-      });
-
-    } catch (error) {
-      console.error('❌ Data erasure request failed:', error);
-      
-      res.status(500).json({
-        error: 'Failed to process erasure request',
-        code: 'ERASURE_PROCESSING_ERROR',
-        message: 'An error occurred while processing your data erasure request. Please contact support.',
-        requestId: req.body.requestId || 'unknown'
-      });
-    }
-  }
-);
-
-/**
- * Get erasure request status
- * GET /api/data-erasure/status/:requestId
- */
-router.get('/status/:requestId',
-  sanitizeInput(['requestId']),
-  async (req, res) => {
-    try {
-      const { requestId } = req.params;
-      const userId = req.user.principal;
-
-      // Verify user owns this request
-      const requestOwnership = await verifyRequestOwnership(requestId, userId);
-      if (!requestOwnership.valid) {
-        return res.status(403).json({
-          error: 'Access denied',
-          code: 'REQUEST_ACCESS_DENIED',
-          message: 'You do not have permission to view this erasure request.'
-        });
-      }
-
-      const status = await dataErasureService.getErasureStatus(requestId);
-
-      res.json({
-        requestId,
-        status: status.status,
-        progress: status.progress,
-        completedSteps: status.completedSteps,
-        totalSteps: status.totalSteps,
-        estimatedCompletion: status.estimatedCompletion,
-        lastUpdated: status.lastUpdated
-      });
-
-    } catch (error) {
-      console.error('❌ Failed to get erasure status:', error);
-      
-      res.status(500).json({
-        error: 'Failed to retrieve erasure status',
-        code: 'STATUS_RETRIEVAL_ERROR',
-        message: 'Unable to retrieve the status of your erasure request.'
-      });
-    }
-  }
-);
-
-/**
- * Request confirmation code for erasure
- * POST /api/data-erasure/request-confirmation
- */
-router.post('/request-confirmation',
-  rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 3, // 3 confirmation requests per 15 minutes
-    message: {
-      error: 'Too many confirmation requests',
-      message: 'Please wait before requesting another confirmation code.'
-    }
-  }),
-  async (req, res) => {
-    try {
-      const userId = req.user.principal;
-      const { method = 'email' } = req.body; // email or sms
-
-      // Generate and send confirmation code
-      const confirmationCode = await generateConfirmationCode(userId);
-      await sendConfirmationCode(userId, confirmationCode, method);
-
-      res.json({
-        message: 'Confirmation code sent',
-        method,
-        expiresIn: '15 minutes',
-        note: 'Please check your email/SMS for the confirmation code.'
-      });
-
-    } catch (error) {
-      console.error('❌ Failed to send confirmation code:', error);
-      
-      res.status(500).json({
-        error: 'Failed to send confirmation code',
-        code: 'CONFIRMATION_SEND_ERROR',
-        message: 'Unable to send confirmation code. Please try again later.'
-      });
-    }
-  }
-);
-
-/**
- * Get data export before erasure (optional)
- * GET /api/data-erasure/export
- */
-router.get('/export',
-  rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 hour
-    max: 2, // 2 exports per hour
-    message: {
-      error: 'Too many export requests',
-      message: 'Please wait before requesting another data export.'
-    }
-  }),
-  async (req, res) => {
-    try {
-      const userId = req.user.principal;
-      const { format = 'json', includeCategories } = req.query;
-
-      // Check if user has consent for data export
-      const hasExportConsent = await consentService.hasConsent(userId, 'DATA_EXPORT');
-      if (!hasExportConsent) {
-        return res.status(403).json({
-          error: 'Export consent required',
-          code: 'EXPORT_CONSENT_REQUIRED',
-          message: 'You must provide consent for data export before proceeding.'
-        });
-      }
-
-      // Generate data export
-      const exportData = await generateDataExport(userId, {
-        format,
-        includeCategories: includeCategories ? includeCategories.split(',') : undefined
-      });
-
-      res.json({
-        message: 'Data export generated successfully',
-        exportId: exportData.exportId,
-        downloadUrl: exportData.downloadUrl,
-        expiresAt: exportData.expiresAt,
-        categories: exportData.categories,
-        recordCount: exportData.recordCount,
-        format: exportData.format,
-        note: 'This export will be automatically deleted after download or expiration.'
-      });
-
-    } catch (error) {
-      console.error('❌ Data export failed:', error);
-      
-      res.status(500).json({
-        error: 'Failed to generate data export',
-        code: 'EXPORT_GENERATION_ERROR',
-        message: 'Unable to generate data export. Please try again later.'
-      });
-    }
-  }
-);
-
-/**
- * Admin: View erasure requests (admin only)
- * GET /api/data-erasure/admin/requests
- */
-router.get('/admin/requests',
-  requireRole(['admin', 'compliance_officer']),
-  async (req, res) => {
-    try {
-      const {
-        status,
-        startDate,
-        endDate,
-        page = 1,
-        limit = 50
-      } = req.query;
-
-      const requests = await getErasureRequests({
-        status,
-        startDate,
-        endDate,
-        page: parseInt(page),
-        limit: parseInt(limit)
-      });
-
-      res.json({
-        requests: requests.data,
-        pagination: {
-          page: requests.page,
-          limit: requests.limit,
-          total: requests.total,
-          pages: requests.pages
-        },
-        summary: {
-          totalRequests: requests.total,
-          pendingRequests: requests.summary.pending,
-          completedRequests: requests.summary.completed,
-          failedRequests: requests.summary.failed
-        }
-      });
-
-    } catch (error) {
-      console.error('❌ Failed to retrieve erasure requests:', error);
-      
-      res.status(500).json({
-        error: 'Failed to retrieve erasure requests',
-        code: 'ADMIN_RETRIEVAL_ERROR'
-      });
-    }
-  }
-);
-
-/**
- * Admin: Manual erasure processing (admin only)
- * POST /api/data-erasure/admin/process/:requestId
- */
-router.post('/admin/process/:requestId',
-  requireRole(['admin', 'compliance_officer']),
-  sanitizeInput(['notes', 'overrideReason']),
-  async (req, res) => {
-    try {
-      const { requestId } = req.params;
-      const { notes, overrideReason } = req.body;
-      const adminId = req.user.principal;
-
-      // Process manual erasure
-      const result = await processManualErasure(requestId, {
-        adminId,
-        notes,
-        overrideReason,
-        ipAddress: req.ip
-      });
-
-      res.json({
-        message: 'Manual erasure processing initiated',
-        requestId,
-        processedBy: adminId,
-        status: result.status,
-        timestamp: result.timestamp
-      });
-
-    } catch (error) {
-      console.error('❌ Manual erasure processing failed:', error);
-      
-      res.status(500).json({
-        error: 'Failed to process manual erasure',
-        code: 'MANUAL_PROCESSING_ERROR'
-      });
-    }
-  }
-);
-
-// Helper functions
-
-async function verifyConfirmationCode(userId, code) {
-  // In production, verify against stored confirmation codes
-  // For now, accept any 6-digit code
-  return /^\d{6}$/.test(code);
-}
-
-async function checkErasureEligibility(userId) {
+  sanitizeInput,
+  
+  // Validation
+  body('erasureType').isIn(['partial', 'complete']).withMessage('Erasure type must be partial or complete'),
+  body('reason').isString().isLength({ min: 10, max: 1000 }).withMessage('Reason must be between 10 and 1000 characters'),
+  body('dataCategories').optional().isArray().withMessage('Data categories must be an array'),
+  body('confirmErasure').isBoolean().equals(true).withMessage('Erasure must be confirmed'),
+  body('effectiveDate').optional().isISO8601().withMessage('Effective date must be a valid ISO date'),
+], async (req, res) => {
   try {
-    // Check for active legal holds, ongoing treatments, etc.
-    // For now, allow all erasures
-    return {
-      eligible: true
-    };
-  } catch (error) {
-    return {
-      eligible: false,
-      reason: 'Unable to verify eligibility'
-    };
-  }
-}
-
-async function verifyRequestOwnership(requestId, userId) {
-  // In production, verify the user owns this request
-  return {
-    valid: true
-  };
-}
-
-async function generateConfirmationCode(userId) {
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
-  
-  // In production, store code with expiration
-  // await storeConfirmationCode(userId, code, expiresAt);
-  
-  return code;
-}
-
-async function sendConfirmationCode(userId, code, method) {
-  // In production, send via email/SMS service
-  console.log(`📧 Confirmation code for ${userId.substring(0, 8)}...: ${code} (via ${method})`);
-}
-
-async function generateDataExport(userId, options) {
-  // In production, generate actual data export
-  return {
-    exportId: `export_${Date.now()}`,
-    downloadUrl: `/api/data-erasure/download/export_${Date.now()}`,
-    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-    categories: ['personal_data', 'medical_records', 'chat_messages'],
-    recordCount: 150,
-    format: options.format
-  };
-}
-
-async function getErasureRequests(filters) {
-  // In production, query actual erasure requests
-  return {
-    data: [],
-    page: filters.page,
-    limit: filters.limit,
-    total: 0,
-    pages: 0,
-    summary: {
-      pending: 0,
-      completed: 0,
-      failed: 0
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: errors.array()
+      });
     }
-  };
-}
 
-async function processManualErasure(requestId, options) {
-  // In production, process manual erasure
-  return {
-    status: 'processing',
-    timestamp: new Date().toISOString()
-  };
-}
+    const { erasureType, reason, dataCategories, confirmErasure, effectiveDate } = req.body;
+    const userId = req.user.principal;
 
-module.exports = router;
+    // Proxy to smart contract
+    const result = await icAgent.callCanisterMethod('mentalverse', 'submitErasureRequest', {
+      userId,
+      erasureType,
+      reason,
+      dataCategories: dataCategories || [],
+      confirmErasure,
+      effectiveDate: effectiveDate || null,
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent']
+    });
+
+    if (result.Err) {
+      return res.status(400).json({
+        error: 'Failed to submit erasure request',
+        details: result.Err
+      });
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Data erasure request submitted successfully',
+      data: result.Ok
+    });
+
+  } catch (error) {
+    console.error('❌ Failed to submit erasure request:', error);
+    res.status(500).json({
+      error: 'Failed to submit erasure request',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// Get erasure request status - Proxied to smart contract
+router.get('/status/:requestId', [
+  authenticateToken,
+], async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const userId = req.user.principal;
+
+    // Proxy to smart contract
+    const result = await icAgent.callCanisterMethod('mentalverse', 'getErasureStatus', {
+      userId,
+      requestId
+    });
+
+    if (result.Err) {
+      return res.status(400).json({
+        error: 'Failed to retrieve erasure status',
+        details: result.Err
+      });
+    }
+
+    res.json({
+      success: true,
+      data: result.Ok
+    });
+
+  } catch (error) {
+    console.error('❌ Failed to get erasure status:', error);
+    res.status(500).json({
+      error: 'Failed to retrieve erasure status',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// Request confirmation for erasure - Proxied to smart contract
+router.post('/request-confirmation', [
+  authenticateToken,
+  sanitizeInput,
+  
+  // Validation
+  body('requestId').isString().isLength({ min: 1 }).withMessage('Request ID is required'),
+  body('confirmationCode').isString().isLength({ min: 6, max: 10 }).withMessage('Confirmation code must be between 6 and 10 characters'),
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: errors.array()
+      });
+    }
+
+    const { requestId, confirmationCode } = req.body;
+    const userId = req.user.principal;
+
+    // Proxy to smart contract
+    const result = await icAgent.callCanisterMethod('mentalverse', 'confirmErasureRequest', {
+      userId,
+      requestId,
+      confirmationCode,
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent']
+    });
+
+    if (result.Err) {
+      return res.status(400).json({
+        error: 'Failed to confirm erasure request',
+        details: result.Err
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Erasure request confirmed successfully',
+      data: result.Ok
+    });
+
+  } catch (error) {
+    console.error('❌ Failed to confirm erasure request:', error);
+    res.status(500).json({
+      error: 'Failed to confirm erasure request',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// Export user data before erasure - Proxied to smart contract
+router.get('/export', [
+  authenticateToken,
+], async (req, res) => {
+  try {
+    const userId = req.user.principal;
+    const { format = 'json', includeMetadata = 'true' } = req.query;
+
+    // Proxy to smart contract
+    const result = await icAgent.callCanisterMethod('mentalverse', 'exportUserData', {
+      userId,
+      format,
+      includeMetadata: includeMetadata === 'true'
+    });
+
+    if (result.Err) {
+      return res.status(400).json({
+        error: 'Failed to export user data',
+        details: result.Err
+      });
+    }
+
+    // Set appropriate headers for download
+    const timestamp = new Date().toISOString().split('T')[0];
+    const filename = `user-data-export-${userId}-${timestamp}.${format}`;
+    
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Type', format === 'json' ? 'application/json' : 'text/csv');
+    
+    res.json({
+      success: true,
+      data: result.Ok
+    });
+
+  } catch (error) {
+    console.error('❌ Failed to export user data:', error);
+    res.status(500).json({
+      error: 'Failed to export user data',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// Get user's erasure history - Proxied to smart contract
+router.get('/history', [
+  authenticateToken,
+], async (req, res) => {
+  try {
+    const userId = req.user.principal;
+    const { limit = 20, offset = 0 } = req.query;
+
+    // Proxy to smart contract
+    const result = await icAgent.callCanisterMethod('mentalverse', 'getErasureHistory', {
+      userId,
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    });
+
+    if (result.Err) {
+      return res.status(400).json({
+        error: 'Failed to retrieve erasure history',
+        details: result.Err
+      });
+    }
+
+    res.json({
+      success: true,
+      data: result.Ok
+    });
+
+  } catch (error) {
+    console.error('❌ Failed to get erasure history:', error);
+    res.status(500).json({
+      error: 'Failed to retrieve erasure history',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// Cancel pending erasure request - Proxied to smart contract
+router.delete('/cancel/:requestId', [
+  authenticateToken,
+  sanitizeInput,
+  
+  // Validation
+  body('reason').optional().isString().isLength({ max: 500 }).withMessage('Cancellation reason must not exceed 500 characters'),
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: errors.array()
+      });
+    }
+
+    const { requestId } = req.params;
+    const { reason } = req.body;
+    const userId = req.user.principal;
+
+    // Proxy to smart contract
+    const result = await icAgent.callCanisterMethod('mentalverse', 'cancelErasureRequest', {
+      userId,
+      requestId,
+      reason: reason || null,
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent']
+    });
+
+    if (result.Err) {
+      return res.status(400).json({
+        error: 'Failed to cancel erasure request',
+        details: result.Err
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Erasure request cancelled successfully',
+      data: result.Ok
+    });
+
+  } catch (error) {
+    console.error('❌ Failed to cancel erasure request:', error);
+    res.status(500).json({
+      error: 'Failed to cancel erasure request',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// Admin routes - Proxied to smart contract
+
+// Get all erasure requests (Admin only) - Proxied to smart contract
+router.get('/admin/requests', [
+  authenticateToken,
+  requireRole(['admin', 'data_protection_officer']),
+], async (req, res) => {
+  try {
+    const { status, limit = 50, offset = 0, userId } = req.query;
+    const adminId = req.user.principal;
+
+    // Proxy to smart contract
+    const result = await icAgent.callCanisterMethod('mentalverse', 'getAllErasureRequests', {
+      adminId,
+      filters: {
+        status: status || null,
+        userId: userId || null
+      },
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    });
+
+    if (result.Err) {
+      return res.status(400).json({
+        error: 'Failed to retrieve erasure requests',
+        details: result.Err
+      });
+    }
+
+    res.json({
+      success: true,
+      data: result.Ok
+    });
+
+  } catch (error) {
+    console.error('❌ Failed to get erasure requests:', error);
+    res.status(500).json({
+      error: 'Failed to retrieve erasure requests',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// Process erasure request (Admin only) - Proxied to smart contract
+router.post('/admin/process/:requestId', [
+  authenticateToken,
+  requireRole(['admin', 'data_protection_officer']),
+  sanitizeInput,
+  
+  // Validation
+  body('action').isIn(['approve', 'reject', 'require_review']).withMessage('Action must be approve, reject, or require_review'),
+  body('adminNotes').optional().isString().isLength({ max: 1000 }).withMessage('Admin notes must not exceed 1000 characters'),
+  body('scheduledDate').optional().isISO8601().withMessage('Scheduled date must be a valid ISO date'),
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: errors.array()
+      });
+    }
+
+    const { requestId } = req.params;
+    const { action, adminNotes, scheduledDate } = req.body;
+    const adminId = req.user.principal;
+
+    // Proxy to smart contract
+    const result = await icAgent.callCanisterMethod('mentalverse', 'processErasureRequest', {
+      adminId,
+      requestId,
+      action,
+      adminNotes: adminNotes || null,
+      scheduledDate: scheduledDate || null,
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent']
+    });
+
+    if (result.Err) {
+      return res.status(400).json({
+        error: 'Failed to process erasure request',
+        details: result.Err
+      });
+    }
+
+    res.json({
+      success: true,
+      message: `Erasure request ${action}d successfully`,
+      data: result.Ok
+    });
+
+  } catch (error) {
+    console.error('❌ Failed to process erasure request:', error);
+    res.status(500).json({
+      error: 'Failed to process erasure request',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// Execute approved erasure (Admin only) - Proxied to smart contract
+router.post('/admin/execute/:requestId', [
+  authenticateToken,
+  requireRole(['admin', 'data_protection_officer']),
+  sanitizeInput,
+  
+  // Validation
+  body('confirmExecution').isBoolean().equals(true).withMessage('Execution must be confirmed'),
+  body('executionNotes').optional().isString().isLength({ max: 1000 }).withMessage('Execution notes must not exceed 1000 characters'),
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: errors.array()
+      });
+    }
+
+    const { requestId } = req.params;
+    const { confirmExecution, executionNotes } = req.body;
+    const adminId = req.user.principal;
+
+    // Proxy to smart contract
+    const result = await icAgent.callCanisterMethod('mentalverse', 'executeErasure', {
+      adminId,
+      requestId,
+      confirmExecution,
+      executionNotes: executionNotes || null,
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent']
+    });
+
+    if (result.Err) {
+      return res.status(400).json({
+        error: 'Failed to execute erasure',
+        details: result.Err
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Data erasure executed successfully',
+      data: result.Ok
+    });
+
+  } catch (error) {
+    console.error('❌ Failed to execute erasure:', error);
+    res.status(500).json({
+      error: 'Failed to execute erasure',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// Get erasure statistics (Admin only) - Proxied to smart contract
+router.get('/admin/statistics', [
+  authenticateToken,
+  requireRole(['admin', 'data_protection_officer']),
+], async (req, res) => {
+  try {
+    const { timeframe = '30d' } = req.query;
+    const adminId = req.user.principal;
+
+    // Proxy to smart contract
+    const result = await icAgent.callCanisterMethod('mentalverse', 'getErasureStatistics', {
+      adminId,
+      timeframe
+    });
+
+    if (result.Err) {
+      return res.status(400).json({
+        error: 'Failed to retrieve erasure statistics',
+        details: result.Err
+      });
+    }
+
+    res.json({
+      success: true,
+      data: result.Ok
+    });
+
+  } catch (error) {
+    console.error('❌ Failed to get erasure statistics:', error);
+    res.status(500).json({
+      error: 'Failed to retrieve erasure statistics',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+export default router;
