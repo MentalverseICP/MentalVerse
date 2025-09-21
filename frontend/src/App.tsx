@@ -53,7 +53,12 @@ function AppRouter() {
   // Check if user exists when authenticated
   useEffect(() => {
     const checkExistingUser = async () => {
-      if (!isAuthenticated || checkingUser) return;
+      if (!isAuthenticated) {
+        setUserExists(null);
+        return;
+      }
+      
+      if (checkingUser) return; // Prevent multiple simultaneous calls
       
       setCheckingUser(true);
       try {
@@ -77,7 +82,7 @@ function AppRouter() {
     };
 
     checkExistingUser();
-  }, [isAuthenticated, checkingUser, userExists]);
+  }, [isAuthenticated, checkingUser]);
 
   useEffect(() => {
     if (isAuthenticated) {
