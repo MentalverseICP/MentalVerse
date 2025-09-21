@@ -25,6 +25,14 @@ module {
         remaining_today : Nat;
         last_reset : Int;
     };
+    
+    // Faucet claim type
+    public type FaucetClaim = {
+        id : Text;
+        amount : Nat;
+        timestamp : Int;
+        status : { #completed; #pending; #failed };
+    };
 
     // Inter-canister communication interface for MVT Token Canister
     public type MVTTokenCanisterInterface = actor {

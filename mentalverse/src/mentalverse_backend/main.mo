@@ -386,6 +386,48 @@ persistent actor MentalVerseBackend {
         }
     };
     
+    // Claim faucet tokens
+    public shared(msg) func claimFaucetTokens() : async Result.Result<Text, Text> {
+        // Security check
+        if (not securityModule.checkRateLimitSimple(msg.caller)) {
+            return #err("Rate limit exceeded");
+        };
+        
+        // For now, return a placeholder implementation
+        // In a real implementation, this would:
+        // 1. Check daily limits
+        // 2. Mint tokens to user
+        // 3. Record the claim
+        switch (mvtTokenCanister) {
+            case (null) { #err("MVT Token service unavailable") };
+            case (?tokenCanister) {
+                try {
+                    // Mint 100 MVT tokens (10^8 * 100 = 10^10 base units)
+                    let amount = 10_000_000_000; // 100 MVT in base units
+                    let result = await tokenCanister.earn_tokens(msg.caller, #system_participation, ?amount);
+                    switch (result) {
+                        case (#ok(_)) { #ok("Successfully claimed 100 MVT tokens") };
+                        case (#err(error)) { #err(error) };
+                    }
+                } catch (_error) {
+                    #err("Error claiming faucet tokens")
+                }
+            };
+        }
+    };
+    
+    // Get faucet claim history
+    public shared(msg) func getFaucetClaimHistory() : async Result.Result<[MVTTokenInterface.FaucetClaim], Text> {
+        // Security check
+        if (not securityModule.checkRateLimitSimple(msg.caller)) {
+            return #err("Rate limit exceeded");
+        };
+        
+        // For now, return empty array as placeholder
+        // In a real implementation, this would fetch actual claim history
+        #ok([])
+    };
+    
     // === SYSTEM HEALTH AND MONITORING ===
     
     public func getSystemHealth() : async SystemHealth {
