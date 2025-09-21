@@ -36,7 +36,7 @@ function AppRouter() {
   const [isLoading, setIsLoading] = useState(true)
   const [, setSearchTerm] = useState('')
   const [userExists, setUserExists] = useState<boolean | null>(null)
-  const [checkingUser, setCheckingUser] = useState(false)
+  const checkingUserRef = useRef(false)
 
   // Loader state
   const [showLoader, setShowLoader] = useState(false)
@@ -55,12 +55,13 @@ function AppRouter() {
     const checkExistingUser = async () => {
       if (!isAuthenticated) {
         setUserExists(null);
+        checkingUserRef.current = false;
         return;
       }
       
-      if (checkingUser) return; // Prevent multiple simultaneous calls
+      if (checkingUserRef.current) return; // Prevent multiple simultaneous calls
       
-      setCheckingUser(true);
+      checkingUserRef.current = true;
       try {
         const result = await authService.checkUserExists();
         console.log('User existence check result:', result);
@@ -77,12 +78,12 @@ function AppRouter() {
         // On error, assume user doesn't exist to trigger onboarding
         setUserExists(false);
       } finally {
-        setCheckingUser(false);
+        checkingUserRef.current = false;
       }
     };
 
     checkExistingUser();
-  }, [isAuthenticated, checkingUser]);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -92,7 +93,7 @@ function AppRouter() {
       setShowLoader(false)
       // Reset user existence check when not authenticated
       setUserExists(null)
-      setCheckingUser(false)
+      checkingUserRef.current = false
     }
     return () => {
       if (loaderTimeout.current) clearTimeout(loaderTimeout.current)
@@ -105,7 +106,7 @@ function AppRouter() {
 
   const handleSearchChange = (value: string) => setSearchTerm(value)
 
-  if (isLoading || authLoading || (isAuthenticated && checkingUser)) return <Loader />
+  if (isLoading || authLoading || (isAuthenticated && checkingUserRef.current)) return <Loader />
   if (showLoader) return <Loader />
 
   return (
