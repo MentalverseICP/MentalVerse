@@ -788,23 +788,23 @@ export class AuthService {
     }
   }
 
-  async claimStakingRewards(): Promise<number> {
+  async claimStakingRewards(): Promise<{ Ok?: number; Err?: string }> {
     if (!this.tokenActor || !this.identity) {
-      throw new Error('Token actor or identity not initialized');
+      return { Err: 'Token actor or identity not initialized' };
     }
 
     try {
       const result = await this.tokenActor.claim_staking_rewards(this.identity.getPrincipal());
       if ('Ok' in result && result.Ok !== undefined) {
-        return Number(result.Ok);
+        return { Ok: Number(result.Ok) };
       } else if ('Err' in result && result.Err) {
-        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
+        return { Err: typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error' };
       } else {
-        throw new Error('Failed to claim staking rewards');
+        return { Err: 'Failed to claim staking rewards' };
       }
     } catch (error) {
       console.error('Claim staking rewards error:', error);
-      throw error;
+      return { Err: error instanceof Error ? error.message : 'Unknown error occurred' };
     }
   }
 
@@ -952,10 +952,24 @@ export class AuthService {
     return [];
   }
 
-  async claimFaucetTokens(): Promise<void> {
-    // This method is not available in the token canister interface
-    // Implement alternative logic or throw error
-    throw new Error('Faucet token claiming is not available in the current token canister implementation');
+  async claimFaucetTokens(): Promise<{ Ok?: string; Err?: string }> {
+    if (!this.actor) {
+      return { Err: 'Backend service not available' };
+    }
+
+    try {
+      const result = await this.actor.claimFaucetTokens();
+      if ('Ok' in result) {
+        return { Ok: result.Ok || 'Tokens claimed successfully' };
+      } else if ('Err' in result) {
+        return { Err: result.Err || 'Failed to claim faucet tokens' };
+      } else {
+        return { Err: 'Unexpected response format' };
+      }
+    } catch (error) {
+      console.error('Claim faucet tokens error:', error);
+      return { Err: error instanceof Error ? error.message : 'Unknown error occurred' };
+    }
   }
 
   // === INTER-CANISTER SECURE MESSAGING ===
