@@ -59,6 +59,36 @@ const Onboarding: React.FC = () => {
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   const [fieldValidations, setFieldValidations] = useState<Record<string, ValidationResult>>({});
   const [fieldValidityStates, setFieldValidityStates] = useState<Record<string, boolean>>({});
+  const [isExistingUser, setIsExistingUser] = useState<boolean | null>(null);
+  const [existingUserRole, setExistingUserRole] = useState<string | null>(null);
+  const [isCheckingUser, setIsCheckingUser] = useState(true);
+
+  // Check if user already exists when component mounts
+  React.useEffect(() => {
+    const checkExistingUser = async () => {
+      if (!isAuthenticated) {
+        setIsCheckingUser(false);
+        return;
+      }
+
+      try {
+        const userCheck = await authService.checkUserExists();
+        if (userCheck.exists && userCheck.userRole) {
+          setIsExistingUser(true);
+          setExistingUserRole(userCheck.userRole);
+        } else {
+          setIsExistingUser(false);
+        }
+      } catch (error) {
+        console.error('Error checking user existence:', error);
+        setIsExistingUser(false);
+      } finally {
+        setIsCheckingUser(false);
+      }
+    };
+
+    checkExistingUser();
+  }, [isAuthenticated]);
 
   const handleInputChange = (field: keyof OnboardingFormData, value: string, isValid: boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -76,6 +106,16 @@ const Onboarding: React.FC = () => {
 
   const handleRoleSelect = (role: 'patient' | 'therapist') => {
     setFormData(prev => ({ ...prev, role }));
+  };
+
+  // Handle existing user login
+  const handleExistingUserLogin = () => {
+    if (existingUserRole) {
+      localStorage.setItem('userRole', existingUserRole);
+      localStorage.setItem('userOnboardingComplete', 'true');
+      console.log('✅ Existing user logged in, redirecting to dashboard');
+      navigate('/dashboard');
+    }
   };
 
   // Validation functions
@@ -222,40 +262,16 @@ const Onboarding: React.FC = () => {
         throw new Error(registrationResult.message || 'Failed to register user');
       }
 
-      // Create complete user profile with all onboarding data
-      const profileData = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        role: formData.role,
-        phoneNumber: formData.phoneNumber,
-        ...(formData.role === 'therapist' && {
-          specialization: formData.specialization,
-          experience: formData.experience,
-          licenseNumber: formData.licenseNumber,
-          bio: formData.bio
-        }),
-        ...(formData.role === 'patient' && {
-          age: formData.age,
-          emergencyContact: formData.emergencyContact,
-          medicalHistory: formData.medicalHistory,
-          currentMedications: formData.currentMedications,
-          therapyGoals: formData.therapyGoals
-        })
-      };
-
-      // Create user profile in backend
-      const profileResult = await authService.createUserProfile(profileData);
-      if (!profileResult.success) {
-        throw new Error(profileResult.message || 'Failed to create user profile');
-      }
-
+      // For new users, registration already creates the complete profile
+      // No need to call createUserProfile separately since registerUser handles it
+      console.log('✅ New user registered successfully');
+      
       // Store user data locally for immediate use (new user registration)
       localStorage.setItem('userRole', formData.role);
       localStorage.setItem('userProfile', JSON.stringify(formData));
       localStorage.setItem('userOnboardingComplete', 'true');
       
-      console.log('✅ User profile created successfully');
+      console.log('✅ User onboarding completed successfully');
       
       // Redirect to dashboard which will route to appropriate home page
       navigate('/dashboard');
@@ -285,6 +301,94 @@ const Onboarding: React.FC = () => {
       description: "Your data is encrypted and stored on the blockchain, ensuring complete anonymity and security."
     }
   ];
+
+  // Show loading state while checking user
+  if (isCheckingUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#18E614] mx-auto"></div>
+          <p className="text-muted-foreground">Checking your account...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show existing user login UI
+  if (isExistingUser && existingUserRole) {
+    return (
+      <div className="min-h-screen flex">
+        {/* Left Side - Existing User Login */}
+        <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-background">
+          <div className="w-full max-w-md space-y-8 text-center">
+            {/* Header */}
+            <div className="space-y-2">
+              <CheckCircle className="w-16 h-16 text-[#18E614] mx-auto" />
+              <h1 className="text-3xl font-bold text-foreground">Welcome Back!</h1>
+              <p className="text-muted-foreground">You already have an account with us</p>
+            </div>
+
+            {/* User Info */}
+            <div className="bg-muted/50 rounded-lg p-6 space-y-4">
+              <div className="flex items-center justify-center space-x-2">
+                {existingUserRole === 'patient' ? (
+                  <User className="w-6 h-6 text-[#18E614]" />
+                ) : (
+                  <Stethoscope className="w-6 h-6 text-[#F80D38]" />
+                )}
+                <span className="text-lg font-medium capitalize">{existingUserRole}</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Your wallet is connected and your profile is ready to use.
+              </p>
+            </div>
+
+            {/* Login Button */}
+            <button
+              onClick={handleExistingUserLogin}
+              className="w-full bg-[#18E614] hover:bg-[#16d012] text-black font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
+            >
+              <span>Continue to Dashboard</span>
+              <ArrowUpRight className="w-4 h-4" />
+            </button>
+
+            {/* Alternative Action */}
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground mb-2">
+                Want to create a new account?
+              </p>
+              <button
+                onClick={() => {
+                  setIsExistingUser(false);
+                  setExistingUserRole(null);
+                }}
+                className="text-[#18E614] hover:underline text-sm font-medium"
+              >
+                Register as New User
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Side - Same as original */}
+        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#0A0A0A] to-[#1A1A1A] items-center justify-center p-8">
+          <div className="max-w-md space-y-8">
+            {rightSideMessages.map((message, index) => (
+              <div key={index} className="flex items-start space-x-4">
+                <div className="flex-shrink-0">
+                  {message.icon}
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-semibold text-white">{message.title}</h3>
+                  <p className="text-gray-300 leading-relaxed">{message.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex">

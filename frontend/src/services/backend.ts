@@ -15,7 +15,7 @@ export interface BackendService {
   completeOnboarding: (userType: { patient?: null; therapist?: null; admin?: null }, additionalData: { bio?: string; profilePicture?: string }) => Promise<{ ok?: string; err?: string }>;
   getCurrentUser: () => Promise<{ ok?: { id: Principal; role: string }; err?: string }>;
   get_user_profile: (principal: Principal) => Promise<{ ok?: any; err?: string }>;
-  create_user_profile: (principal: Principal, userData: any) => Promise<{ ok?: string; err?: string }>;
+  create_user_profile: (userData: { firstName: string; lastName: string; email: string; userType: { patient?: null; therapist?: null; admin?: null } }) => Promise<{ ok?: string; err?: string }>;
   
   // Token operations
   getTokenBalance: () => Promise<{ Ok?: number; Err?: string }>;
@@ -521,21 +521,41 @@ export class AuthService {
     }
 
     try {
-      // Transform the data to match backend expectations - only send expected fields
+      // Get userType from userData.role or stored userRole
+      const userType = userData.role || userData.userType || this.userRole;
+      if (!userType) {
+        return { success: false, message: 'User type is required' };
+      }
+
+      // Convert userType string to Motoko variant format
+      const userTypeVariant = userType === 'therapist' ? { therapist: null } : 
+                             userType === 'admin' ? { admin: null } : 
+                             { patient: null };
+
+      // Transform the data to match backend expectations - include userType
       const backendUserData = {
         firstName: userData.firstName,
         lastName: userData.lastName,
-        email: userData.email
+        email: userData.email,
+        userType: userTypeVariant
       };
       
-      const result = await this.actor.create_user_profile(this.userPrincipal, backendUserData);
+      console.log('🔍 Creating user profile with data:', backendUserData);
+      
+      // Fix: Call with only userData parameter, not principal + userData
+      const result = await this.actor.create_user_profile(backendUserData);
       if ('ok' in result && result.ok) {
         return { success: true, message: 'Profile created successfully' };
       }
       return { success: false, message: result.err || 'Failed to create profile' };
     } catch (error) {
       console.error('Failed to create user profile:', error);
-      return { success: false, message: 'Failed to create profile' };
+      console.error('Error details:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      return { success: false, message: `Failed to create profile: ${error instanceof Error ? error.message : String(error)}` };
     }
   }
 
