@@ -521,14 +521,11 @@ export class AuthService {
     }
 
     try {
-      // Transform the data to match backend expectations
+      // Transform the data to match backend expectations - only send expected fields
       const backendUserData = {
         firstName: userData.firstName,
         lastName: userData.lastName,
-        email: userData.email,
-        userType: userData.role === 'patient' ? { patient: null } : 
-                 userData.role === 'therapist' ? { therapist: null } : 
-                 { admin: null }
+        email: userData.email
       };
       
       const result = await this.actor.create_user_profile(this.userPrincipal, backendUserData);
