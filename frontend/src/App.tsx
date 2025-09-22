@@ -35,7 +35,8 @@ function AppRouter() {
   const { isAuthenticated, isLoading: authLoading } = useAuth()
   const [isLoading, setIsLoading] = useState(true)
   const [, setSearchTerm] = useState('')
-  const [userExists, setUserExists] = useState<boolean | null>(null)
+  const [userExists, setUserExists] = useState<boolean | null>(null);
+  const [hasProfile, setHasProfile] = useState<boolean | null>(null);
   const checkingUserRef = useRef(false)
 
   // Loader state
@@ -50,11 +51,12 @@ function AppRouter() {
     return () => clearTimeout(timer)
   }, [])
 
-  // Check if user exists when authenticated
+  // Check if user exists and has profile when authenticated
   useEffect(() => {
-    const checkExistingUser = async () => {
+    const checkUserAndProfile = async () => {
       if (!isAuthenticated) {
         setUserExists(null);
+        setHasProfile(null);
         checkingUserRef.current = false;
         return;
       }
@@ -63,26 +65,43 @@ function AppRouter() {
       
       checkingUserRef.current = true;
       try {
-        const result = await authService.checkUserExists();
-        console.log('User existence check result:', result);
-        setUserExists(result.exists);
+        // First check if user exists (is registered)
+        const userResult = await authService.checkUserExists();
+        console.log('User existence check result:', userResult);
+        setUserExists(userResult.exists);
         
-        if (result.exists && result.userRole) {
-          // Store user role and mark onboarding as complete for existing users
-          localStorage.setItem('userRole', result.userRole);
-          localStorage.setItem('userOnboardingComplete', 'true');
-          console.log('Existing user found with role:', result.userRole);
+        if (userResult.exists) {
+          console.log('✅ User exists with role:', userResult.userRole);
+          
+          // Then check if user has a complete profile
+          const profileResult = await authService.checkUserProfile();
+          setHasProfile(profileResult.hasProfile);
+          
+          if (profileResult.hasProfile) {
+             console.log('✅ User has complete profile');
+             // Store user role and mark onboarding as complete for users with complete profiles
+             if (userResult.userRole) {
+               localStorage.setItem('userRole', userResult.userRole);
+               localStorage.setItem('userOnboardingComplete', 'true');
+             }
+          } else {
+            console.log('❌ User exists but no complete profile found');
+          }
+        } else {
+          console.log('❌ User does not exist or no role found');
+          setHasProfile(false);
         }
       } catch (error) {
-        console.error('Failed to check user existence:', error);
+        console.error('Failed to check user existence and profile:', error);
         // On error, assume user doesn't exist to trigger onboarding
         setUserExists(false);
+        setHasProfile(false);
       } finally {
         checkingUserRef.current = false;
       }
     };
 
-    checkExistingUser();
+    checkUserAndProfile();
   }, [isAuthenticated]);
 
   useEffect(() => {
@@ -122,9 +141,12 @@ function AppRouter() {
         element={
           !isAuthenticated ? (
             <Navigate to="/" replace />
-          ) : userExists === true ? (
-            // Existing user - bypass onboarding and go to dashboard
+          ) : userExists === true && hasProfile === true ? (
+            // Existing user with complete profile - go to dashboard
             <Navigate to="/dashboard" replace />
+          ) : userExists === true && hasProfile === false ? (
+            // Existing user without complete profile - go to onboarding
+            <Navigate to="/onboarding" replace />
           ) : userExists === false ? (
             // New user - go to onboarding
             <Navigate to="/onboarding" replace />
@@ -138,11 +160,11 @@ function AppRouter() {
         path="/onboarding"
         element={
           isAuthenticated ? (
-            userExists === false ? (
-              // Only new users should access onboarding
+            userExists === false || (userExists === true && hasProfile === false) ? (
+              // New users or existing users without complete profile should access onboarding
               <Onboarding />
-            ) : userExists === true ? (
-              // Existing users should be redirected to dashboard
+            ) : userExists === true && hasProfile === true ? (
+              // Existing users with complete profile should be redirected to dashboard
               <Navigate to="/dashboard" replace />
             ) : (
               // Still checking user status

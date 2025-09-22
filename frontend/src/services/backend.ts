@@ -14,6 +14,8 @@ export interface BackendService {
   registerUser: (userData: { firstName: string; lastName: string; email: string; userType: { patient?: null; therapist?: null; admin?: null } }) => Promise<{ ok?: string; err?: string }>;
   completeOnboarding: (userType: { patient?: null; therapist?: null; admin?: null }, additionalData: { bio?: string; profilePicture?: string }) => Promise<{ ok?: string; err?: string }>;
   getCurrentUser: () => Promise<{ ok?: { id: Principal; role: string }; err?: string }>;
+  get_user_profile: (principal: Principal) => Promise<{ ok?: any; err?: string }>;
+  create_user_profile: (principal: Principal, userData: any) => Promise<{ ok?: string; err?: string }>;
   
   // Token operations
   getTokenBalance: () => Promise<{ Ok?: number; Err?: string }>;
@@ -493,6 +495,40 @@ export class AuthService {
     } catch (error) {
       console.error('Failed to check if user exists:', error);
       return { exists: false };
+    }
+  }
+
+  async checkUserProfile(): Promise<{ hasProfile: boolean; profile?: any }> {
+    if (!this.actor || !this.isAuthenticated || !this.userPrincipal) {
+      return { hasProfile: false };
+    }
+
+    try {
+      const result = await this.actor.get_user_profile(this.userPrincipal);
+      if ('ok' in result && result.ok) {
+        return { hasProfile: true, profile: result.ok };
+      }
+      return { hasProfile: false };
+    } catch (error) {
+      console.error('Failed to check user profile:', error);
+      return { hasProfile: false };
+    }
+  }
+
+  async createUserProfile(userData: any): Promise<{ success: boolean; message: string }> {
+    if (!this.actor || !this.isAuthenticated || !this.userPrincipal) {
+      return { success: false, message: 'Not authenticated' };
+    }
+
+    try {
+      const result = await this.actor.create_user_profile(this.userPrincipal, userData);
+      if ('ok' in result && result.ok) {
+        return { success: true, message: 'Profile created successfully' };
+      }
+      return { success: false, message: result.err || 'Failed to create profile' };
+    } catch (error) {
+      console.error('Failed to create user profile:', error);
+      return { success: false, message: 'Failed to create profile' };
     }
   }
 

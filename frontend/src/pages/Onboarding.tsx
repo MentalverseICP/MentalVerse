@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { authService } from '../services/backend';
 import { User, Stethoscope, ArrowUpRight, CheckCircle } from 'lucide-react';
 import SecureInput from '../components/ui/SecureInput';
 import { ValidationResult } from '../utils/inputSecurity';
@@ -221,10 +222,40 @@ const Onboarding: React.FC = () => {
         throw new Error(registrationResult.message || 'Failed to register user');
       }
 
+      // Create complete user profile with all onboarding data
+      const profileData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        role: formData.role,
+        phoneNumber: formData.phoneNumber,
+        ...(formData.role === 'therapist' && {
+          specialization: formData.specialization,
+          experience: formData.experience,
+          licenseNumber: formData.licenseNumber,
+          bio: formData.bio
+        }),
+        ...(formData.role === 'patient' && {
+          age: formData.age,
+          emergencyContact: formData.emergencyContact,
+          medicalHistory: formData.medicalHistory,
+          currentMedications: formData.currentMedications,
+          therapyGoals: formData.therapyGoals
+        })
+      };
+
+      // Create user profile in backend
+      const profileResult = await authService.createUserProfile(profileData);
+      if (!profileResult.success) {
+        throw new Error(profileResult.message || 'Failed to create user profile');
+      }
+
       // Store user data locally for immediate use (new user registration)
       localStorage.setItem('userRole', formData.role);
       localStorage.setItem('userProfile', JSON.stringify(formData));
       localStorage.setItem('userOnboardingComplete', 'true');
+      
+      console.log('✅ User profile created successfully');
       
       // Redirect to dashboard which will route to appropriate home page
       navigate('/dashboard');

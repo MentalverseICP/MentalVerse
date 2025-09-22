@@ -153,6 +153,33 @@ persistent actor MentalVerseBackend {
         authModule.updateUserProfile(msg.caller, updates)
     };
     
+    // Get user profile by principal
+    public shared(msg) func get_user_profile(userPrincipal: Principal) : async Result.Result<Auth.UserProfile, Text> {
+        // Security check
+        if (not securityModule.checkRateLimitSimple(msg.caller)) {
+            return #err("Rate limit exceeded");
+        };
+        
+        // Get user profile through auth module
+        authModule.getCurrentUserProfile(userPrincipal)
+    };
+    
+    // Create user profile (used during onboarding)
+    public shared(msg) func create_user_profile(userData: {
+        email: Text;
+        firstName: Text;
+        lastName: Text;
+        userType: UserType;
+    }) : async Result.Result<Text, Text> {
+        // Security check
+        if (not securityModule.checkRateLimitSimple(msg.caller)) {
+            return #err("Rate limit exceeded");
+        };
+        
+        // Create user profile through registerUser (which creates the profile)
+        authModule.registerUser(msg.caller, userData)
+    };
+    
     // === STORAGE ENDPOINTS ===
     
     public shared(msg) func storePatientData(_patientId: UserId, _data: Text) : async Result.Result<Text, Text> {
