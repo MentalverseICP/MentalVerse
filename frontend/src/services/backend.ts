@@ -25,7 +25,7 @@ export interface BackendService {
   stakeTokens: (amount: number, lockPeriod: number) => Promise<{ Ok?: string; Err?: string }>;
   unstakeTokens: (amount: number) => Promise<{ Ok?: string; Err?: string }>;
   claimStakingRewards: () => Promise<{ Ok?: number; Err?: string }>;
-  getUserStake: () => Promise<{ Ok?: StakeInfo; Err?: string }>;
+  getUserStake: () => Promise<{ Ok?: StakeInfo | null; Err?: string }>;
   getTransactionHistory: (limit?: bigint[], offset?: bigint[]) => Promise<{ Ok?: any[]; Err?: string }>;
   getUserEarningHistory: () => Promise<{ Ok?: EarningRecord[]; Err?: string }>;
   getUserSpendingHistory: () => Promise<{ Ok?: SpendingRecord[]; Err?: string }>;
@@ -474,6 +474,12 @@ export class AuthService {
       return { exists: false };
     }
 
+    // First check cached user role for immediate response
+    const cachedRole = localStorage.getItem('userRole');
+    if (cachedRole && this.userRole) {
+      return { exists: true, userRole: this.userRole };
+    }
+
     try {
       const result = await this.actor.getCurrentUser();
       if ('ok' in result && result.ok) {
@@ -484,6 +490,9 @@ export class AuthService {
         localStorage.setItem('userRole', userRole);
         return { exists: true, userRole };
       }
+      // Clear cached data if user doesn't exist
+      localStorage.removeItem('userRole');
+      this.userRole = null;
       return { exists: false };
     } catch (error) {
       console.error('Failed to check if user exists:', error);
@@ -690,7 +699,7 @@ export class AuthService {
     }
   }
 
-  async getUserStake(): Promise<StakeInfo> {
+  async getUserStake(): Promise<StakeInfo | null> {
     if (!this.tokenActor || !this.identity) {
       throw new Error('Token actor or identity not initialized');
     }
@@ -700,7 +709,7 @@ export class AuthService {
       if (result && result.length > 0) {
         const stakeInfo = result[0];
         if (!stakeInfo) {
-          throw new Error('No stake information found');
+          return null;
         }
         return {
           amount: Number(stakeInfo.amount),
@@ -714,11 +723,11 @@ export class AuthService {
           rewards: 0
         };
       } else {
-        throw new Error('No stake found for user');
+        return null; // Return null instead of throwing error when no stake found
       }
     } catch (error) {
       console.error('Get user stake error:', error);
-      throw error;
+      return null; // Return null on error instead of throwing
     }
   }
 
