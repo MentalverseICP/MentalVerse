@@ -3,7 +3,9 @@ import { HttpAgent, Actor } from '@dfinity/agent';
 import { AuthClient } from '@dfinity/auth-client';
 import { Principal } from '@dfinity/principal';
 import { secureMessagingService, SecureMessagingService } from './secureMessaging';
-import { idlFactory, _SERVICE as MentalverseService } from '../declarations/mentalverse_backend';
+import { _SERVICE as MentalverseService } from '../declarations/mentalverse_backend';
+import { icAgent } from './icAgent';
+import type { _SERVICE as TokenService } from '../declarations/mvt_token_canister';
 
 // Import the generated declarations (these will be created after deployment)
 // import { mentalverse_backend } from '../../../declarations/mentalverse_backend';
@@ -361,7 +363,9 @@ export interface FaucetClaim {
 export class AuthService {
   private authClient: AuthClient | null = null;
   private actor: BackendService | null = null;
+  private tokenActor: TokenService | null = null;
   private secureMessaging: SecureMessagingService | null = null;
+  private identity: any = null;
   private isAuthenticated = false;
   private userPrincipal: Principal | null = null;
   private userRole: string | null = null;
@@ -408,27 +412,16 @@ export class AuthService {
   private async handleAuthenticated(): Promise<void> {
     if (!this.authClient) return;
 
-    const identity = this.authClient.getIdentity();
-    this.userPrincipal = identity.getPrincipal();
+    this.identity = this.authClient.getIdentity();
+    this.userPrincipal = this.identity.getPrincipal();
     this.isAuthenticated = true;
 
-    // Create actor with authenticated identity
-    const agent = new HttpAgent({
-      identity,
-      host: (globalThis as any).VITE_IC_HOST || 'https://ic0.app',
-    });
-
-    // In development, fetch root key
-    if ((globalThis as any).DEV || process.env.NODE_ENV === 'development') {
-      await agent.fetchRootKey();
-    }
-
-    // Use the statically imported idlFactory and type the actor with MentalverseService
-    const canisterId = (globalThis as any).VITE_CANISTER_MENTALVERSE_BACKEND || 'cytcv-raaaa-aaaac-a4aoa-cai';
-    this.actor = Actor.createActor(idlFactory, { agent, canisterId }) as MentalverseService & BackendService;
+    // Initialize IC Agent with the authenticated identity
+    await icAgent.initializeAgent(this.identity);
     
-    // Mock actor is no longer needed as we're using the real implementation
-    // this.actor = this.createMockActor();
+    // Get actors from IC Agent
+    this.actor = icAgent.getMentalverseActor() as unknown as MentalverseService & BackendService;
+    this.tokenActor = icAgent.getTokenActor();
 
     // Initialize secure messaging service
     try {
@@ -653,23 +646,23 @@ export class AuthService {
   }
 
   async getTokenBalance(): Promise<TokenBalance> {
-    if (!this.actor) {
-      throw new Error('Not authenticated');
+    if (!this.tokenActor || !this.identity) {
+      throw new Error('Token actor or identity not initialized');
     }
 
     try {
-      const result = await this.actor.getTokenBalance();
-      if ('Ok' in result && typeof result.Ok === 'number') {
-        return {
-          total: result.Ok,
-          available: result.Ok,
-          staked: 0,
-          pending: 0,
-          balance: result.Ok
-        };
-      } else {
-        throw new Error('Failed to get token balance');
-      }
+      const account = {
+        owner: this.identity.getPrincipal(),
+        subaccount: [] as [] | [Uint8Array | number[]]
+      };
+      const result = await this.tokenActor.icrc1_balance_of(account);
+      return {
+        total: Number(result),
+        available: Number(result),
+        staked: 0,
+        pending: 0,
+        balance: Number(result)
+      };
     } catch (error) {
       console.error('Get token balance error:', error);
       throw error;
@@ -677,28 +670,20 @@ export class AuthService {
   }
 
   async getTransactionHistory(): Promise<Transaction[]> {
-    if (!this.actor) {
-      throw new Error('Not authenticated');
+    if (!this.tokenActor) {
+      throw new Error('Token actor not initialized');
     }
 
     try {
-      const result = await this.actor.getTransactionHistory([BigInt(50)], [BigInt(0)]);
-      if (result.Ok) {
-        return result.Ok.map((tx: any) => ({
-          id: tx.id || '',
-          type: tx.type || 'transfer',
-          amount: Number(tx.amount) || 0,
-          timestamp: Number(tx.timestamp) || Date.now(),
-          description: tx.description || '',
-          status: tx.status || 'completed',
-          from: tx.from,
-          to: tx.to
-        }));
-      } else if (result.Err) {
-        throw new Error(`Failed to get transaction history: ${result.Err}`);
-      } else {
-        throw new Error('Failed to get transaction history');
-      }
+      const result = await this.tokenActor.get_transaction_history([], []);
+      return result.map((tx: any) => ({
+        id: tx.index.toString(),
+        type: this.mapTransactionType(tx.operation),
+        amount: this.getTransactionAmount(tx.operation),
+        timestamp: Number(tx.timestamp),
+        description: this.getTransactionDescription(tx.operation),
+        status: 'completed' as const
+      }));
     } catch (error) {
       console.error('Get transaction history error:', error);
       throw error;
@@ -706,16 +691,30 @@ export class AuthService {
   }
 
   async getUserStake(): Promise<StakeInfo> {
-    if (!this.actor) {
-      throw new Error('Not authenticated');
+    if (!this.tokenActor || !this.identity) {
+      throw new Error('Token actor or identity not initialized');
     }
 
     try {
-      const result = await this.actor.getUserStake();
-      if ('Ok' in result && result.Ok) {
-        return result.Ok;
+      const result = await this.tokenActor.get_user_stake(this.identity.getPrincipal());
+      if (result && result.length > 0) {
+        const stakeInfo = result[0];
+        if (!stakeInfo) {
+          throw new Error('No stake information found');
+        }
+        return {
+          amount: Number(stakeInfo.amount),
+          lockPeriod: Number(stakeInfo.lock_period),
+          startTime: Number(stakeInfo.staked_at),
+          endTime: Number(stakeInfo.staked_at) + Number(stakeInfo.lock_period),
+          unlockTime: Number(stakeInfo.staked_at) + Number(stakeInfo.lock_period),
+          stakeTime: Number(stakeInfo.staked_at),
+          rewardRate: stakeInfo.reward_rate,
+          accumulatedRewards: 0,
+          rewards: 0
+        };
       } else {
-        throw new Error('Failed to get user stake');
+        throw new Error('No stake found for user');
       }
     } catch (error) {
       console.error('Get user stake error:', error);
@@ -724,12 +723,12 @@ export class AuthService {
   }
 
   async stakeTokens(amount: number, lockPeriod: number): Promise<void> {
-    if (!this.actor) {
-      throw new Error('Not authenticated');
+    if (!this.tokenActor || !this.identity) {
+      throw new Error('Token actor or identity not initialized');
     }
 
     try {
-      const result = await this.actor.stakeTokens(amount, lockPeriod);
+      const result = await this.tokenActor.stake_tokens(this.identity.getPrincipal(), BigInt(amount), BigInt(lockPeriod));
       if ('Err' in result && result.Err) {
         throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
       }
@@ -739,15 +738,15 @@ export class AuthService {
     }
   }
 
-  async unstakeTokens(amount: number): Promise<void> {
-    if (!this.actor) {
-      throw new Error('Not authenticated');
+  async unstakeTokens(_amount: number): Promise<void> {
+    if (!this.tokenActor || !this.identity) {
+      throw new Error('Token actor or identity not initialized');
     }
 
     try {
-      const result = await this.actor.unstakeTokens(amount);
-      if ('Err' in result && result.Err) {
-        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
+      const result = await this.tokenActor.unstake_tokens(this.identity.getPrincipal());
+      if ('err' in result && result.err) {
+        throw new Error(typeof result.err === 'string' ? result.err : JSON.stringify(result.err) || 'Unknown error');
       }
     } catch (error) {
       console.error('Unstake tokens error:', error);
@@ -756,15 +755,23 @@ export class AuthService {
   }
 
   async transferTokens(to: string, amount: number): Promise<void> {
-    if (!this.actor) {
-      throw new Error('Not authenticated');
+    if (!this.tokenActor || !this.identity) {
+      throw new Error('Token actor or identity not initialized');
     }
 
     try {
       const toPrincipal = Principal.fromText(to);
-      const result = await this.actor.transferTokens(toPrincipal, amount);
-      if ('Err' in result && result.Err) {
-        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
+      const transferArgs = {
+        to: { owner: toPrincipal, subaccount: [] as [] | [Uint8Array | number[]] },
+        fee: [] as [] | [bigint],
+        memo: [] as [] | [Uint8Array | number[]],
+        from_subaccount: [] as [] | [Uint8Array | number[]],
+        created_at_time: [] as [] | [bigint],
+        amount: BigInt(amount)
+      };
+      const result = await this.tokenActor.icrc1_transfer(transferArgs);
+      if ('err' in result && result.err) {
+        throw new Error(typeof result.err === 'string' ? result.err : JSON.stringify(result.err) || 'Unknown error');
       }
     } catch (error) {
       console.error('Transfer tokens error:', error);
@@ -773,14 +780,14 @@ export class AuthService {
   }
 
   async claimStakingRewards(): Promise<number> {
-    if (!this.actor) {
-      throw new Error('Not authenticated');
+    if (!this.tokenActor || !this.identity) {
+      throw new Error('Token actor or identity not initialized');
     }
 
     try {
-      const result = await this.actor.claimStakingRewards();
+      const result = await this.tokenActor.claim_staking_rewards(this.identity.getPrincipal());
       if ('Ok' in result && result.Ok !== undefined) {
-        return result.Ok;
+        return Number(result.Ok);
       } else if ('Err' in result && result.Err) {
         throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
       } else {
@@ -792,20 +799,62 @@ export class AuthService {
     }
   }
 
+  private mapEarningType(earningType: any): 'appointment_completion' | 'platform_usage' | 'patient_feedback' | 'doctor_consultation' {
+    if ('appointment_completion' in earningType) return 'appointment_completion';
+    if ('platform_usage' in earningType) return 'platform_usage';
+    if ('patient_feedback' in earningType) return 'patient_feedback';
+    if ('doctor_consultation' in earningType) return 'doctor_consultation';
+    return 'platform_usage'; // default
+  }
+
+  private mapSpendingType(spendingType: any): 'premium_consultation' | 'priority_booking' | 'advanced_features' {
+    if ('premium_consultation' in spendingType) return 'premium_consultation';
+    if ('priority_booking' in spendingType) return 'priority_booking';
+    if ('advanced_features' in spendingType) return 'advanced_features';
+    return 'premium_consultation'; // default
+  }
+
+  private mapTransactionType(operation: any): 'transfer' | 'earn' | 'spend' | 'stake' | 'unstake' {
+    if ('transfer' in operation) return 'transfer';
+    if ('earn' in operation) return 'earn';
+    if ('spend' in operation) return 'spend';
+    if ('stake' in operation) return 'stake';
+    if ('unstake' in operation) return 'unstake';
+    return 'transfer'; // default
+  }
+
+  private getTransactionAmount(operation: any): number {
+    if ('transfer' in operation) return Number(operation.transfer.amount);
+    if ('earn' in operation) return Number(operation.earn.amount);
+    if ('spend' in operation) return Number(operation.spend.amount);
+    if ('stake' in operation) return Number(operation.stake.amount);
+    if ('unstake' in operation) return Number(operation.unstake.amount);
+    return 0;
+  }
+
+  private getTransactionDescription(operation: any): string {
+    if ('transfer' in operation) return 'Token transfer';
+    if ('earn' in operation) return 'Tokens earned';
+    if ('spend' in operation) return 'Tokens spent';
+    if ('stake' in operation) return 'Tokens staked';
+    if ('unstake' in operation) return 'Tokens unstaked';
+    return 'Transaction';
+  }
+
   async getUserEarningHistory(): Promise<EarningRecord[]> {
-    if (!this.actor) {
-      throw new Error('Not authenticated');
+    if (!this.tokenActor || !this.identity) {
+      throw new Error('Token actor not initialized');
     }
 
     try {
-      const result = await this.actor.getUserEarningHistory();
-      if (result.Ok) {
-        return result.Ok;
-      } else if (result.Err) {
-        throw new Error(`Failed to get user earning history: ${result.Err}`);
-      } else {
-        throw new Error('Failed to get user earning history');
-      }
+      const result = await this.tokenActor.get_user_earning_history(this.identity.getPrincipal());
+      return result.map((record: any) => ({
+        id: record.timestamp.toString(),
+        type: this.mapEarningType(record.earning_type),
+        amount: Number(record.amount),
+        timestamp: Number(record.timestamp),
+        description: `Earned ${Number(record.amount)} tokens`
+      }));
     } catch (error) {
       console.error('Get user earning history error:', error);
       throw error;
@@ -813,34 +862,36 @@ export class AuthService {
   }
 
   async getUserSpendingHistory(): Promise<SpendingRecord[]> {
-    if (!this.actor) {
-      throw new Error('Not authenticated');
+    if (!this.tokenActor || !this.identity) {
+      throw new Error('Token actor not initialized');
     }
 
     try {
-      const result = await this.actor.getUserSpendingHistory();
-      if (result.Ok) {
-        return result.Ok;
-      } else if (result.Err) {
-        throw new Error(`Failed to get user spending history: ${result.Err}`);
-      } else {
-        throw new Error('Failed to get user spending history');
-      }
+      const result = await this.tokenActor.get_user_spending_history(this.identity.getPrincipal());
+      return result.map((record: any) => ({
+        id: record.timestamp.toString(),
+        type: this.mapSpendingType(record.spending_type),
+        amount: Number(record.amount),
+        timestamp: Number(record.timestamp),
+        description: `Spent ${Number(record.amount)} tokens`
+      }));
     } catch (error) {
       console.error('Get user spending history error:', error);
       throw error;
     }
   }
 
-  async earnTokens(amount: number, reason: string): Promise<void> {
-    if (!this.actor) {
-      throw new Error('Not authenticated');
+  async earnTokens(amount: number, _reason: string): Promise<void> {
+    if (!this.tokenActor || !this.identity) {
+      throw new Error('Token actor not initialized');
     }
 
     try {
-      const result = await this.actor.earnTokens(amount, reason);
-      if ('Err' in result && result.Err) {
-        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
+      // Map reason string to EarningType - using platform_usage as default
+      const earningType = { 'platform_usage': null };
+      const result = await this.tokenActor.earn_tokens(this.identity.getPrincipal(), earningType, [BigInt(amount)]);
+      if ('err' in result && result.err) {
+        throw new Error(typeof result.err === 'string' ? result.err : JSON.stringify(result.err) || 'Unknown error');
       }
     } catch (error) {
       console.error('Earn tokens error:', error);
@@ -848,15 +899,17 @@ export class AuthService {
     }
   }
 
-  async spendTokens(amount: number, reason: string): Promise<void> {
-    if (!this.actor) {
-      throw new Error('Not authenticated');
+  async spendTokens(amount: number, _reason: string): Promise<void> {
+    if (!this.tokenActor || !this.identity) {
+      throw new Error('Token actor not initialized');
     }
 
     try {
-      const result = await this.actor.spendTokens(amount, reason);
-      if ('Err' in result && result.Err) {
-        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
+      // Map reason string to SpendingType - using ai_insights as default
+      const spendingType = { 'ai_insights': null };
+      const result = await this.tokenActor.spend_tokens(this.identity.getPrincipal(), spendingType, [BigInt(amount)]);
+      if ('err' in result && result.err) {
+        throw new Error(typeof result.err === 'string' ? result.err : JSON.stringify(result.err) || 'Unknown error');
       }
     } catch (error) {
       console.error('Spend tokens error:', error);
@@ -865,19 +918,19 @@ export class AuthService {
   }
 
   async getFaucetStats(): Promise<FaucetStats> {
-    if (!this.actor) {
-      throw new Error('Not authenticated');
+    if (!this.tokenActor) {
+      throw new Error('Token actor not initialized');
     }
 
     try {
-      const result = await this.actor.getFaucetStats();
-      if ('Ok' in result && result.Ok) {
-        return result.Ok;
-      } else if ('Err' in result && result.Err) {
-        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
-      } else {
-        throw new Error('Failed to get faucet stats');
-      }
+      const result = await this.tokenActor.get_faucet_stats();
+      // Map the token canister response to our FaucetStats interface
+      return {
+        dailyLimit: Number(result.daily_limit),
+        claimedToday: Number(result.total_claims - result.remaining_today),
+        totalClaimed: Number(result.total_distributed),
+        nextClaimTime: Number(result.last_reset)
+      };
     } catch (error) {
       console.error('Get faucet stats error:', error);
       throw error;
@@ -885,39 +938,15 @@ export class AuthService {
   }
 
   async getFaucetClaimHistory(): Promise<FaucetClaim[]> {
-    if (!this.actor) {
-      throw new Error('Not authenticated');
-    }
-
-    try {
-      const result = await this.actor.getFaucetClaimHistory();
-      if (result.Ok) {
-        return result.Ok;
-      } else if (result.Err) {
-        throw new Error(`Failed to get faucet claim history: ${result.Err}`);
-      } else {
-        throw new Error('Failed to get faucet claim history');
-      }
-    } catch (error) {
-      console.error('Get faucet claim history error:', error);
-      throw error;
-    }
+    // This method is not available in the token canister interface
+    // Return empty array for now
+    return [];
   }
 
   async claimFaucetTokens(): Promise<void> {
-    if (!this.actor) {
-      throw new Error('Not authenticated');
-    }
-
-    try {
-      const result = await this.actor.claimFaucetTokens();
-      if ('Err' in result && result.Err) {
-        throw new Error(typeof result.Err === 'string' ? result.Err : JSON.stringify(result.Err) || 'Unknown error');
-      }
-    } catch (error) {
-      console.error('Claim faucet tokens error:', error);
-      throw error;
-    }
+    // This method is not available in the token canister interface
+    // Implement alternative logic or throw error
+    throw new Error('Faucet token claiming is not available in the current token canister implementation');
   }
 
   // === INTER-CANISTER SECURE MESSAGING ===
