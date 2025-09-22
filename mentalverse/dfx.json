@@ -46,6 +46,18 @@
         "./frontend_dist/"
       ],
       "type": "assets"
+    },
+    "admin_frontend": {
+      "dependencies": [
+        "mentalverse_backend",
+        "mvt_token_canister",
+        "secure_messaging",
+        "internet_identity"
+      ],
+      "source": [
+        "./admin_dist/"
+      ],
+      "type": "assets"
     }
   },
   "defaults": {

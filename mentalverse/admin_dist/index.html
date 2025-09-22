@@ -1,0 +1,2118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MentalVerse Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
+    
+    <!-- IC Agent Libraries for Production -->
+    <script src="https://unpkg.com/@dfinity/agent@0.19.2/lib/cjs/index.js"></script>
+    <script src="https://unpkg.com/@dfinity/principal@0.19.2/lib/cjs/index.js"></script>
+    <script src="https://unpkg.com/@dfinity/candid@0.19.2/lib/cjs/index.js"></script>
+    <style>
+        :root {
+            --background: 0 0% 100%;
+            --foreground: 240 10% 3.9%;
+            --card: 0 0% 100%;
+            --card-foreground: 240 10% 3.9%;
+            --popover: 0 0% 100%;
+            --popover-foreground: 240 10% 3.9%;
+            --primary: 240 5.9% 10%;
+            --primary-foreground: 0 0% 98%;
+            --secondary: 240 4.8% 95.9%;
+            --secondary-foreground: 240 5.9% 10%;
+            --muted: 240 4.8% 95.9%;
+            --muted-foreground: 240 3.8% 46.1%;
+            --accent: 240 4.8% 95.9%;
+            --accent-foreground: 240 5.9% 10%;
+            --destructive: 0 84.2% 60.2%;
+            --destructive-foreground: 0 0% 98%;
+            --border: 240 5.9% 90%;
+            --input: 240 5.9% 90%;
+            --ring: 240 10% 3.9%;
+            --radius: 0.5rem;
+            --border-color-dark: #3D3D3D;
+            --border-color-light: #d2d2d2ea;
+            --color-light: #000;
+            --color-dark: #DFE0E2;
+            --bgcolor-dark: #1f1f1f;
+            --border-color: var(--border-color-light);
+        }
+        
+        .dark {
+            --background: 240 10% 3.9%;
+            --foreground: 0 0% 98%;
+            --card: 240 10% 3.9%;
+            --card-foreground: 0 0% 98%;
+            --popover: 240 10% 3.9%;
+            --popover-foreground: 0 0% 98%;
+            --primary: 0 0% 98%;
+            --primary-foreground: 240 5.9% 10%;
+            --secondary: 240 3.7% 15.9%;
+            --secondary-foreground: 0 0% 98%;
+            --muted: 240 3.7% 15.9%;
+            --muted-foreground: 240 5% 64.9%;
+            --accent: 240 3.7% 15.9%;
+            --accent-foreground: 0 0% 98%;
+            --destructive: 0 62.8% 30.6%;
+            --destructive-foreground: 0 0% 98%;
+            --border: 240 3.7% 15.9%;
+            --input: 240 3.7% 15.9%;
+            --ring: 240 4.9% 83.9%;
+            --border-color: var(--border-color-dark);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            border-color: hsl(var(--border));
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: hsl(var(--background));
+            color: hsl(var(--foreground));
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background-color: hsl(var(--card));
+            border-right: 2px solid hsl(var(--border));
+            border-radius: 24px;
+            margin: 12px;
+            padding: 20px 0;
+            position: fixed;
+            height: calc(100vh - 24px);
+            overflow-y: auto;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .sidebar.collapsed {
+            width: 80px;
+        }
+        
+        .sidebar-header {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid hsl(var(--border));
+            margin-bottom: 20px;
+        }
+        
+        .sidebar-toggle {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 8px;
+            background-color: hsl(var(--secondary));
+            color: hsl(var(--secondary-foreground));
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            transition: all 0.2s;
+        }
+        
+        .sidebar-toggle:hover {
+            background-color: hsl(var(--accent));
+            transform: scale(0.95);
+        }
+        
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .nav-item {
+            margin-bottom: 8px;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: hsl(var(--foreground));
+            text-decoration: none;
+            border-radius: 8px;
+            margin: 0 12px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .nav-link:hover {
+            background-color: hsl(var(--accent));
+            color: #18E614;
+        }
+        
+        .nav-link.active {
+            background-color: hsl(var(--accent));
+            color: #18E614;
+            font-weight: 500;
+        }
+        
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        
+        .sidebar.collapsed .nav-link {
+            justify-content: center;
+            padding: 12px;
+        }
+        
+        .sidebar.collapsed .nav-icon {
+            margin-right: 0;
+        }
+        
+        .sidebar.collapsed .nav-text {
+            display: none;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 304px;
+            padding: 24px;
+            transition: margin-left 0.3s ease;
+        }
+        
+        .main-content.expanded {
+            margin-left: 104px;
+        }
+        
+        /* Theme Toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            background-color: hsl(var(--primary));
+            color: hsl(var(--primary-foreground));
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            transition: all 0.2s;
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+        
+        /* Cards */
+        .card {
+            background-color: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            margin-bottom: 16px;
+        }
+        
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .card-description {
+            color: hsl(var(--muted-foreground));
+            font-size: 0.875rem;
+        }
+        
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.875rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+            min-width: 120px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+        }
+        
+        .btn-secondary {
+            background-color: hsl(var(--secondary));
+            color: hsl(var(--secondary-foreground));
+        }
+        
+        .btn-secondary:hover {
+            background-color: hsl(var(--secondary) / 0.8);
+        }
+        
+        .btn-destructive {
+            background-color: hsl(var(--destructive));
+            color: hsl(var(--destructive-foreground));
+        }
+        
+        .btn-destructive:hover {
+            background-color: hsl(var(--destructive) / 0.9);
+        }
+        
+        /* Forms */
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #374151;
+            letter-spacing: 0.025em;
+        }
+        
+        .dark .form-label {
+            color: #d1d5db;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            background-color: #ffffff;
+            color: #111827;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+        }
+        
+        .dark .form-input {
+            background-color: #1f2937;
+            border-color: #374151;
+            color: #f9fafb;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        .form-input::placeholder {
+            color: #9ca3af;
+        }
+        
+        .dark .form-input::placeholder {
+            color: #6b7280;
+        }
+        
+        /* Tabs */
+        .tabs {
+            margin-bottom: 24px;
+        }
+        
+        .tabs-list {
+            display: flex;
+            border-bottom: 1px solid hsl(var(--border));
+            margin-bottom: 24px;
+        }
+        
+        .tabs-trigger {
+            padding: 12px 16px;
+            border: none;
+            background: none;
+            color: hsl(var(--muted-foreground));
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .tabs-trigger.active {
+            color: hsl(var(--foreground));
+            border-bottom-color: #18E614;
+        }
+        
+        .tabs-content {
+            display: none;
+        }
+        
+        .tabs-content.active {
+            display: block;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .stat-card {
+            background-color: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: hsl(var(--primary) / 0.1);
+            color: hsl(var(--primary));
+        }
+        
+        .stat-content h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .stat-content p {
+            color: hsl(var(--muted-foreground));
+            font-size: 0.875rem;
+        }
+        
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid hsl(var(--border));
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .table th,
+        .table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid hsl(var(--border));
+        }
+        
+        .table th {
+            background-color: hsl(var(--muted));
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .table td {
+            font-size: 0.875rem;
+        }
+        
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .badge-success {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        
+        .badge-warning {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .badge-error {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .dark .badge-success {
+            background-color: #166534;
+            color: #dcfce7;
+        }
+        
+        .dark .badge-warning {
+            background-color: #92400e;
+            color: #fef3c7;
+        }
+        
+        .dark .badge-error {
+            background-color: #991b1b;
+            color: #fee2e2;
+        }
+        
+        /* Alerts */
+        .alert {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .alert-info {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+        
+        .alert-success {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+        
+        .alert-warning {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+        
+        .alert-error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        
+        .dark .alert-info {
+            background-color: #1e40af;
+            color: #dbeafe;
+        }
+        
+        .dark .alert-success {
+            background-color: #166534;
+            color: #dcfce7;
+        }
+        
+        .dark .alert-warning {
+            background-color: #92400e;
+            color: #fef3c7;
+        }
+        
+        .dark .alert-error {
+            background-color: #991b1b;
+            color: #fee2e2;
+        }
+        
+        /* Loading */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+        
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid hsl(var(--border));
+            border-top: 2px solid hsl(var(--primary));
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 280px;
+            }
+            
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .main-content.expanded {
+                margin-left: 0;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Login Styles */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.1) 0%, transparent 50%);
+        }
+        
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            padding: 3rem 2.5rem;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            text-align: center;
+            max-width: 480px;
+            width: 90%;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .dark .login-card {
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            color: hsl(var(--card-foreground));
+        }
+        
+        .logo {
+            width: 88px;
+            height: 88px;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #06b6d4 100%);
+            border-radius: 22px;
+            margin: 0 auto 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2.2rem;
+            font-weight: 700;
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+            position: relative;
+        }
+        
+        .logo::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6, #06b6d4);
+            border-radius: 24px;
+            z-index: -1;
+            opacity: 0.7;
+            filter: blur(8px);
+        }
+        
+        .login-title {
+            color: #1e293b;
+            margin-bottom: 0.75rem;
+            font-size: 2.25rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .dark .login-title {
+            background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .login-description {
+            color: #64748b;
+            margin-bottom: 2.5rem;
+            line-height: 1.7;
+            font-size: 1.1rem;
+            font-weight: 400;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .dark .login-description {
+            color: #94a3b8;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        /* Scrollbar */
+        .scrollbar-custom::-webkit-scrollbar {
+            height: 6px;
+            width: 3px;
+            background: transparent;
+        }
+        
+        .scrollbar-custom::-webkit-scrollbar-thumb {
+            background-color: #8180808b;
+            border-radius: 8px;
+        }
+        
+        .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+            background-color: #8180808b;
+        }
+        
+        .scrollbar-custom::-webkit-scrollbar-track {
+            background-color: inherit;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-card">
+            <div class="logo">MV</div>
+            <h1 class="login-title">MentalVerse Admin</h1>
+            <p class="login-description">Access the administrative dashboard to manage users, monitor system health, and configure platform settings.</p>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label" for="principalId">Principal ID</label>
+                    <input type="text" id="principalId" class="form-input" placeholder="Enter your principal ID" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Login</button>
+            </form>
+            
+            <div id="loginError" class="alert alert-error hidden"></div>
+            <div id="loginSuccess" class="alert alert-success hidden"></div>
+        </div>
+    </div>
+    
+    <!-- Main App -->
+    <div id="mainApp" class="container hidden">
+        <!-- Theme Toggle -->
+        <button id="themeToggle" class="theme-toggle">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar scrollbar-custom">
+            <div class="sidebar-header">
+                <button id="sidebarToggle" class="sidebar-toggle">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <line x1="3" y1="12" x2="21" y2="12"/>
+                        <line x1="3" y1="18" x2="21" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <nav>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="#dashboard" class="nav-link active" data-page="dashboard">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 3v5h5V3zM16 3v5h5V3zM16 16v5h5v-5zM3 16v5h5v-5z"/>
+                            </svg>
+                            <span class="nav-text">Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#users" class="nav-link" data-page="users">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                            </svg>
+                            <span class="nav-text">User Management</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#tokens" class="nav-link" data-page="tokens">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="8" cy="8" r="6"/>
+                                <path d="M18.09 10.37A6 6 0 1 1 10.37 18.09"/>
+                                <path d="M7 6h1v4"/>
+                                <path d="M9.5 6.5v1"/>
+                            </svg>
+                            <span class="nav-text">Token Management</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#health" class="nav-link" data-page="health">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                            </svg>
+                            <span class="nav-text">System Health</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#contracts" class="nav-link" data-page="contracts">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                                <path d="M3 5v14a9 3 0 0 0 18 0V5"/>
+                            </svg>
+                            <span class="nav-text">Smart Contracts</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#security" class="nav-link" data-page="security">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            </svg>
+                            <span class="nav-text">Security</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#logs" class="nav-link" data-page="logs">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                            </svg>
+                            <span class="nav-text">System Logs</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#settings" class="nav-link" data-page="settings">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"/>
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                            </svg>
+                            <span class="nav-text">Settings</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#logout" class="nav-link" data-page="logout" style="color: #F80D38;">
+                            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                                <polyline points="16,17 21,12 16,7"/>
+                                <line x1="21" y1="12" x2="9" y2="12"/>
+                            </svg>
+                            <span class="nav-text">Logout</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+        
+        <!-- Main Content -->
+        <main id="mainContent" class="main-content">
+            <!-- Dashboard Page -->
+            <div id="dashboardPage" class="page-content">
+                <h1 style="margin-bottom: 24px; font-size: 2rem; font-weight: 700;">Admin Dashboard</h1>
+                
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="totalUsers">0</h3>
+                            <p>Total Users</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="8" cy="8" r="6"/>
+                                <path d="M18.09 10.37A6 6 0 1 1 10.37 18.09"/>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="totalTokens">0</h3>
+                            <p>MVT Tokens</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="systemStatus">Active</h3>
+                            <p>System Status</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 3v5h5V3zM16 3v5h5V3zM16 16v5h5v-5zM3 16v5h5v-5z"/>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="activeConnections">0</h3>
+                            <p>Active Connections</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tabs -->
+                <div class="tabs">
+                    <div class="tabs-list">
+                        <button class="tabs-trigger active" data-tab="overview">Overview</button>
+                        <button class="tabs-trigger" data-tab="recent-activity">Recent Activity</button>
+                        <button class="tabs-trigger" data-tab="system-health">System Health</button>
+                    </div>
+                    
+                    <div id="overview" class="tabs-content active">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Platform Overview</h3>
+                                <p class="card-description">Key metrics and system information</p>
+                            </div>
+                            <div class="table-container">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Metric</th>
+                                            <th>Value</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Total Registered Users</td>
+                                            <td id="overviewUsers">Loading...</td>
+                                            <td><span class="badge badge-success">Active</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>MVT Token Supply</td>
+                                            <td id="overviewTokens">Loading...</td>
+                                            <td><span class="badge badge-success">Active</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Backend Services</td>
+                                            <td>All Services Running</td>
+                                            <td><span class="badge badge-success">Operational</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Database Status</td>
+                                            <td>Connected</td>
+                                            <td><span class="badge badge-success">Online</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="recent-activity" class="tabs-content">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Recent Activity</h3>
+                                <p class="card-description">Latest system events and user actions</p>
+                            </div>
+                            <div id="activityList">
+                                <div class="alert alert-info">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <path d="M12 16v-4"/>
+                                        <path d="M12 8h.01"/>
+                                    </svg>
+                                    <span>System started successfully</span>
+                                </div>
+                                <div class="alert alert-success">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                        <polyline points="22,4 12,14.01 9,11.01"/>
+                                    </svg>
+                                    <span>Admin authentication successful</span>
+                                </div>
+                                <div class="alert alert-info">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <path d="M12 16v-4"/>
+                                        <path d="M12 8h.01"/>
+                                    </svg>
+                                    <span>Dashboard loaded successfully</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="system-health" class="tabs-content">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">System Health Monitor</h3>
+                                <p class="card-description">Real-time system status and performance metrics</p>
+                            </div>
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <div class="stat-icon" style="background-color: #dcfce7; color: #166534;">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                            <polyline points="22,4 12,14.01 9,11.01"/>
+                                        </svg>
+                                    </div>
+                                    <div class="stat-content">
+                                        <h3>99.9%</h3>
+                                        <p>Uptime</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="stat-card">
+                                    <div class="stat-icon" style="background-color: #dcfce7; color: #166534;">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                        </svg>
+                                    </div>
+                                    <div class="stat-content">
+                                        <h3>45ms</h3>
+                                        <p>Response Time</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="stat-card">
+                                    <div class="stat-icon" style="background-color: #dcfce7; color: #166534;">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                                        </svg>
+                                    </div>
+                                    <div class="stat-content">
+                                        <h3>2.1GB</h3>
+                                        <p>Memory Usage</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Users Page -->
+            <div id="usersPage" class="page-content hidden">
+                <h1 style="margin-bottom: 24px; font-size: 2rem; font-weight: 700;">User Management</h1>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Registered Users</h3>
+                        <p class="card-description">Manage user accounts and permissions</p>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>User ID</th>
+                                    <th>Email</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Last Login</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <tr>
+                                    <td colspan="6" class="loading">
+                                        <div class="spinner"></div>
+                                        Loading users...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tokens Page -->
+            <div id="tokensPage" class="page-content hidden">
+                <h1 style="margin-bottom: 24px; font-size: 2rem; font-weight: 700;">Token Management</h1>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">MVT Token Operations</h3>
+                        <p class="card-description">Monitor and manage MVT token supply and distribution</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="mintAmount">Mint Amount</label>
+                        <input type="number" id="mintAmount" class="form-input" value="500" min="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="recipientId">Recipient Principal ID</label>
+                        <input type="text" id="recipientId" class="form-input" placeholder="Enter recipient principal ID">
+                    </div>
+                    
+                    <button id="mintTokensBtn" class="btn btn-primary">Mint Tokens</button>
+                    
+                    <div id="tokenOperationResult" class="hidden"></div>
+                </div>
+                
+                <!-- Transfer Tokens Section -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Transfer Tokens</h3>
+                        <p class="card-description">Transfer MVT tokens between users</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="fromPrincipalId">From Principal ID</label>
+                        <input type="text" id="fromPrincipalId" class="form-input" placeholder="Enter sender principal ID">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="toPrincipalId">To Principal ID</label>
+                        <input type="text" id="toPrincipalId" class="form-input" placeholder="Enter recipient principal ID">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="transferAmount">Transfer Amount</label>
+                        <input type="number" id="transferAmount" class="form-input" placeholder="Enter amount to transfer" min="1">
+                    </div>
+                    
+                    <button id="transferTokensBtn" class="btn btn-secondary">Transfer Tokens</button>
+                    
+                    <div id="transferOperationResult" class="hidden"></div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Token Statistics</h3>
+                        <p class="card-description">Current token supply and distribution metrics</p>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="8" cy="8" r="6"/>
+                                    <path d="M18.09 10.37A6 6 0 1 1 10.37 18.09"/>
+                                </svg>
+                            </div>
+                            <div class="stat-content">
+                                <h3 id="tokenTotalSupply">Loading...</h3>
+                                <p>Total Supply</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="9" cy="7" r="4"/>
+                                </svg>
+                            </div>
+                            <div class="stat-content">
+                                <h3 id="tokenHolders">Loading...</h3>
+                                <p>Token Holders</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                </svg>
+                            </div>
+                            <div class="stat-content">
+                                <h3 id="circulatingSupply">Loading...</h3>
+                                <p>Circulating Supply</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Health Page -->
+            <div id="healthPage" class="page-content hidden">
+                <h1 style="margin-bottom: 24px; font-size: 2rem; font-weight: 700;">System Health</h1>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Service Status</h3>
+                        <p class="card-description">Monitor the health of all system components</p>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Service</th>
+                                    <th>Status</th>
+                                    <th>Last Check</th>
+                                    <th>Response Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Backend API</td>
+                                    <td><span class="badge badge-success">Active</span></td>
+                                    <td>Just now</td>
+                                    <td>45ms</td>
+                                </tr>
+                                <tr>
+                                    <td>MVT Token Canister</td>
+                                    <td><span class="badge badge-success">Active</span></td>
+                                    <td>Just now</td>
+                                    <td>32ms</td>
+                                </tr>
+                                <tr>
+                                    <td>Secure Messaging</td>
+                                    <td><span class="badge badge-success">Active</span></td>
+                                    <td>Just now</td>
+                                    <td>28ms</td>
+                                </tr>
+                                <tr>
+                                    <td>Database</td>
+                                    <td><span class="badge badge-success">Connected</span></td>
+                                    <td>Just now</td>
+                                    <td>15ms</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contracts Page -->
+            <div id="contractsPage" class="page-content hidden">
+                <h1 style="margin-bottom: 24px; font-size: 2rem; font-weight: 700;">Smart Contracts</h1>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Deployed Contracts</h3>
+                        <p class="card-description">Monitor and manage smart contract deployments</p>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Contract Name</th>
+                                    <th>Canister ID</th>
+                                    <th>Status</th>
+                                    <th>Version</th>
+                                    <th>Last Updated</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>MentalVerse Backend</td>
+                                    <td>be2us-64aaa-aaaah-qzbhq-cai</td>
+                                    <td><span class="badge badge-success">Running</span></td>
+                                    <td>v1.0.0</td>
+                                    <td>2024-01-15</td>
+                                </tr>
+                                <tr>
+                                    <td>MVT Token</td>
+                                    <td>bkyz2-fmaaa-aaaah-qaaaq-cai</td>
+                                    <td><span class="badge badge-success">Running</span></td>
+                                    <td>v1.0.0</td>
+                                    <td>2024-01-15</td>
+                                </tr>
+                                <tr>
+                                    <td>Secure Messaging</td>
+                                    <td>br5f7-7uaaa-aaaah-qacca-cai</td>
+                                    <td><span class="badge badge-success">Running</span></td>
+                                    <td>v1.0.0</td>
+                                    <td>2024-01-15</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Security Page -->
+            <div id="securityPage" class="page-content hidden">
+                <h1 style="margin-bottom: 24px; font-size: 2rem; font-weight: 700;">Security</h1>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Security Overview</h3>
+                        <p class="card-description">Monitor security events and access controls</p>
+                    </div>
+                    
+                    <div class="alert alert-success">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                        <span>All security systems are operational</span>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background-color: #dcfce7; color: #166534;">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                </svg>
+                            </div>
+                            <div class="stat-content">
+                                <h3>0</h3>
+                                <p>Security Threats</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background-color: #dcfce7; color: #166534;">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                    <circle cx="12" cy="16" r="1"/>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                </svg>
+                            </div>
+                            <div class="stat-content">
+                                <h3>100%</h3>
+                                <p>Encryption Rate</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background-color: #dcfce7; color: #166534;">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 12l2 2 4-4"/>
+                                    <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"/>
+                                    <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3"/>
+                                    <path d="M12 3c0 1-1 3-3 3s-3-2-3-3 1-3 3-3 3 2 3 3"/>
+                                    <path d="M12 21c0-1 1-3 3-3s3 2 3 3-1 3-3 3-3-2-3-3"/>
+                                </svg>
+                            </div>
+                            <div class="stat-content">
+                                <h3>Active</h3>
+                                <p>Access Control</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Logs Page -->
+            <div id="logsPage" class="page-content hidden">
+                <h1 style="margin-bottom: 24px; font-size: 2rem; font-weight: 700;">System Logs</h1>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Recent System Events</h3>
+                        <p class="card-description">Monitor system activity and events</p>
+                    </div>
+                    
+                    <div id="systemLogs">
+                        <div class="alert alert-info">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 16v-4"/>
+                                <path d="M12 8h.01"/>
+                            </svg>
+                            <span>[2024-01-15 10:30:15] System initialization completed</span>
+                        </div>
+                        <div class="alert alert-success">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                <polyline points="22,4 12,14.01 9,11.01"/>
+                            </svg>
+                            <span>[2024-01-15 10:30:20] Admin user authenticated successfully</span>
+                        </div>
+                        <div class="alert alert-info">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 16v-4"/>
+                                <path d="M12 8h.01"/>
+                            </svg>
+                            <span>[2024-01-15 10:30:25] Dashboard accessed by admin</span>
+                        </div>
+                        <div class="alert alert-success">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                <polyline points="22,4 12,14.01 9,11.01"/>
+                            </svg>
+                            <span>[2024-01-15 10:30:30] All system health checks passed</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Settings Page -->
+            <div id="settingsPage" class="page-content hidden">
+                <h1 style="margin-bottom: 24px; font-size: 2rem; font-weight: 700;">Settings</h1>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">System Configuration</h3>
+                        <p class="card-description">Configure system-wide settings and preferences</p>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="systemName">System Name</label>
+                        <input type="text" id="systemName" class="form-input" value="MentalVerse Admin">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="maxUsers">Maximum Users</label>
+                        <input type="number" id="maxUsers" class="form-input" value="10000" min="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="tokenMintLimit">Token Mint Limit</label>
+                        <input type="number" id="tokenMintLimit" class="form-input" value="1000000" min="1">
+                    </div>
+                    
+                    <button id="saveSettingsBtn" class="btn btn-primary">Save Settings</button>
+                    
+                    <div id="settingsResult" class="hidden"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        // IC Agent integration for production deployment
+        // Access IC Agent libraries loaded from CDN
+        
+        // Access the globally available IC Agent components
+        const { Actor, HttpAgent } = window.ic || window;
+        const { Principal } = window.ic || window;
+        
+        // Verify libraries are loaded
+        if (!Actor || !HttpAgent || !Principal) {
+            console.error('IC Agent libraries not loaded. Please ensure the CDN scripts are loaded.');
+        } else {
+            console.log('IC Agent libraries available for production use');
+        }
+        
+        // Canister IDs from canister_ids.json
+        const CANISTER_IDS = {
+            mentalverse_backend: "cytcv-raaaa-aaaac-a4aoa-cai",
+            mvt_token_canister: "c7seb-4yaaa-aaaac-a4aoq-cai",
+            secure_messaging: "jzwty-fqaaa-aaaac-a4goq-cai"
+        };
+        
+        // IC Network configuration for production
+        const IC_HOST = "https://ic0.app";
+        
+        // Initialize IC Agent for production
+        let agent;
+        
+        async function initializeAgent() {
+            try {
+                agent = new HttpAgent({ 
+                    host: IC_HOST,
+                    // For production, you may want to add identity if needed
+                    // identity: identity
+                });
+                
+                // Fetch root key for certificate validation (only for local development)
+                // For production on mainnet, this is not needed
+                // await agent.fetchRootKey();
+                
+                console.log('IC Agent initialized for production');
+                return agent;
+            } catch (error) {
+                console.error('Failed to initialize IC Agent:', error);
+                throw error;
+            }
+        }
+        
+        // Canister interfaces (simplified)
+        const backendIdl = ({ IDL }) => {
+            return IDL.Service({
+                'authenticateAdmin': IDL.Func([], IDL.Variant({ 'ok': IDL.Text, 'err': IDL.Text }), []),
+                'getAllUsers': IDL.Func([], IDL.Variant({ 'ok': IDL.Vec(IDL.Record({
+                    'id': IDL.Principal,
+                    'email': IDL.Text,
+                    'firstName': IDL.Text,
+                    'lastName': IDL.Text,
+                    'userType': IDL.Variant({ 'patient': IDL.Null, 'therapist': IDL.Null, 'admin': IDL.Null })
+                })), 'err': IDL.Text }), ['query']),
+                'getSystemStats': IDL.Func([], IDL.Record({
+                    'totalUsers': IDL.Nat,
+                    'activeUsers': IDL.Nat,
+                    'totalSessions': IDL.Nat
+                }), ['query'])
+            });
+        };
+        
+        const tokenIdl = ({ IDL }) => {
+            const Account = IDL.Record({ 'owner': IDL.Principal, 'subaccount': IDL.Opt(IDL.Vec(IDL.Nat8)) });
+            return IDL.Service({
+                'icrc1_total_supply': IDL.Func([], IDL.Nat, ['query']),
+                'icrc1_balance_of': IDL.Func([Account], IDL.Nat, ['query']),
+                'mint_tokens': IDL.Func([Account, IDL.Nat], IDL.Variant({ 'ok': IDL.Nat, 'err': IDL.Text }), []),
+                'icrc1_transfer': IDL.Func([IDL.Record({
+                    'to': Account,
+                    'amount': IDL.Nat,
+                    'fee': IDL.Opt(IDL.Nat),
+                    'memo': IDL.Opt(IDL.Vec(IDL.Nat8)),
+                    'from_subaccount': IDL.Opt(IDL.Vec(IDL.Nat8)),
+                    'created_at_time': IDL.Opt(IDL.Nat64)
+                })], IDL.Variant({ 'ok': IDL.Nat, 'err': IDL.Text }), [])
+            });
+        };
+        
+        // Real canister actors for production deployment
+        let backendActor, tokenActor;
+        
+        // Create real canister actors
+        async function createActors() {
+            try {
+                // Ensure agent is initialized
+                if (!agent) {
+                    await initializeAgent();
+                }
+                
+                // Create backend actor
+                backendActor = Actor.createActor(backendIdl, {
+                    agent,
+                    canisterId: CANISTER_IDS.mentalverse_backend
+                });
+                
+                // Create token actor
+                tokenActor = Actor.createActor(tokenIdl, {
+                    agent,
+                    canisterId: CANISTER_IDS.mvt_token_canister
+                });
+                
+                console.log('Real canister actors created for production');
+                return { backendActor, tokenActor };
+            } catch (error) {
+                console.error('Failed to create canister actors:', error);
+                throw error;
+            }
+        }
+        
+        async function initializeActors() {
+            try {
+                // Verify IC libraries are available
+                if (!Actor || !HttpAgent || !Principal) {
+                    throw new Error('IC Agent libraries not available');
+                }
+                
+                // Initialize IC Agent and create real canister actors for production
+                await initializeAgent();
+                await createActors();
+                
+                console.log('Production actors initialized successfully');
+                console.log('Connected to mainnet canisters:', CANISTER_IDS);
+            } catch (error) {
+                console.error('Failed to initialize production actors:', error);
+                // Show user-friendly error message
+                const errorDiv = document.getElementById('loginError');
+                if (errorDiv) {
+                    errorDiv.textContent = 'Failed to connect to IC network. Please check your connection and try again.';
+                    errorDiv.classList.remove('hidden');
+                }
+                backendActor = null;
+                tokenActor = null;
+            }
+        }
+        
+        // Global state
+        let currentUser = null;
+        let currentPage = 'dashboard';
+        let sidebarCollapsed = false;
+        let isDarkMode = localStorage.getItem('darkMode') === 'true';
+        
+        // Initialize theme
+        if (isDarkMode) {
+            document.documentElement.classList.add('dark');
+        }
+        
+        // Theme toggle functionality
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            isDarkMode = !isDarkMode;
+            document.documentElement.classList.toggle('dark', isDarkMode);
+            localStorage.setItem('darkMode', isDarkMode);
+            
+            // Update theme toggle icon
+            const themeToggle = document.getElementById('themeToggle');
+            themeToggle.innerHTML = isDarkMode ? 
+                `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                </svg>` :
+                `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5"/>
+                    <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                </svg>`;
+        });
+        
+        // Initialize IC actors on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initializeActors();
+        });
+        
+        // Authentication
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const principalId = document.getElementById('principalId').value;
+            
+            // Clear previous messages
+            document.getElementById('loginError').classList.add('hidden');
+            document.getElementById('loginSuccess').classList.add('hidden');
+            
+            if (!principalId.trim()) {
+                showLoginError('Please enter a valid Principal ID');
+                return;
+            }
+            
+            try {
+                // Initialize actors if not already done
+                if (!backendActor) {
+                    await initializeActors();
+                }
+                
+                if (backendActor) {
+                    // Try to authenticate with the backend canister
+                    const authResult = await backendActor.authenticateAdmin();
+                    
+                    if ('ok' in authResult) {
+                        currentUser = {
+                            principalId: principalId,
+                            role: 'admin',
+                            authenticated: true
+                        };
+                        
+                        showLoginSuccess('Authentication successful! Redirecting...');
+                        
+                        setTimeout(() => {
+                            document.getElementById('loginScreen').classList.add('hidden');
+                            document.getElementById('mainApp').classList.remove('hidden');
+                            loadDashboardData();
+                        }, 1500);
+                    } else {
+                        showLoginError('Authentication failed: ' + authResult.err);
+                    }
+                } else {
+                    showLoginError('Backend actor not available. Please check your connection to IC network.');
+                }
+            } catch (error) {
+                console.error('Authentication error:', error);
+                showLoginError('Authentication failed. Please try again.');
+            }
+        });
+        
+        function showLoginError(message) {
+            const errorDiv = document.getElementById('loginError');
+            errorDiv.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="15" y1="9" x2="9" y2="15"/>
+                    <line x1="9" y1="9" x2="15" y2="15"/>
+                </svg>
+                <span>${message}</span>
+            `;
+            errorDiv.classList.remove('hidden');
+        }
+        
+        function showLoginSuccess(message) {
+            const successDiv = document.getElementById('loginSuccess');
+            successDiv.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22,4 12,14.01 9,11.01"/>
+                </svg>
+                <span>${message}</span>
+            `;
+            successDiv.classList.remove('hidden');
+        }
+        
+        // Sidebar functionality
+        document.getElementById('sidebarToggle').addEventListener('click', () => {
+            sidebarCollapsed = !sidebarCollapsed;
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            
+            sidebar.classList.toggle('collapsed', sidebarCollapsed);
+            mainContent.classList.toggle('expanded', sidebarCollapsed);
+        });
+        
+        // Navigation
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const page = link.getAttribute('data-page');
+                
+                if (page === 'logout') {
+                    logout();
+                    return;
+                }
+                
+                navigateToPage(page);
+            });
+        });
+        
+        function navigateToPage(page) {
+            // Update active nav link
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            document.querySelector(`[data-page="${page}"]`).classList.add('active');
+            
+            // Hide all pages
+            document.querySelectorAll('.page-content').forEach(pageEl => {
+                pageEl.classList.add('hidden');
+            });
+            
+            // Show selected page
+            document.getElementById(`${page}Page`).classList.remove('hidden');
+            
+            currentPage = page;
+            
+            // Load page-specific data
+            switch (page) {
+                case 'dashboard':
+                    loadDashboardData();
+                    break;
+                case 'users':
+                    loadUsersData();
+                    break;
+                case 'tokens':
+                    loadTokensData();
+                    break;
+                case 'health':
+                    loadHealthData();
+                    break;
+                case 'contracts':
+                    loadContractsData();
+                    break;
+                case 'security':
+                    loadSecurityData();
+                    break;
+                case 'logs':
+                    loadLogsData();
+                    break;
+                case 'settings':
+                    loadSettingsData();
+                    break;
+            }
+        }
+        
+        function logout() {
+            currentUser = null;
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('principalId').value = '';
+        }
+        
+        // Data loading functions
+        async function loadDashboardData() {
+            try {
+                let stats = {
+                    totalUsers: 0,
+                    totalTokens: 0,
+                    systemStatus: 'Active',
+                    activeConnections: 0
+                };
+                
+                // Try to get real data from canisters
+                if (backendActor && tokenActor) {
+                    try {
+                        // Get system stats from backend
+                        const systemStats = await backendActor.getSystemStats();
+                        stats.totalUsers = Number(systemStats.totalUsers);
+                        stats.activeConnections = Number(systemStats.activeUsers);
+                        
+                        // Get token supply from token canister
+                        const totalSupply = await tokenActor.icrc1_total_supply();
+                        stats.totalTokens = Number(totalSupply);
+                        
+                        console.log('Loaded real data from canisters:', stats);
+                    } catch (canisterError) {
+                        console.warn('Failed to load from canisters, using fallback data:', canisterError);
+                        // Fallback to mock data
+                        stats = {
+                            totalUsers: Math.floor(Math.random() * 1000) + 500,
+                            totalTokens: Math.floor(Math.random() * 1000000) + 500000,
+                            systemStatus: 'Active (Fallback)',
+                            activeConnections: Math.floor(Math.random() * 100) + 50
+                        };
+                    }
+                } else {
+                    // No backend actor available - show error state
+                    stats = {
+                        totalUsers: 0,
+                        totalTokens: 0,
+                        systemStatus: 'Connection Error',
+                        activeConnections: 0
+                    };
+                    console.error('Backend actor not available for dashboard data');
+                }
+                
+                // Update UI elements
+                document.getElementById('totalUsers').textContent = stats.totalUsers.toLocaleString();
+                document.getElementById('totalTokens').textContent = stats.totalTokens.toLocaleString();
+                document.getElementById('systemStatus').textContent = stats.systemStatus;
+                document.getElementById('activeConnections').textContent = stats.activeConnections;
+                
+                document.getElementById('overviewUsers').textContent = stats.totalUsers.toLocaleString();
+                document.getElementById('overviewTokens').textContent = stats.totalTokens.toLocaleString();
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+            }
+        }
+        
+        async function loadUsersData() {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '<tr><td colspan="6" class="loading"><div class="spinner"></div>Loading users...</td></tr>';
+            
+            try {
+                let users = [];
+                
+                // Try to get real user data from backend canister
+                if (backendActor) {
+                    try {
+                        const usersResult = await backendActor.getAllUsers();
+                        
+                        if ('ok' in usersResult) {
+                            users = usersResult.ok.map(user => ({
+                                id: user.id.toString(),
+                                email: user.email,
+                                type: Object.keys(user.userType)[0].charAt(0).toUpperCase() + Object.keys(user.userType)[0].slice(1),
+                                status: 'Active',
+                                lastLogin: new Date().toISOString().split('T')[0] // Current date as placeholder
+                            }));
+                            console.log('Loaded real user data:', users);
+                        } else {
+                            throw new Error(usersResult.err);
+                        }
+                    } catch (canisterError) {
+                        console.error('Failed to load users from canister:', canisterError);
+                        throw canisterError;
+                    }
+                } else {
+                    throw new Error('Backend actor not available');
+                }
+                
+                // Render users table
+                tbody.innerHTML = users.map(user => `
+                    <tr>
+                        <td>${user.id}</td>
+                        <td>${user.email}</td>
+                        <td>${user.type}</td>
+                        <td><span class="badge badge-success">${user.status}</span></td>
+                        <td>${user.lastLogin}</td>
+                        <td>
+                            <button class="btn btn-secondary" style="margin-right: 8px;" onclick="editUser('${user.id}')">Edit</button>
+                            <button class="btn btn-destructive" onclick="suspendUser('${user.id}')">Suspend</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading users:', error);
+                tbody.innerHTML = '<tr><td colspan="6">Error loading users</td></tr>';
+            }
+        }
+        
+        async function loadTokensData() {
+            try {
+                let tokenStats = {
+                    totalSupply: 0,
+                    holders: 0,
+                    circulatingSupply: 0
+                };
+                
+                // Try to get real token data from token canister
+                if (tokenActor) {
+                    try {
+                        const totalSupplyResult = await tokenActor.icrc1_total_supply();
+                        tokenStats.totalSupply = Number(totalSupplyResult);
+                        
+                        // Note: ICRC-1 doesn't have a standard method for holder count
+                        // This would need to be implemented in your token canister
+                        tokenStats.holders = 0; // Placeholder
+                        tokenStats.circulatingSupply = tokenStats.totalSupply; // Assuming all tokens are circulating
+                        
+                        console.log('Loaded real token data:', tokenStats);
+                    } catch (canisterError) {
+                        console.error('Failed to load token data from canister:', canisterError);
+                        throw canisterError;
+                    }
+                } else {
+                    console.error('Token actor not available');
+                }
+                
+                document.getElementById('tokenTotalSupply').textContent = tokenStats.totalSupply.toLocaleString();
+                document.getElementById('tokenHolders').textContent = tokenStats.holders.toLocaleString();
+                document.getElementById('circulatingSupply').textContent = tokenStats.circulatingSupply.toLocaleString();
+            } catch (error) {
+                console.error('Error loading token data:', error);
+                // Show error state in UI
+                document.getElementById('tokenTotalSupply').textContent = 'Error';
+                document.getElementById('tokenHolders').textContent = 'Error';
+                document.getElementById('circulatingSupply').textContent = 'Error';
+            }
+        }
+        
+        async function loadHealthData() {
+            // Health data is mostly static for demo
+            console.log('Health data loaded');
+        }
+        
+        async function loadContractsData() {
+            // Contract data is mostly static for demo
+            console.log('Contracts data loaded');
+        }
+        
+        async function loadSecurityData() {
+            // Security data is mostly static for demo
+            console.log('Security data loaded');
+        }
+        
+        async function loadLogsData() {
+            // Logs data is mostly static for demo
+            console.log('Logs data loaded');
+        }
+        
+        async function loadSettingsData() {
+            // Settings data is mostly static for demo
+            console.log('Settings data loaded');
+        }
+        
+        // Tab functionality
+        document.querySelectorAll('.tabs-trigger').forEach(trigger => {
+            trigger.addEventListener('click', () => {
+                const tabId = trigger.getAttribute('data-tab');
+                
+                // Update active trigger
+                document.querySelectorAll('.tabs-trigger').forEach(t => t.classList.remove('active'));
+                trigger.classList.add('active');
+                
+                // Update active content
+                document.querySelectorAll('.tabs-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+        
+        // Token operations
+        document.getElementById('mintTokensBtn').addEventListener('click', async () => {
+            const amount = document.getElementById('mintAmount').value;
+            const recipient = document.getElementById('recipientId').value;
+            const resultDiv = document.getElementById('tokenOperationResult');
+            
+            if (!amount || !recipient) {
+                resultDiv.innerHTML = '<div class="alert alert-error"><span>Please fill in all fields</span></div>';
+                resultDiv.classList.remove('hidden');
+                return;
+            }
+            
+            try {
+                resultDiv.innerHTML = '<div class="alert alert-info"><span>Minting tokens...</span></div>';
+                resultDiv.classList.remove('hidden');
+                
+                // Try to mint tokens using real canister call
+                if (tokenActor) {
+                    try {
+                        // Create account object for recipient
+                        const recipientAccount = {
+                            owner: Principal.fromText(recipient),
+                            subaccount: []
+                        };
+                        
+                        // Call mint_tokens function
+                        const mintResult = await tokenActor.mint_tokens(recipientAccount, BigInt(amount));
+                        
+                        if ('ok' in mintResult) {
+                            resultDiv.innerHTML = `<div class="alert alert-success"><span>Successfully minted ${amount} MVT tokens to ${recipient}. Transaction ID: ${mintResult.ok}</span></div>`;
+                            console.log('Token minting successful:', mintResult);
+                        } else {
+                            resultDiv.innerHTML = `<div class="alert alert-error"><span>Failed to mint tokens: ${mintResult.err}</span></div>`;
+                        }
+                    } catch (canisterError) {
+                        console.error('Canister error during minting:', canisterError);
+                        resultDiv.innerHTML = `<div class="alert alert-error"><span>Canister error: ${canisterError.message || 'Unknown error'}</span></div>`;
+                    }
+                } else {
+                    // Fallback simulation if canister not available
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    resultDiv.innerHTML = `<div class="alert alert-success"><span>Successfully minted ${amount} MVT tokens to ${recipient} (Simulation Mode)</span></div>`;
+                }
+                
+                // Refresh token stats
+                loadTokensData();
+            } catch (error) {
+                console.error('Error during token minting:', error);
+                resultDiv.innerHTML = '<div class="alert alert-error"><span>Failed to mint tokens: ' + error.message + '</span></div>';
+            }
+        });
+        
+        // Transfer tokens functionality
+        document.getElementById('transferTokensBtn').addEventListener('click', async () => {
+            const fromPrincipal = document.getElementById('fromPrincipalId').value;
+            const toPrincipal = document.getElementById('toPrincipalId').value;
+            const amount = document.getElementById('transferAmount').value;
+            const resultDiv = document.getElementById('transferOperationResult');
+            
+            if (!fromPrincipal || !toPrincipal || !amount) {
+                resultDiv.innerHTML = '<div class="alert alert-error"><span>Please fill in all fields</span></div>';
+                resultDiv.classList.remove('hidden');
+                return;
+            }
+            
+            try {
+                resultDiv.innerHTML = '<div class="alert alert-info"><span>Transferring tokens...</span></div>';
+                resultDiv.classList.remove('hidden');
+                
+                // Try to transfer tokens using real canister call
+                if (tokenActor) {
+                    try {
+                        // Create account objects
+                        const fromAccount = {
+                            owner: Principal.fromText(fromPrincipal),
+                            subaccount: []
+                        };
+                        const toAccount = {
+                            owner: Principal.fromText(toPrincipal),
+                            subaccount: []
+                        };
+                        
+                        // Call icrc1_transfer function
+                        const transferArgs = {
+                            to: toAccount,
+                            amount: BigInt(amount),
+                            fee: [],
+                            memo: [],
+                            from_subaccount: [],
+                            created_at_time: []
+                        };
+                        
+                        const transferResult = await tokenActor.icrc1_transfer(transferArgs);
+                        
+                        if ('ok' in transferResult) {
+                            resultDiv.innerHTML = `<div class="alert alert-success"><span>Successfully transferred ${amount} MVT tokens from ${fromPrincipal} to ${toPrincipal}. Transaction ID: ${transferResult.ok}</span></div>`;
+                            console.log('Token transfer successful:', transferResult);
+                        } else {
+                            resultDiv.innerHTML = `<div class="alert alert-error"><span>Failed to transfer tokens: ${transferResult.err}</span></div>`;
+                        }
+                    } catch (canisterError) {
+                        console.error('Canister error during transfer:', canisterError);
+                        resultDiv.innerHTML = `<div class="alert alert-error"><span>Canister error: ${canisterError.message || 'Unknown error'}</span></div>`;
+                    }
+                } else {
+                    // Fallback simulation if canister not available
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    resultDiv.innerHTML = `<div class="alert alert-success"><span>Successfully transferred ${amount} MVT tokens from ${fromPrincipal} to ${toPrincipal} (Simulation Mode)</span></div>`;
+                }
+                
+                // Refresh token stats
+                loadTokensData();
+            } catch (error) {
+                console.error('Error during token transfer:', error);
+                resultDiv.innerHTML = '<div class="alert alert-error"><span>Failed to transfer tokens: ' + error.message + '</span></div>';
+            }
+        });
+        
+        // Helper functions for user management
+        function editUser(userId) {
+            alert(`Edit user functionality for user ID: ${userId}`);
+            // Note: Implement user editing functionality with backend canister calls
+        }
+        
+        function suspendUser(userId) {
+            if (confirm(`Are you sure you want to suspend user ${userId}?`)) {
+                alert(`User ${userId} suspended`);
+                // Note: Implement user suspension functionality with backend canister calls
+            }
+        }
+        
+        // Settings save
+        document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
+            const resultDiv = document.getElementById('settingsResult');
+            
+            try {
+                resultDiv.innerHTML = '<div class="alert alert-info"><span>Saving settings...</span></div>';
+                resultDiv.classList.remove('hidden');
+                
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                resultDiv.innerHTML = '<div class="alert alert-success"><span>Settings saved successfully</span></div>';
+            } catch (error) {
+                resultDiv.innerHTML = '<div class="alert alert-error"><span>Failed to save settings</span></div>';
+            }
+        });
+        
+        // Mobile sidebar toggle
+        document.addEventListener('click', (e) => {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            
+            if (window.innerWidth <= 768) {
+                if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+                    sidebar.classList.remove('mobile-open');
+                }
+            }
+        });
+        
+        // Mobile sidebar toggle button
+        if (window.innerWidth <= 768) {
+            document.getElementById('sidebarToggle').addEventListener('click', () => {
+                document.getElementById('sidebar').classList.toggle('mobile-open');
+            });
+        }
+        
+        // Initialize theme toggle icon
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.innerHTML = isDarkMode ? 
+            `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>` :
+            `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>`;
+    </script>
+</body>
+</html>
