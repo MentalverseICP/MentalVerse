@@ -170,6 +170,7 @@ export type UserType = { 'patient' : null } |
 export type ValidationResult = { 'ok' : null } |
   { 'err' : string };
 export interface _SERVICE {
+  'authenticateAdmin' : ActorMethod<[], Result_1>,
   'claimFaucetTokens' : ActorMethod<[], Result_1>,
   'createTherapyConversation' : ActorMethod<[Principal, string], Result_1>,
   'create_user_profile' : ActorMethod<

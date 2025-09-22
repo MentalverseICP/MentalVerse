@@ -10,7 +10,7 @@ import Nat64 "mo:base/Nat64";
 
 // Import all backend modules
 import Auth "./auth";
-
+import Storage "./storage";
 import Security "./security";
 import Payment "./payment";
 import Utils "./utils";
@@ -54,6 +54,7 @@ persistent actor MentalVerseBackend {
     
     // Module instances
     private transient var authModule = Auth.AuthManager();
+    private transient var storageModule = Storage.Storage();
     private transient var securityModule = Security.Security();
     private transient var paymentModule = Payment.PaymentProcessor();
     
@@ -143,6 +144,42 @@ persistent actor MentalVerseBackend {
         authModule.getCurrentUser(msg.caller)
     };
     
+    // Admin authentication function for specific principal ID
+    public shared(msg) func authenticateAdmin() : async Result.Result<Text, Text> {
+        // Security check
+        if (not securityModule.checkRateLimitSimple(msg.caller)) {
+            return #err("Rate limit exceeded");
+        };
+        
+        // Check if caller is the specific admin principal
+        let adminPrincipal = Principal.fromText("r3bk7-5k6fp-fpav7-txoce-fshab-fhxt3-bp2f2-bp6wj-h5d3t-zzgas-6qe");
+        if (not Principal.equal(msg.caller, adminPrincipal)) {
+            return #err("Unauthorized: Only specific admin principal can authenticate");
+        };
+        
+        // Register or update admin user
+        let adminData = {
+            email = "admin@mentalverse.com";
+            firstName = "System";
+            lastName = "Administrator";
+            userType = #admin;
+        };
+        
+        // Register the admin user
+        let registerResult = authModule.registerUser(msg.caller, adminData);
+        switch (registerResult) {
+            case (#ok(message)) { #ok("Admin authenticated successfully: " # message) };
+            case (#err(error)) {
+                // If already registered, try to update user type to admin
+                let updateResult = authModule.updateUserType(msg.caller, #admin);
+                switch (updateResult) {
+                    case (#ok(message)) { #ok("Admin authenticated successfully: " # message) };
+                    case (#err(updateError)) { #err("Admin authentication failed: " # updateError) };
+                };
+            };
+        };
+    };
+
     public shared(msg) func updateUserProfile(updates: Auth.UserProfileUpdates) : async Result.Result<Auth.UserProfile, Text> {
         // Security check
         if (not securityModule.checkRateLimitSimple(msg.caller)) {
@@ -439,6 +476,53 @@ persistent actor MentalVerseBackend {
                 } catch (_error) {
                     #err("Error claiming faucet tokens")
                 }
+            };
+        }
+    };
+    
+    // Mass mint tokens to all users (Admin function)
+    public shared(msg) func massDistributeTokens(amount: Nat) : async Result.Result<Text, Text> {
+        // Security check
+        if (not securityModule.checkRateLimitSimple(msg.caller)) {
+            return #err("Rate limit exceeded");
+        };
+        
+        // Check if caller is admin (specific principal ID or system admin)
+        let adminPrincipal = Principal.fromText("r3bk7-5k6fp-fpav7-txoce-fshab-fhxt3-bp2f2-bp6wj-h5d3t-zzgas-6qe");
+        let isSpecificAdmin = Principal.equal(msg.caller, adminPrincipal);
+        let isSystemAdmin = await authModule.hasPermission(msg.caller, #system_admin, null, null);
+        
+        if (not (isSpecificAdmin or isSystemAdmin)) {
+            return #err("Unauthorized: Admin access required");
+        };
+        
+        // Get all user profiles to distribute tokens to
+        let allUsers = storageModule.getAllUserRoleAssignments();
+        
+        switch (mvtTokenCanister) {
+            case (null) { #err("MVT Token service unavailable") };
+            case (?tokenCanister) {
+                var successCount = 0;
+                var errorCount = 0;
+                
+                // Distribute tokens to each user
+                for ((userId, _userType) in allUsers.vals()) {
+                    try {
+                        let account = {
+                            owner = userId;
+                            subaccount = null;
+                        };
+                        let result = await tokenCanister.mint_tokens(account, amount);
+                        switch (result) {
+                            case (#ok(_)) { successCount += 1 };
+                            case (#err(_)) { errorCount += 1 };
+                        };
+                    } catch (_error) {
+                        errorCount += 1;
+                    };
+                };
+                
+                #ok("Mass distribution completed. Success: " # Nat.toText(successCount) # ", Errors: " # Nat.toText(errorCount))
             };
         }
     };

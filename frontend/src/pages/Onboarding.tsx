@@ -71,6 +71,7 @@ const Onboarding: React.FC = () => {
         return;
       }
 
+      setIsCheckingUser(true);
       try {
         const userCheck = await authService.checkUserExists();
         if (userCheck.exists && userCheck.userRole) {
@@ -302,8 +303,8 @@ const Onboarding: React.FC = () => {
     }
   ];
 
-  // Show loading state while checking user
-  if (isCheckingUser) {
+  // Show loading state while checking user - prioritize this check
+  if (isCheckingUser || (isAuthenticated && isExistingUser === null)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">

@@ -9,6 +9,7 @@ import Medical from '@/pages/Patients/Medical'
 import Doctors from '@/pages/Patients/Doctors'
 import Appointments from '@/pages/Patients/Appointments'
 import Claims from '@/pages/Patients/Claims'
+import NewClaim from '@/pages/Patients/NewClaim'
 import TokenWallet from '@/pages/Patients/TokenWallet'
 import TokenTransfer from '@/pages/Patients/TokenTransfer'
 import TokenStaking from '@/pages/Patients/TokenStaking'
@@ -20,6 +21,7 @@ import DoctorAppointments from '@/pages/Therapists/Appointments'
 import TherapySessions from '@/pages/Therapists/Sessions'
 import TreatmentPlans from '@/pages/Therapists/TreatmentPlans'
 import MentalHealthRecords from '@/pages/Therapists/Records'
+import AdminDashboard from '@/pages/Admin/Dashboard'
 import { cn } from './lib/utils';
 import { useSidebar } from './components/ui/Sidebar';
 
@@ -69,6 +71,7 @@ export const AppRoutes: React.FC<RouteProps> = () => {
           <Route index element={<Home />} />
           <Route path='/patients/home' element={<Home />} />
           <Route path='/patients/claims' element={<Claims />} />
+          <Route path='/claims/new' element={<NewClaim />} />
           <Route path="/patients/medical" element={<Medical />} />
           <Route path="/patients/doctors" element={<Doctors />} />
           <Route path="/patients/token-wallet" element={<TokenWallet />} />
@@ -90,6 +93,9 @@ export const AppRoutes: React.FC<RouteProps> = () => {
           <Route path="/therapist/crisis-support" element={<DoctorHome />} />
           <Route path="/therapist/certifications" element={<DoctorHome />} />
           <Route path="/therapist/activity" element={<DoctorHome />} />
+          
+          {/* Admin Routes */}
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
           
           {/* Shared Routes */}
           <Route path="/login" element={<Login />} />

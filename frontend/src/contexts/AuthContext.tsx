@@ -10,6 +10,7 @@ interface User {
   principal: string;
   email?: string;
   walletAddress?: string;
+  userType?: 'patient' | 'therapist' | 'admin';
 }
 
 interface AuthState {
@@ -48,6 +49,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const initializeAuth = async () => {
     try {
       setIsLoading(true);
+      
+      // Check localStorage for authentication state first
+      const localAuth = localStorage.getItem('isAuthenticated') === 'true';
+      const userRole = localStorage.getItem('userRole');
+      const userType = localStorage.getItem('userType');
+      
+      if (localAuth && userRole) {
+        setIsAuthenticated(true);
+        setUser({ 
+          principal: 'local-user', 
+          userType: userType as 'patient' | 'therapist' | 'admin'
+        });
+        setIsLoading(false);
+        return;
+      }
       
       // Create AuthClient with improved configuration for reconnects
       const client = await AuthClient.create({
@@ -260,6 +276,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       // Clear any stored user data and session information
       localStorage.removeItem('userRole');
+      localStorage.removeItem('userType');
+      localStorage.removeItem('isAuthenticated');
       localStorage.removeItem('userOnboardingComplete');
       
       // Logout from AuthClient

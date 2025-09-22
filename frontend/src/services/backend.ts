@@ -20,7 +20,7 @@ export interface BackendService {
   create_user_profile: (userData: { firstName: string; lastName: string; email: string; userType: { patient?: null; therapist?: null; admin?: null } }) => Promise<{ ok?: string; err?: string }>;
   
   // Token operations
-  getTokenBalance: () => Promise<{ Ok?: number; Err?: string }>;
+  getTokenBalance: () => Promise<{ Ok?: TokenBalance; Err?: string }>;
   transferTokens: (to: Principal, amount: number) => Promise<{ Ok?: string; Err?: string }>;
   stakeTokens: (amount: number, lockPeriod: number) => Promise<{ Ok?: string; Err?: string }>;
   unstakeTokens: (amount: number) => Promise<{ Ok?: string; Err?: string }>;
@@ -654,9 +654,9 @@ export class AuthService {
     }
   }
 
-  async getTokenBalance(): Promise<TokenBalance> {
+  async getTokenBalance(): Promise<{ Ok?: TokenBalance; Err?: string }> {
     if (!this.tokenActor || !this.identity) {
-      throw new Error('Token actor or identity not initialized');
+      return { Err: 'Token actor or identity not initialized' };
     }
 
     try {
@@ -666,15 +666,17 @@ export class AuthService {
       };
       const result = await this.tokenActor.icrc1_balance_of(account);
       return {
-        total: Number(result),
-        available: Number(result),
-        staked: 0,
-        pending: 0,
-        balance: Number(result)
+        Ok: {
+          total: Number(result),
+          available: Number(result),
+          staked: 0,
+          pending: 0,
+          balance: Number(result)
+        }
       };
     } catch (error) {
       console.error('Get token balance error:', error);
-      throw error;
+      return { Err: error instanceof Error ? error.message : 'Failed to fetch balance' };
     }
   }
 

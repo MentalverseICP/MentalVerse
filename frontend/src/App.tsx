@@ -6,6 +6,7 @@ import { SearchProvider } from './contexts/SearchContext'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { AppSidebar } from './components/patients/AppSidebar'
 import { DoctorSidebar } from './components/therapists/DoctorSidebar'
+import { AdminSidebar } from './components/admin/AdminSidebar'
 import { AppRoutes } from './AppRoutes'
 import SearchBar from './components/shared/SearchBar'
 import LandingPage from '@/pages/LandingPage'
@@ -211,8 +212,9 @@ function SubApp({ onSearchChange }: SubAppProps) {
 
   // Determine which sidebar to show based on user role
   const isDoctor = userRole === 'therapist';
+  const isAdmin = userRole === 'admin';
   
-  console.log('SubApp loaded for user role:', userRole, 'isDoctor:', isDoctor);
+  console.log('SubApp loaded for user role:', userRole, 'isDoctor:', isDoctor, 'isAdmin:', isAdmin);
 
   return (
     <div className="min-h-screen">
@@ -226,7 +228,9 @@ function SubApp({ onSearchChange }: SubAppProps) {
       <div className="">
         <SidebarProvider defaultOpen={false}>
           <div className="grid grid-cols-[auto,1fr] w-full overflow-hidden">
-            {isDoctor ? (
+            {isAdmin ? (
+              <AdminSidebar className={'z-20 fixed lg:mt-12 lg:mb-20 max-lg:mt-8'} />
+            ) : isDoctor ? (
               <DoctorSidebar className={'z-20 fixed lg:mt-12 lg:mb-20 max-lg:mt-8'} />
             ) : (
               <AppSidebar className={'z-20 fixed lg:mt-12 lg:mb-20 max-lg:mt-8'} />
