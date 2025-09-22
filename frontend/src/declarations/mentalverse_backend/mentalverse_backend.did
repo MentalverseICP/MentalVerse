@@ -31,19 +31,102 @@ type UserProfile =
    userType: UserType;
  };
 type UserId = principal;
+type TxIndex = nat;
+type Transaction = 
+ record {
+   index: TxIndex;
+   operation:
+    variant {
+      burn: record {
+              amount: nat;
+              from: Account;
+            };
+      earn: record {
+              amount: nat;
+              earning_type: EarningType;
+              to: Account;
+            };
+      mint: record {
+              amount: nat;
+              to: Account;
+            };
+      spend: record {
+               amount: nat;
+               from: Account;
+               spending_type: SpendingType;
+             };
+      stake: record {
+               amount: nat;
+               from: Account;
+               lock_period: Duration;
+             };
+      transfer: record {
+                  amount: nat;
+                  fee: nat;
+                  from: Account;
+                  to: Account;
+                };
+      unstake: record {
+                 amount: nat;
+                 reward: nat;
+                 to: Account;
+               };
+    };
+   timestamp: Timestamp;
+ };
+type Timestamp = nat64;
 type SystemHealth = 
  record {
    backend_status: CanisterStatus;
    last_health_check: int;
    mvt_token_status: CanisterStatus;
  };
-type Result_2 = 
+type SpendingType = 
+ variant {
+   advanced_features;
+   ai_insights;
+   extended_storage;
+   premium_consultation;
+   priority_booking;
+   telemedicine;
+ };
+type Result_8 = 
  variant {
    err: text;
    ok: record {
          id: UserId;
          role: text;
        };
+ };
+type Result_7 = 
+ variant {
+   err: text;
+   ok: vec FaucetClaim;
+ };
+type Result_6 = 
+ variant {
+   err: text;
+   ok: FaucetStats;
+ };
+type Result_5 = 
+ variant {
+   err: text;
+   ok: vec Message;
+ };
+type Result_4 = 
+ variant {
+   err: text;
+   ok: nat;
+ };
+type Result_3 = 
+ variant {
+   err: text;
+   ok: vec Transaction;
+ };
+type Result_2 = 
+ variant {
+   err: text;
+   ok: vec Conversation;
  };
 type Result_1 = 
  variant {
@@ -55,20 +138,128 @@ type Result =
    err: text;
    ok: UserProfile;
  };
+type MessageType = 
+ variant {
+   Audio;
+   File;
+   Image;
+   System;
+   Text;
+   Video;
+ };
+type Message = 
+ record {
+   attachments: vec Attachment;
+   content: text;
+   conversation_id: text;
+   id: nat64;
+   is_deleted: bool;
+   is_read: bool;
+   message_type: MessageType;
+   recipient_id: principal;
+   reply_to: opt nat64;
+   sender_id: principal;
+   timestamp: nat64;
+ };
+type FaucetStats = 
+ record {
+   daily_limit: nat;
+   last_reset: int;
+   remaining_today: nat;
+   total_claims: nat;
+   total_distributed: nat;
+ };
+type FaucetClaim = 
+ record {
+   amount: nat;
+   id: text;
+   status: variant {
+             completed;
+             failed;
+             pending;
+           };
+   timestamp: int;
+ };
+type EarningType = 
+ variant {
+   appointment_completion;
+   doctor_consultation;
+   patient_feedback;
+   platform_usage;
+   referral_bonus;
+   staking_reward;
+   system_participation;
+ };
+type Duration = nat64;
+type ConversationType = 
+ variant {
+   DirectMessage;
+   GroupChat;
+   SessionChat;
+ };
+type ConversationMetadata = 
+ record {
+   description: opt text;
+   encryption_key_id: text;
+   session_id: opt text;
+   title: opt text;
+ };
+type Conversation = 
+ record {
+   conversation_type: ConversationType;
+   created_at: nat64;
+   id: text;
+   is_archived: bool;
+   last_message_id: opt nat64;
+   metadata: ConversationMetadata;
+   participants: vec principal;
+   updated_at: nat64;
+ };
 type CanisterStatus = 
  variant {
    active;
    error: text;
    inactive;
  };
+type Attachment = 
+ record {
+   content_type: text;
+   encrypted_data: text;
+   filename: text;
+   id: text;
+   size: nat64;
+ };
+type Account = 
+ record {
+   owner: principal;
+   subaccount: opt vec nat8;
+ };
 service : {
+  claimFaucetTokens: () -> (Result_1);
+  createTherapyConversation: (therapistId: principal, sessionId: text) ->
+   (Result_1);
+  create_user_profile: (userData:
+   record {
+     email: text;
+     firstName: text;
+     lastName: text;
+     userType: UserType;
+   }) -> (Result_1);
   getCanisterIds: () -> (vec record {
                                text;
                                principal;
                              });
-  getCurrentUser: () -> (Result_2);
+  getCurrentUser: () -> (Result_8);
+  getFaucetClaimHistory: () -> (Result_7);
+  getFaucetStats: () -> (Result_6);
   getPatientData: (_patientId: principal) -> (Result_1);
+  getSecureConversationMessages: (conversationId: text, limit: opt nat64,
+   offset: opt nat64) -> (Result_5);
   getSystemHealth: () -> (SystemHealth);
+  getTokenBalance: () -> (Result_4);
+  getTransactionHistory: (limit: opt nat64, offset: opt nat64) -> (Result_3);
+  getUserSecureConversations: () -> (Result_2);
+  get_user_profile: (userPrincipal: principal) -> (Result);
   initialize: () -> (Result_1);
   isSystemInitialized: () -> (bool);
   processPayment: (amount: nat, serviceType: text) -> (Result_1);

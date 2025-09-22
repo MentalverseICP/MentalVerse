@@ -137,6 +137,19 @@ export const idlFactory = ({ IDL }) => {
         ],
         ['query'],
       ),
+    'get_faucet_stats' : IDL.Func(
+        [],
+        [
+          IDL.Record({
+            'remaining_today' : IDL.Nat,
+            'total_claims' : IDL.Nat,
+            'last_reset' : IDL.Int,
+            'total_distributed' : IDL.Nat,
+            'daily_limit' : IDL.Nat,
+          }),
+        ],
+        ['query'],
+      ),
     'get_reward_eligibility' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
     'get_spending_costs' : IDL.Func(
         [],

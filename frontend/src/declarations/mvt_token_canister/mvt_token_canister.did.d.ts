@@ -127,6 +127,16 @@ export interface _SERVICE {
       'system_participation' : bigint,
     }
   >,
+  'get_faucet_stats' : ActorMethod<
+    [],
+    {
+      'remaining_today' : bigint,
+      'total_claims' : bigint,
+      'last_reset' : bigint,
+      'total_distributed' : bigint,
+      'daily_limit' : bigint,
+    }
+  >,
   'get_reward_eligibility' : ActorMethod<[Principal], boolean>,
   'get_spending_costs' : ActorMethod<
     [],

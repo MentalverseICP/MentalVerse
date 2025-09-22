@@ -7,8 +7,7 @@ import type {
 import type { Principal } from "@dfinity/principal";
 import type { IDL } from "@dfinity/candid";
 
-import { _SERVICE } from './mentalverse_backend.did';
-export { _SERVICE };
+export { _SERVICE } from './mentalverse_backend.did';
 
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const canisterId: string;

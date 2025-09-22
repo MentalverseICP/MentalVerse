@@ -156,6 +156,14 @@ service : {
       referral_bonus: nat;
       system_participation: nat;
     }) query;
+  get_faucet_stats: () ->
+   (record {
+      daily_limit: nat;
+      last_reset: int;
+      remaining_today: nat;
+      total_claims: nat;
+      total_distributed: nat;
+    }) query;
   get_reward_eligibility: (user: principal) -> (bool) query;
   get_spending_costs: () ->
    (record {
