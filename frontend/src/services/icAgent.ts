@@ -346,7 +346,7 @@ class ICAgentService {
     if (this.state.mentalverseActor) {
       connectivityTests.push(
         this.testActorHealth('mentalverse', async () => {
-          const result = await this.state.mentalverseActor!.healthCheck();
+          const result = await this.state.mentalverseActor!.getSystemHealth();
           console.log('MentalVerse health check result:', result);
         })
       );
@@ -497,23 +497,7 @@ class ICAgentService {
     };
   }
 
-  // New: Update user stats via MentalVerse backend
-  async updateUserStats(stats: { chatInteractions: number; lastActivity: string }) {
-    if (!this.state.mentalverseActor) {
-      throw new Error('Mentalverse actor not initialized');
-    }
-
-    try {
-      const statsWithBigInt = {
-        chatInteractions: BigInt(stats.chatInteractions),
-        lastActivity: stats.lastActivity
-      };
-      return await this.state.mentalverseActor.updateUserStats(statsWithBigInt);
-    } catch (error) {
-      console.error('Failed to update user stats:', error);
-      throw error;
-    }
-  }
+  // Note: updateUserStats method removed as it's not implemented in the backend canister
 
   async sendSecureMessage(conversationId: string, content: string, recipient: string): Promise<void> {
     if (!this.state.messagingActor) {
@@ -573,7 +557,7 @@ class ICAgentService {
 
     try {
       const mentalverseActor = this.getMentalverseActor();
-      await mentalverseActor.healthCheck();
+      await mentalverseActor.getSystemHealth();
       results.mentalverse = 'healthy';
     } catch (error) {
       results.mentalverse = 'error';

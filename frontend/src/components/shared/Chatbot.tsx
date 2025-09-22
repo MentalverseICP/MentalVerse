@@ -101,13 +101,11 @@ const Chatbot: React.FC<ChatbotProps> = ({ className = "" }) => {
             sessionId: sessionId
           });
           
-          // Update user stats on IC if available
-          if (icAgent.isInitialized()) {
-            await icAgent.updateUserStats({
-              chatInteractions: 1,
-              lastActivity: new Date().toISOString()
-            });
-          }
+          // Note: User stats tracking removed as updateUserStats is not implemented in backend
+          console.log('Chat interaction completed:', {
+            chatInteractions: 1,
+            lastActivity: new Date().toISOString()
+          });
         } catch (logError) {
           console.warn('Failed to log interaction:', logError);
         }

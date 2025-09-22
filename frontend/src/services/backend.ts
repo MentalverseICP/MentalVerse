@@ -521,7 +521,17 @@ export class AuthService {
     }
 
     try {
-      const result = await this.actor.create_user_profile(this.userPrincipal, userData);
+      // Transform the data to match backend expectations
+      const backendUserData = {
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        userType: userData.role === 'patient' ? { patient: null } : 
+                 userData.role === 'therapist' ? { therapist: null } : 
+                 { admin: null }
+      };
+      
+      const result = await this.actor.create_user_profile(this.userPrincipal, backendUserData);
       if ('ok' in result && result.ok) {
         return { success: true, message: 'Profile created successfully' };
       }
