@@ -8,9 +8,9 @@ export const Footer: React.FC = () => {
     {
       title: "Contact",
       links: [
-        { label: "123 Main Street, City, State 12345", icon: MapPin },
-        { label: "+1 (555) 123-4567", icon: Phone },
-        { label: "info@mentalverse.com", icon: Mail }
+        { label: "Internet Computer", icon: MapPin },
+        { label: "+2347016401210", icon: Phone },
+        { label: "mentalverseinc@gmail.com", icon: Mail }
       ]
     },
     {
@@ -37,9 +37,9 @@ export const Footer: React.FC = () => {
       title: "Follow Us",
       social: [
         // { icon: Facebook, href: "#facebook", label: "Facebook" },
-        { icon: Instagram, href: "#instagram", label: "Instagram" },
+        // { icon: Instagram, href: "#instagram", label: "Instagram" },
         { icon: Twitter, href: "https://x.com/mentalverse_ICP", label: "X" },
-        { icon: Linkedin, href: "#linkedin", label: "LinkedIn" }
+        // { icon: Linkedin, href: "#linkedin", label: "LinkedIn" }
       ]
     }
   ];

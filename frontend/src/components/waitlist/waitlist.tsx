@@ -1,224 +1,142 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Mail,
   Phone,
   MapPin,
-  X,
-  Facebook,
-  Instagram,
   Upload,
   Users,
   BarChart3,
   CheckCircle,
   ArrowUpRight,
-  XIcon
+  LucideX,
 } from "lucide-react";
 import mentalIconDark from "@/images/mental_Icon_mobile_dark1.svg";
-import {  } from "lucide-react";
-
-type ValidTags = "button" | "div" | "span";
-
-type TagMap = {
-  button: HTMLButtonElement;
-  div: HTMLDivElement;
-  span: HTMLSpanElement;
-};
-
-type HoverBorderGradientProps<T extends ValidTags> = React.HTMLAttributes<
-  TagMap[T]
-> & {
-  children: React.ReactNode;
-  containerClassName?: string;
-  className?: string;
-  as?: T;
-  duration?: number;
-  clockwise?: boolean;
-};
-
-function HoverBorderGradient<T extends ValidTags = "button">({
-  children,
-  containerClassName,
-  className,
-  as,
-  duration = 1,
-  clockwise = true,
-  ...props
-}: HoverBorderGradientProps<T>) {
-  const Tag = as ?? "button";
-  const [hovered, setHovered] = useState(false);
-  type Direction = keyof typeof movingMap;
-  const [direction, setDirection] = useState<Direction>("TOP");
-
-  const rotateDirection = (currentDirection: Direction): Direction => {
-    const directions: Direction[] = ["TOP", "LEFT", "BOTTOM", "RIGHT"];
-    const currentIndex = directions.indexOf(currentDirection);
-    const nextIndex = clockwise
-      ? (currentIndex - 1 + directions.length) % directions.length
-      : (currentIndex + 1) % directions.length;
-    return directions[nextIndex];
-  };
-
-  const movingMap = {
-    TOP: "radial-gradient(20.7% 50% at 50% 0%, hsl(0, 0%, 100%) 0%, rgba(255, 255, 255, 0.05) 100%)",
-    LEFT: "radial-gradient(16.6% 43.1% at 0% 50%, hsl(0, 0%, 100%) 0%, rgba(255, 255, 255, 0.05) 100%)",
-    BOTTOM:
-      "radial-gradient(20.7% 50% at 50% 100%, hsl(0, 0%, 100%) 0%, rgba(255, 255, 255, 0.05) 100%)",
-    RIGHT:
-      "radial-gradient(16.2% 41.2% at 100% 50%, hsl(0, 0%, 100%) 0%, rgba(255, 255, 255, 0.05) 100%)",
-  };
-
-  const highlight =
-    "radial-gradient(75% 181.16% at 50% 50%, #3275F8 0%, rgba(50, 117, 248, 0.4) 100%)";
-
-  useEffect(() => {
-    if (!hovered) {
-      const interval = setInterval(() => {
-        setDirection((prevState) => rotateDirection(prevState));
-      }, duration * 1000);
-      return () => clearInterval(interval);
-    }
-  }, [hovered, duration, clockwise]);
-
-  return React.createElement(
-    Tag,
-    {
-      onMouseEnter: () => setHovered(true),
-      onMouseLeave: () => setHovered(false),
-      className: `relative flex rounded-full border content-center bg-black/20 hover:bg-black/10 transition duration-500 items-center flex-col flex-nowrap gap-10 h-min justify-center overflow-visible p-px decoration-clone w-fit ${containerClassName}`,
-      ...props,
-    },
-    <>
-      <div
-        className={`w-auto text-white z-10 bg-black px-4 py-2 rounded-[inherit] ${className}`}
-      >
-        {children}
-      </div>
-      <motion.div
-        className="flex-none inset-0 overflow-hidden absolute z-0 rounded-[inherit]"
-        style={{
-          filter: "blur(2px) brightness(1.5)",
-          position: "absolute",
-          width: "100%",
-          height: "100%",
-        }}
-        initial={{ background: movingMap[direction] }}
-        animate={{
-          background: hovered
-            ? [movingMap[direction], highlight]
-            : movingMap[direction],
-        }}
-        transition={{ ease: "linear", duration: duration ?? 1 }}
-      />
-      <div className="bg-black absolute z-1 flex-none inset-[500rem] rounded-[500px]" />
-    </>
-  );
-}
-
-type CardType = {
-  id: number;
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  className: string;
-};
-
-const LayoutGrid = ({ cards }: { cards: CardType[] }) => {
-  return (
-    <div className="w-full h-full grid grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto gap-4 relative">
-      {cards.map((card, i) => (
-        <div key={i} className={card.className}>
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            className="bg-[#03050b51] backdrop-filter backdrop-blur-[14px] border border-[#ffffff14] rounded-xl h-full w-full shadow-[0_0_30px_rgba(255,255,255,0.05)] relative overflow-hidden"
-            layoutId={`card-${card.id}`}
-          >
-            <div className="p-6 h-full flex flex-col relative">
-              <div className="absolute bottom-0 right-0 w-1/3 h-1/3 bg-transparent border border-emerald-800/30 rounded-br-xl rounded-tl-3xl blur-sm" />
-              <div className="w-12 h-12 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center mb-4">
-                {card.icon}
-              </div>
-              <h3 className="text-lg font-semibold text-white mb-2 z-10">
-                {card.title}
-              </h3>
-              <p className="text-gray-400 text-sm z-10">{card.description}</p>
-            </div>
-          </motion.div>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-const FlipText = ({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) => {
-  const [isHovered, setIsHovered] = useState(false);
-
-  return (
-    <div
-      className={`relative inline-block ${className}`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <motion.span
-        className="block"
-        animate={{
-          rotateX: isHovered ? [0, 90, 0] : 0,
-        }}
-        transition={{ duration: 0.6 }}
-      >
-        {children}
-      </motion.span>
-    </div>
-  );
-};
+import icpHub from "@/images/Icp_hub.jpg";
+import icpHubNigeria from "@/images/icphub_nigeria.png";
+import { HoverBorderGradient } from "./HoverBorderGradient";
+import { LayoutGrid } from "./LayoutGrid";
+import { FlipText } from "./FlipText";
 
 export default function Waitlist() {
   const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState({ type: "", text: "" });
 
   const features = [
     {
       id: 1,
-      title: "Real-Time Updates",
+      title: "Early Mental Support",
       description:
-        "Keep customers informed about their position in the waitlist.",
+        "Get priority access to AI-powered mental health support and counseling services.",
       icon: <Upload className="w-5 h-5 text-white/60" />,
       className: "col-span-1",
     },
     {
       id: 2,
-      title: "Priority Management",
+      title: "Wellness Community",
       description:
-        "Assign priority levels to customers based on predefined criteria.",
+        "Join a supportive community of individuals on their mental health journey.",
       icon: <Users className="w-5 h-5 text-white/60" />,
       className: "col-span-1",
     },
     {
       id: 3,
-      title: "Integration Capabilities",
+      title: "Anonymous Support",
       description:
-        "Seamlessly integrate the waitlist functionality into your website.",
+        "Access confidential mental health resources with complete privacy and security.",
       icon: <CheckCircle className="w-5 h-5 text-white/60" />,
       className: "col-span-1",
     },
     {
       id: 4,
-      title: "Analytics & Insights",
-      description: "Gain valuable insights into customer behavior & demand.",
+      title: "Wellness Tracking",
+      description:
+        "Monitor your mental health progress with personalized analytics.",
       icon: <BarChart3 className="w-5 h-5 text-white/60" />,
+      className: "col-span-1",
+    },
+    {
+      id: 5,
+      title: "Priority Access",
+      description:
+        "Be first in line to experience innovative mental wellness features.",
+      icon: <ArrowUpRight className="w-5 h-5 text-white/60" />,
+      className: "col-span-1",
+    },
+    {
+      id: 6,
+      title: "24/7 Support",
+      description:
+        "Get round-the-clock access to mental health resources and assistance.",
+      icon: <CheckCircle className="w-5 h-5 text-white/60" />,
       className: "col-span-1",
     },
   ];
 
+  const handleWaitlistSubmission = async () => {
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setMessage({
+        type: "error",
+        text: "Please enter a valid email address.",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    setMessage({ type: "", text: "" });
+
+    try {
+      // Simulate API call
+
+      setMessage({
+        type: "success",
+        text: "Thanks for joining! We'll keep you updated on our progress.",
+      });
+      setEmail(""); // Clear the input
+    } catch (error) {
+      setMessage({
+        type: "error",
+        text: "Something went wrong. Please try again later.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const partners = [
-    { name: "Dfinity", logo: "" },
-    { name: "ICPHub", logo: "" },
-    { name: "ICPHub Nigeria", logo: "" },
+    {
+      name: "Dfinity",
+      logo: (
+        <img
+          src="https://coin-images.coingecko.com/coins/images/14495/large/Internet_Computer_logo.png?1696514180"
+          alt="Dfinity"
+          className="w-8 h-8 object-contain rounded-full"
+        />
+      ),
+    },
+    {
+      name: "ICPHub",
+      logo: (
+        <img
+          src={icpHub}
+          alt="ICP Hub"
+          className="w-8 h-8 object-contain rounded-full"
+        />
+      ),
+    },
+    {
+      name: "ICPHub Nigeria",
+      logo: (
+        <img
+          src={icpHubNigeria}
+          alt="ICP Hub Nigeria"
+          className="w-8 h-8 object-contain rounded-full"
+        />
+      ),
+    },
   ];
 
   return (
@@ -281,7 +199,10 @@ export default function Waitlist() {
       </div>
 
       {/* Hero/Waitlist Section */}
-      <section className="relative z-10 min-h-screen flex items-center justify-center px-6">
+      <section
+        id="waitlist-hero"
+        className="relative z-10 min-h-screen flex items-center justify-center px-6"
+      >
         {/* Background Text */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
           <motion.h1
@@ -322,7 +243,7 @@ export default function Waitlist() {
             <div className="relative bg-[#03050b51] backdrop-filter backdrop-blur-[14px] border border-[#ffffff14] hover:bg-[#03050 rounded-[32px] p-8 py-10 before:absolute before:inset-0 before:bg-gradient-to-b before:from-white/5 before:to-transparent before:rounded-[32px]">
               {/* Heading with Flip Effect */}
               <div className="flex justify-center items-center">
-                <FlipText className="text-4xl font-bold mb-4 text-center inline-block">
+                <FlipText className="text-5xl font-bold mb-4 text-center inline-block">
                   <span className="bg-gradient-to-b from-white to-gray-500 bg-clip-text text-transparent">
                     Join our waitlist!
                   </span>
@@ -340,23 +261,57 @@ export default function Waitlist() {
                   containerClassName="flex-1"
                   className="w-full"
                   as="div"
+                  duration={2}
+                  clockwise={true}
                 >
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter email"
-                    className="w-full bg-transparent text-white placeholder-gray-500 outline-none py-1"
+                    className="w-full bg-transparent text-white placeholder-gray-500 outline-none py-2 px-4"
                   />
+                  <div className="absolute inset-0 bg-[radial-gradient(32%_50%_at_24.325%_25.675%,rgb(255,255,255)_0%,rgba(255,255,255,0)_100%)] opacity-[0.03] blur-[10px] rounded-full pointer-events-none" />
                 </HoverBorderGradient>
 
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="px-6 py-3 bg-white text-black font-semibold rounded-full hover:bg-gray-100 transition-colors"
+                  disabled={isLoading || !email}
+                  onClick={handleWaitlistSubmission}
+                  className={`px-6 py-3 bg-white font-semibold rounded-full transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer
+                    ${
+                      isLoading
+                        ? "opacity-70 cursor-not-allowed"
+                        : "hover:bg-gray-100 cursor-pointer"
+                    }
+                    ${
+                      !email
+                        ? "opacity-50 cursor-not-allowed"
+                        : "cursor-pointer"
+                    }
+                  `}
                 >
-                  Join Waitlist
+                  {isLoading ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin" />
+                      <span className="text-black">Joining...</span>
+                    </>
+                  ) : (
+                    <span className="text-black">Join Waitlist</span>
+                  )}
                 </motion.button>
+                {message.text && (
+                  <div
+                    className={`mt-2 text-sm ${
+                      message.type === "success"
+                        ? "text-green-400"
+                        : "text-red-400"
+                    }`}
+                  >
+                    {message.text}
+                  </div>
+                )}
               </div>
 
               {/* Component Library Card */}
@@ -375,13 +330,15 @@ export default function Waitlist() {
                     </div>
                     <div className="flex-1">
                       <p className="text-xs text-gray-500 mb-1">
-                        Choose a component
+                        Mental Wellness Pioneer
                       </p>
                       <h4 className="text-white font-semibold text-lg mb-2">
-                        Components library
+                        Early Access Benefits
                       </h4>
                       <p className="text-sm text-gray-400">
-                        Our template offers a range of customization options.
+                        Be among the first to experience AI-powered mental
+                        health support, personalized wellness journeys, and a
+                        supportive community.
                       </p>
                     </div>
                   </div>
@@ -389,27 +346,42 @@ export default function Waitlist() {
                 </div>
                 <div className="flex flex-wrap gap-2 mt-4">
                   <span className="text-xs px-3 py-1 bg-zinc-800/50 rounded-full text-gray-300">
-                    ✓ Header Section
+                    ✓ Personalized Support
                   </span>
                   <span className="text-xs px-3 py-1 bg-zinc-800/50 rounded-full text-gray-300">
-                    Streamlined Quickstart
+                    Anonymous Community
                   </span>
                   <span className="text-xs px-3 py-1 bg-zinc-800/50 rounded-full text-gray-300">
-                    Features
+                    24/7 Mental Care
                   </span>
                 </div>
               </motion.div>
 
               {/* Social Links */}
               <div className="flex items-center justify-center gap-3 mt-8">
-                <motion.button
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                  className="w-12 h-12 bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-xl flex items-center justify-center hover:bg-white/[0.04] transition-colors relative overflow-hidden"
+                <motion.a
+                  href="https://x.com/mentalverse_ICP"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-xl px-1 py-1 hover:bg-white/[0.04] transition-colors relative overflow-hidden w-[14rem]"
+                  whileHover={{ scale: 1.02 }}
                 >
                   <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-emerald-900/20 border border-emerald-800/30 rounded-br-2xl rounded-tl-3xl blur-2xl" />
                   <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-emerald-900/10 rounded-br-2xl rounded-tl-3xl filter blur-3xl" />
-                  <XIcon className="w-5 h-5 relative z-10" />
-                </motion.button>
+                  <div className="flex items-center gap-2 relative z-10">
+                    <motion.button
+                      whileHover={{ scale: 1.1, rotate: 5 }}
+                      className="w-12 h-12 bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-xl flex items-center justify-center hover:bg-white/[0.04] transition-colors relative overflow-hidden"
+                    >
+                      <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-emerald-900/20 border border-emerald-800/30 rounded-br-2xl rounded-tl-3xl blur-2xl" />
+                      <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-emerald-900/10 rounded-br-2xl rounded-tl-3xl filter blur-3xl" />
+                      <LucideX className="w-7 h-7 relative z-10" />
+                    </motion.button>
+                    <span className="text-sm font-medium">
+                      @mentalverse_ICP
+                    </span>
+                  </div>
+                </motion.a>
               </div>
             </div>
           </motion.div>
@@ -425,15 +397,19 @@ export default function Waitlist() {
             transition={{ duration: 0.8 }}
             className="text-center mb-12"
           >
-            <span className="inline-block bg-zinc-900/50 border border-zinc-800 rounded-full px-4 py-2 text-sm mb-6">
-              Our Partners
-            </span>
-            <FlipText className="text-4xl font-bold mb-4">
-              Trusted by Brands
-            </FlipText>
+            <div className="flex justify-center items-start gap-5">
+              <span className="inline-block bg-zinc-900/50 border border-zinc-800 rounded-full px-4 py-2 text-sm mb-6">
+                Our Partners
+              </span>
+              <FlipText className="text-4xl font-bold mb-4">
+                Trusted by Brands
+              </FlipText>
+            </div>
+
             <p className="text-gray-400 max-w-2xl mx-auto">
-              We collaborate with industry-leading partners to bring you the
-              best in class services.
+              We partner with leading mental health organizations and technology
+              innovators to provide secure, accessible, and effective mental
+              wellness support.
             </p>
           </motion.div>
 
@@ -448,12 +424,14 @@ export default function Waitlist() {
                 className="bg-[#03050b51] backdrop-filter backdrop-blur-[14px] border border-[#ffffff14] hover:bg-[#03050b70] shadow-[0_0_30px_rgba(255,255,255,0.05)] rounded-2xl px-6 py-4 flex items-center gap-3transition-all relative overflow-hidden"
               >
                 <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-emerald-900/20 border border-emerald-800/30 rounded-br-2xl rounded-tl-3xl blur-2xl" />
-                <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-emerald-900/10 rounded-br-2xl rounded-tl-3xl filter blur-3xl" />
+                <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-emerald-700/30 rounded-br-2xl rounded-tl-3xl filter blur-3xl" />
 
-                <span className="text-2xl relative z-10">{partner.logo}</span>
-                <span className="font-medium text-white relative z-10">
-                  {partner.name}
-                </span>
+                <div className="flex items-center gap-3 relative z-10 flex-wrap">
+                  <span className="text-2xl relative z-10">{partner.logo}</span>
+                  <span className="font-medium text-white relative z-10">
+                    {partner.name}
+                  </span>
+                </div>
               </motion.div>
             ))}
           </div>
@@ -465,8 +443,8 @@ export default function Waitlist() {
         {/* Background Text */}
         <div className="absolute inset-0 flex items-end justify-center pointer-events-none overflow-hidden bottom-0 pb-20">
           <motion.h1
-            initial={{ opacity: 0, y: 100 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 130 }}
+            whileInView={{ opacity: 1, y: 70 }}
             transition={{ duration: 1.5, ease: "easeOut" }}
             className="text-[20vw] font-bold leading-none select-none"
             style={{
@@ -497,7 +475,13 @@ export default function Waitlist() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="bg-white text-black font-semibold py-3 px-8 rounded-full hover:bg-gray-100 transition-all inline-flex items-center gap-2"
+              onClick={() => {
+                document.getElementById("waitlist-hero")?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                });
+              }}
+              className="bg-white text-black font-semibold py-3 px-8 rounded-full hover:bg-gray-100 transition-all inline-flex items-center gap-2 cursor-pointer"
             >
               Join Waitlist
               <ArrowUpRight className="w-4 h-4" />
@@ -554,14 +538,27 @@ export default function Waitlist() {
 
             {/* Social Icons */}
             <div className="flex justify-center gap-3 mb-10">
-              <motion.button
-                whileHover={{ scale: 1.1, rotate: 5 }}
-                className="w-12 h-12 bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-xl flex items-center justify-center hover:bg-white/[0.04] transition-colors relative overflow-hidden"
+              <motion.a
+                href="https://x.com/mentalverse_ICP"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-xl px-1 py-1 hover:bg-white/[0.04] transition-colors relative overflow-hidden w-[14rem]"
+                whileHover={{ scale: 1.02 }}
               >
                 <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-emerald-900/20 border border-emerald-800/30 rounded-br-2xl rounded-tl-3xl blur-2xl" />
                 <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-emerald-900/10 rounded-br-2xl rounded-tl-3xl filter blur-3xl" />
-                <XIcon className="w-5 h-5 relative z-10" />
-              </motion.button>
+                <div className="flex items-center gap-2 relative z-10">
+                  <motion.button
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    className="w-12 h-12 bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-xl flex items-center justify-center hover:bg-white/[0.04] transition-colors relative overflow-hidden"
+                  >
+                    <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-emerald-900/20 border border-emerald-800/30 rounded-br-2xl rounded-tl-3xl blur-2xl" />
+                    <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-emerald-900/10 rounded-br-2xl rounded-tl-3xl filter blur-3xl" />
+                    <LucideX className="w-7 h-7 relative z-10" />
+                  </motion.button>
+                  <span className="text-sm font-medium">@mentalverse_ICP</span>
+                </div>
+              </motion.a>
               {/* <motion.button
                 whileHover={{ scale: 1.1, rotate: -5 }}
                 className="w-12 h-12 bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-xl flex items-center justify-center hover:bg-white/[0.04] transition-colors relative overflow-hidden"
@@ -592,8 +589,8 @@ export default function Waitlist() {
                 <p className="font-semibold text-white mb-1 relative z-10">
                   Email us
                 </p>
-                <p className="text-sm text-gray-400 relative z-10">
-                  hi@affanlab.com
+                <p className="sm:text-xs text-sm text-gray-400 relative z-10">
+                  mentalverseinc@gmail.com
                 </p>
               </motion.div>
 
@@ -608,7 +605,7 @@ export default function Waitlist() {
                   Call us
                 </p>
                 <p className="text-sm text-gray-400 relative z-10">
-                  (501) 123-4567
+                  +2347016401210
                 </p>
               </motion.div>
 
@@ -623,7 +620,7 @@ export default function Waitlist() {
                   Location
                 </p>
                 <p className="text-sm text-gray-400 relative z-10">
-                  Crosby Street, NY, USA
+                  Internet Computer
                 </p>
               </motion.div>
             </div>
@@ -639,7 +636,7 @@ export default function Waitlist() {
               transition={{ duration: 0.5 }}
             >
               <p className="text-gray-600 text-sm mb-4">
-                ©2025 Mentalverse Waitlist 
+                ©2025 Mentalverse Waitlist
               </p>
               {/* <div className="inline-flex items-center gap-2 bg-white text-black px-4 py-2 rounded-full text-sm font-medium">
                 <span>🚀</span>
