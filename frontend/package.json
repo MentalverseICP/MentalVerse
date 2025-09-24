@@ -57,6 +57,7 @@
     "react-toastify": "^11.0.5",
     "reactstrap": "^9.2.3",
     "recharts": "^2.15.4",
+    "sonner": "^2.0.7",
     "swiper": "^11.2.10",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",

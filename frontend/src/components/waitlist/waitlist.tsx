@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { Toaster, toast } from "sonner";
+import emailjs from "@emailjs/browser";
+import { BackgroundRippleEffect } from "@/components/ui/background-ripple-effect";
 import {
   Mail,
   Phone,
@@ -22,6 +25,11 @@ export default function Waitlist() {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
+
+  // Initialize EmailJS
+  React.useEffect(() => {
+    emailjs.init("NsfNf6qAb6ZaEPM1q"); // EmailJS public key
+  }, []);
 
   const features = [
     {
@@ -78,29 +86,47 @@ export default function Waitlist() {
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setMessage({
-        type: "error",
-        text: "Please enter a valid email address.",
-      });
+      toast.error("Please enter a valid email address.");
       return;
     }
 
     setIsLoading(true);
-    setMessage({ type: "", text: "" });
 
     try {
-      // Simulate API call
+      const templateParams = {
+        to_email: email,
+        user_email: email,
+        message: "Thank you for joining the MentalVerse waitlist!",
+      };
 
-      setMessage({
-        type: "success",
-        text: "Thanks for joining! We'll keep you updated on our progress.",
+      await emailjs.send(
+        "service_19yonvy", // EmailJS service ID
+        "template_xo3q85i", // EmailJS template ID
+        templateParams,
+        "NsfNf6qAb6ZaEPM1q" // public key
+      );
+
+      // Store in localStorage
+      const waitlistEmails = JSON.parse(
+        localStorage.getItem("waitlistEmails") || "[]"
+      );
+      waitlistEmails.push({
+        email,
+        date: new Date().toISOString(),
       });
-      setEmail(""); // Clear the input
+      localStorage.setItem("waitlistEmails", JSON.stringify(waitlistEmails));
+
+      // Show success toast
+      toast.success(
+        "Welcome to MentalVerse! You're now on our waitlist. We'll keep you updated on our progress."
+      );
+
+      // Clear the email input
+      setEmail("");
+      setMessage({ type: "success", text: "" }); // Clear any existing messages
     } catch (error) {
-      setMessage({
-        type: "error",
-        text: "Something went wrong. Please try again later.",
-      });
+      console.error("Error processing waitlist submission:", error);
+      toast.error("Something went wrong. Please try again later.");
     } finally {
       setIsLoading(false);
     }
@@ -198,6 +224,8 @@ export default function Waitlist() {
         /> */}
       </div>
 
+      <Toaster position="top-center" theme="dark" richColors closeButton />
+
       {/* Hero/Waitlist Section */}
       <section
         id="waitlist-hero"
@@ -240,25 +268,23 @@ export default function Waitlist() {
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_70%_70%_at_50%_50%,#000_60%,transparent_100%)]" />
 
             {/* Main Waitlist Card */}
-            <div className="relative bg-[#03050b51] backdrop-filter backdrop-blur-[14px] border border-[#ffffff14] hover:bg-[#03050 rounded-[32px] p-8 py-10 before:absolute before:inset-0 before:bg-gradient-to-b before:from-white/5 before:to-transparent before:rounded-[32px]">
+            <div className="relative bg-[#03050b51] backdrop-filter backdrop-blur-[14px] border border-[#ffffff14] hover:bg-[#03050 rounded-[32px] p-4 sm:p-8 py-6 sm:py-10 before:absolute before:inset-0 before:bg-gradient-to-b before:from-white/5 before:to-transparent before:rounded-[32px]">
               {/* Heading with Flip Effect */}
-              <div className="flex justify-center items-center">
-                <FlipText className="text-5xl font-bold mb-4 text-center inline-block">
+              <div className="flex justify-center items-center max-sm:mt-10">
+                <FlipText className="text-3xl sm:text-5xl font-bold mb-4 text-center inline-block">
                   <span className="bg-gradient-to-b from-white to-gray-500 bg-clip-text text-transparent">
                     Join our waitlist!
                   </span>
                 </FlipText>
               </div>
-
-              <p className="text-gray-400 mb-6 text-sm leading-relaxed text-center">
+              <p className="text-gray-400 mb-4 sm:mb-6 text-sm leading-relaxed text-center px-2 sm:px-0">
                 Sign up for our newsletter to receive the latest updates and
                 insights straight to your inbox.
-              </p>
-
+              </p>{" "}
               {/* Email Input Section */}
-              <div className="flex gap-3 mb-8">
+              <div className="flex flex-col sm:flex-row gap-3 mb-8 w-full">
                 <HoverBorderGradient
-                  containerClassName="flex-1"
+                  containerClassName="flex-1 w-full"
                   className="w-full"
                   as="div"
                   duration={2}
@@ -279,7 +305,7 @@ export default function Waitlist() {
                   whileTap={{ scale: 0.98 }}
                   disabled={isLoading || !email}
                   onClick={handleWaitlistSubmission}
-                  className={`px-6 py-3 bg-white font-semibold rounded-full transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer
+                  className={`px-6 py-3 bg-white font-semibold rounded-full transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer justify-center max-sm:mt-5
                     ${
                       isLoading
                         ? "opacity-70 cursor-not-allowed"
@@ -313,7 +339,6 @@ export default function Waitlist() {
                   </div>
                 )}
               </div>
-
               {/* Component Library Card */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -324,7 +349,7 @@ export default function Waitlist() {
                 <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-emerald-900/20 border border-emerald-800/30 rounded-br-2xl rounded-tl-3xl blur-2xl" />
                 <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-emerald-900/10 rounded-br-2xl rounded-tl-3xl filter blur-3xl" />
                 <div className="flex items-start justify-between relative z-10">
-                  <div className="flex gap-4">
+                  <div className="flex max-sm:flex-col gap-4">
                     <div className="w-12 h-12 bg-[#03050b51] backdrop-filter backdrop-blur-[14px] border border-[#ffffff14] rounded-xl flex items-center justify-center flex-shrink-0">
                       <span className="text-black text-xl">⚡</span>
                     </div>
@@ -356,7 +381,6 @@ export default function Waitlist() {
                   </span>
                 </div>
               </motion.div>
-
               {/* Social Links */}
               <div className="flex items-center justify-center gap-3 mt-8">
                 <motion.a
@@ -389,19 +413,21 @@ export default function Waitlist() {
       </section>
 
       {/* Partners Section */}
-      <section className="relative z-10 py-20 px-6">
-        <div className="max-w-5xl mx-auto">
+      <section className="relative z-10 py-12 sm:py-20 px-4 sm:px-6 mt-20 overflow-hidden">
+        <BackgroundRippleEffect rows={8} cols={44} cellSize={42} />
+        <div className="relative z-10 w-full h-full bg-gradient-to-b from-black/30 via-transparent to-transparent backdrop-blur-[2px]" />
+        <div className="max-w-5xl mx-auto relative z-20">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-center mb-12"
+            className="text-center mb-8 sm:mb-12"
           >
-            <div className="flex justify-center items-start gap-5">
-              <span className="inline-block bg-zinc-900/50 border border-zinc-800 rounded-full px-4 py-2 text-sm mb-6">
+            <div className="flex flex-col sm:flex-row justify-center items-center sm:items-start gap-3 sm:gap-5">
+              <span className="inline-block bg-zinc-900/50 border border-zinc-800 rounded-full px-4 py-2 text-sm mb-4 sm:mb-6">
                 Our Partners
               </span>
-              <FlipText className="text-4xl font-bold mb-4">
+              <FlipText className="text-3xl sm:text-4xl font-bold mb-4">
                 Trusted by Brands
               </FlipText>
             </div>
@@ -439,14 +465,20 @@ export default function Waitlist() {
       </section>
 
       {/* Features Section */}
-      <section className="relative z-10 py-20 px-6 min-h-screen flex items-center">
+      <section className="relative z-10 py-12 sm:py-20 px-4 sm:px-6 min-h-screen flex items-center">
         {/* Background Text */}
-        <div className="absolute inset-0 flex items-end justify-center pointer-events-none overflow-hidden bottom-0 pb-20">
+        <div className="absolute inset-0 flex items-end justify-center pointer-events-none overflow-hidden bottom-0 pb-12 sm:pb-20">
           <motion.h1
-            initial={{ opacity: 0, y: 130 }}
-            whileInView={{ opacity: 1, y: 70 }}
+            initial={{
+              opacity: 0,
+              y: [null, window.innerWidth < 640 ? 30 : 170],
+            }}
+            whileInView={{
+              opacity: 1,
+              y: [null, window.innerWidth < 640 ? 30 : 70],
+            }}
             transition={{ duration: 1.5, ease: "easeOut" }}
-            className="text-[20vw] font-bold leading-none select-none"
+            className="text-[15vw] sm:text-[20vw] font-bold leading-none select-none translate-y-8 sm:translate-y-0"
             style={{
               color: "transparent",
               WebkitTextStroke: "1px rgba(255,255,255,0.15)",
@@ -470,7 +502,7 @@ export default function Waitlist() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.5 }}
-            className="text-center mt-12"
+            className="text-center sm:mt-12 mt-5"
           >
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -496,7 +528,7 @@ export default function Waitlist() {
         <div className="absolute inset-0 flex items-end justify-center pointer-events-none overflow-hidden bottom-0 pb-20">
           <motion.h1
             initial={{ opacity: 0, y: 170 }}
-            whileInView={{ opacity: 1, y: 100 }}
+            whileInView={{ opacity: 1, y: 90 }}
             transition={{ duration: 1.5, ease: "easeOut" }}
             className="text-[23vw] w-fit font-bold leading-none select-none tracking-tighter"
             style={{
@@ -578,18 +610,18 @@ export default function Waitlist() {
             </div>
 
             {/* Contact Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <motion.div
                 whileHover={{ scale: 1.05, y: -2 }}
-                className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-5 hover:bg-white/[0.04] transition-all cursor-pointer relative overflow-hidden"
+                className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:p-5 hover:bg-white/[0.04] transition-all cursor-pointer relative overflow-hidden flex flex-col items-center sm:items-start"
               >
                 <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-emerald-900/20 border border-emerald-800/30 rounded-br-2xl rounded-tl-3xl blur-2xl" />
                 <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-emerald-900/10 rounded-br-2xl rounded-tl-3xl filter blur-3xl" />
                 <Mail className="w-6 h-6 mb-3 text-gray-400 relative z-10" />
-                <p className="font-semibold text-white mb-1 relative z-10">
+                <p className="font-semibold text-white mb-1 relative z-10 text-center sm:text-left">
                   Email us
                 </p>
-                <p className="sm:text-xs text-sm text-gray-400 relative z-10">
+                <p className="text-xs sm:text-sm text-gray-400 relative z-10 text-center sm:text-left break-all">
                   mentalverseinc@gmail.com
                 </p>
               </motion.div>
