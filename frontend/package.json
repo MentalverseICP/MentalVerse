@@ -7,6 +7,7 @@
     "dev": "vite",
     "start": "vite --open --port 4943",
     "build": "vite build",
+    "build:waitlist": "vite build --config vite.waitlist.config.ts",
     "lint": "eslint .",
     "preview": "vite preview"
   },

@@ -58,6 +58,12 @@
         "./admin_dist/"
       ],
       "type": "assets"
+    },
+    "waitlist_frontend": {
+      "source": [
+        "./waitlist_dist/"
+      ],
+      "type": "assets"
     }
   },
   "defaults": {
