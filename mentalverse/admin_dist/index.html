@@ -9,10 +9,51 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
     
-    <!-- IC Agent Libraries for Production -->
+    <!-- IC Agent Libraries - Direct Script Loading -->
     <script src="https://unpkg.com/@dfinity/agent@0.19.2/lib/cjs/index.js"></script>
     <script src="https://unpkg.com/@dfinity/principal@0.19.2/lib/cjs/index.js"></script>
     <script src="https://unpkg.com/@dfinity/candid@0.19.2/lib/cjs/index.js"></script>
+    
+    <script>
+        // Initialize IC Agent libraries from global scope
+        function initializeICLibraries() {
+            try {
+                // Access IC Agent components from global scope
+                if (typeof window.ic === 'undefined') {
+                    window.ic = {};
+                }
+                
+                // Map the loaded libraries
+                if (typeof dfinity !== 'undefined') {
+                    window.ic.Actor = dfinity.agent.Actor;
+                    window.ic.HttpAgent = dfinity.agent.HttpAgent;
+                    window.ic.Principal = dfinity.principal.Principal;
+                    window.ic.IDL = dfinity.candid.IDL;
+                } else if (typeof IC !== 'undefined') {
+                    // Alternative global namespace
+                    window.ic = IC;
+                }
+                
+                window.icLibrariesLoaded = true;
+                console.log('IC libraries loaded successfully from CDN');
+                
+                // Trigger initialization
+                document.dispatchEvent(new Event('icLibrariesReady'));
+                return true;
+            } catch (error) {
+                console.error('Failed to initialize IC libraries:', error);
+                window.icLibrariesLoaded = false;
+                return false;
+            }
+        }
+        
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeICLibraries);
+        } else {
+            initializeICLibraries();
+        }
+    </script>
     <style>
         :root {
             --background: 0 0% 100%;
@@ -88,8 +129,8 @@
         /* Sidebar Styles */
         .sidebar {
             width: 280px;
-            background-color: hsl(var(--card));
-            border-right: 2px solid hsl(var(--border));
+            background: linear-gradient(145deg, hsl(var(--card)) 0%, hsl(var(--card) / 0.95) 100%);
+            border-right: 1px solid hsl(var(--border) / 0.5);
             border-radius: 24px;
             margin: 12px;
             padding: 20px 0;
@@ -98,6 +139,8 @@
             overflow-y: auto;
             transition: all 0.3s ease;
             z-index: 1000;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05);
         }
         
         .sidebar.collapsed {
@@ -219,12 +262,31 @@
         
         /* Cards */
         .card {
-            background-color: hsl(var(--card));
-            border: 1px solid hsl(var(--border));
-            border-radius: 12px;
-            padding: 24px;
+            background: linear-gradient(145deg, hsl(var(--card)) 0%, hsl(var(--card) / 0.98) 100%);
+            border: 1px solid hsl(var(--border) / 0.3);
+            border-radius: 16px;
+            padding: 28px;
             margin-bottom: 24px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4);
+            opacity: 0.6;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
         }
         
         .card-header {
@@ -390,24 +452,51 @@
         }
         
         .stat-card {
-            background-color: hsl(var(--card));
-            border: 1px solid hsl(var(--border));
-            border-radius: 12px;
-            padding: 20px;
+            background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--card) / 0.95) 100%);
+            border: 1px solid hsl(var(--border) / 0.2);
+            border-radius: 16px;
+            padding: 24px;
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .stat-card:hover::before {
+            opacity: 1;
         }
         
         .stat-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 8px;
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: hsl(var(--primary) / 0.1);
-            color: hsl(var(--primary));
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+            position: relative;
+            z-index: 1;
         }
         
         .stat-content h3 {
@@ -488,6 +577,99 @@
         .dark .badge-error {
             background-color: #991b1b;
             color: #fee2e2;
+        }
+        
+        /* Welcome Header */
+        .welcome-header {
+            background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.8) 100%);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .welcome-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+            pointer-events: none;
+        }
+        
+        .welcome-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .welcome-text {
+            flex: 1;
+        }
+        
+        .welcome-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white;
+            margin: 0 0 8px 0;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .welcome-subtitle {
+            font-size: 1.125rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin: 0;
+            max-width: 500px;
+        }
+        
+        .welcome-stats {
+            display: flex;
+            gap: 24px;
+        }
+        
+        .quick-stat {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 16px 20px;
+            min-width: 120px;
+        }
+        
+        .quick-stat-number {
+            display: block;
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 4px;
+        }
+        
+        .quick-stat-label {
+            display: block;
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 500;
+        }
+        
+        @media (max-width: 768px) {
+            .welcome-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 24px;
+            }
+            
+            .welcome-title {
+                font-size: 2rem;
+            }
+            
+            .welcome-stats {
+                justify-content: center;
+            }
         }
         
         /* Alerts */
@@ -853,7 +1035,25 @@
         <main id="mainContent" class="main-content">
             <!-- Dashboard Page -->
             <div id="dashboardPage" class="page-content">
-                <h1 style="margin-bottom: 24px; font-size: 2rem; font-weight: 700;">Admin Dashboard</h1>
+                <!-- Welcome Header -->
+                <div class="welcome-header">
+                    <div class="welcome-content">
+                        <div class="welcome-text">
+                            <h1 class="welcome-title">Welcome to MentalVerse Admin</h1>
+                            <p class="welcome-subtitle">Manage your decentralized mental health platform with powerful administrative tools</p>
+                        </div>
+                        <div class="welcome-stats">
+                            <div class="quick-stat">
+                                <span class="quick-stat-number" id="quickTotalUsers">0</span>
+                                <span class="quick-stat-label">Active Users</span>
+                            </div>
+                            <div class="quick-stat">
+                                <span class="quick-stat-number" id="quickSystemHealth">100%</span>
+                                <span class="quick-stat-label">System Health</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 
                 <!-- Stats Grid -->
                 <div class="stats-grid">
@@ -1419,49 +1619,42 @@
     </div>
     
     <script>
-        // IC Agent integration for production deployment
-        // Access IC Agent libraries loaded from CDN
+        // Production IC mainnet integration
+        console.log('Initializing admin interface with IC mainnet integration');
         
-        // Access the globally available IC Agent components
-        const { Actor, HttpAgent } = window.ic || window;
-        const { Principal } = window.ic || window;
-        
-        // Verify libraries are loaded
-        if (!Actor || !HttpAgent || !Principal) {
-            console.error('IC Agent libraries not loaded. Please ensure the CDN scripts are loaded.');
+        // Check if IC components are loaded
+        if (window.ic && window.ic.Actor && window.ic.HttpAgent && window.ic.Principal) {
+            console.log('IC components loaded successfully');
         } else {
-            console.log('IC Agent libraries available for production use');
+            console.error('IC components not available - check library loading');
         }
         
-        // Canister IDs from canister_ids.json
+        // Production canister IDs for mainnet
         const CANISTER_IDS = {
-            mentalverse_backend: "cytcv-raaaa-aaaac-a4aoa-cai",
-            mvt_token_canister: "c7seb-4yaaa-aaaac-a4aoq-cai",
-            secure_messaging: "jzwty-fqaaa-aaaac-a4goq-cai"
+            mentalverse_backend: "c7j3q-cai",
+            mvt_token_canister: "your-token-canister-id", // Replace with actual token canister ID
+            secure_messaging: "your-messaging-canister-id" // Replace with actual messaging canister ID
         };
         
-        // IC Network configuration for production
-        const IC_HOST = "https://ic0.app";
-        
-        // Initialize IC Agent for production
+        // Mock agent for compatibility mode
+        // IC network configuration
+        const IC_HOST = 'https://ic0.app';
         let agent;
         
         async function initializeAgent() {
             try {
-                agent = new HttpAgent({ 
-                    host: IC_HOST,
-                    // For production, you may want to add identity if needed
-                    // identity: identity
-                });
+                console.log('Initializing IC agent for mainnet...');
                 
-                // Fetch root key for certificate validation (only for local development)
-                // For production on mainnet, this is not needed
+                agent = new window.ic.HttpAgent({ host: IC_HOST });
+                
+                // Fetch root key for certificate validation (only needed for local development)
+                // For mainnet, this is not needed as the root key is hardcoded
                 // await agent.fetchRootKey();
                 
-                console.log('IC Agent initialized for production');
+                console.log('IC agent initialized successfully for mainnet');
                 return agent;
             } catch (error) {
-                console.error('Failed to initialize IC Agent:', error);
+                console.error('Failed to initialize IC agent:', error);
                 throw error;
             }
         }
@@ -1502,61 +1695,166 @@
             });
         };
         
-        // Real canister actors for production deployment
+        // Production actors for mainnet
         let backendActor, tokenActor;
         
-        // Create real canister actors
+        // Create real IC actors for mainnet canisters
         async function createActors() {
             try {
-                // Ensure agent is initialized
+                // Ensure IC agent is initialized
                 if (!agent) {
                     await initializeAgent();
                 }
                 
+                console.log('Creating actors for mainnet canisters...');
+                
                 // Create backend actor
-                backendActor = Actor.createActor(backendIdl, {
+                backendActor = window.ic.Actor.createActor(backendIdl, {
                     agent,
                     canisterId: CANISTER_IDS.mentalverse_backend
                 });
                 
-                // Create token actor
-                tokenActor = Actor.createActor(tokenIdl, {
-                    agent,
-                    canisterId: CANISTER_IDS.mvt_token_canister
-                });
+                // Create token actor (if token canister ID is provided)
+                if (CANISTER_IDS.mvt_token_canister && CANISTER_IDS.mvt_token_canister !== 'your-token-canister-id') {
+                    tokenActor = window.ic.Actor.createActor(tokenIdl, {
+                        agent,
+                        canisterId: CANISTER_IDS.mvt_token_canister
+                    });
+                } else {
+                    console.warn('Token canister ID not configured - token operations will be unavailable');
+                    tokenActor = null;
+                }
                 
-                console.log('Real canister actors created for production');
+                console.log('Mainnet canister actors created successfully');
                 return { backendActor, tokenActor };
             } catch (error) {
-                console.error('Failed to create canister actors:', error);
+                console.error('Failed to create mainnet actors:', error);
                 throw error;
             }
         }
         
         async function initializeActors() {
             try {
-                // Verify IC libraries are available
-                if (!Actor || !HttpAgent || !Principal) {
-                    throw new Error('IC Agent libraries not available');
+                console.log('Initializing actors for mainnet integration...');
+                
+                // Wait for IC libraries to be loaded
+                if (!window.icLibrariesLoaded) {
+                    console.log('Waiting for IC libraries to load...');
+                    await new Promise(resolve => {
+                        document.addEventListener('icLibrariesReady', resolve, { once: true });
+                    });
                 }
                 
-                // Initialize IC Agent and create real canister actors for production
+                // Verify IC components are available
+                if (!window.ic || !window.ic.Actor || !window.ic.HttpAgent || !window.ic.Principal) {
+                    throw new Error('IC components not available');
+                }
+                
+                // Initialize IC agent and create actors
                 await initializeAgent();
                 await createActors();
                 
-                console.log('Production actors initialized successfully');
+                console.log('Mainnet actors initialized successfully');
                 console.log('Connected to mainnet canisters:', CANISTER_IDS);
+                
+                // Load real data from canisters
+                await loadRealData();
             } catch (error) {
-                console.error('Failed to initialize production actors:', error);
-                // Show user-friendly error message
-                const errorDiv = document.getElementById('loginError');
-                if (errorDiv) {
-                    errorDiv.textContent = 'Failed to connect to IC network. Please check your connection and try again.';
-                    errorDiv.classList.remove('hidden');
-                }
+                console.error('Failed to initialize mainnet actors:', error);
                 backendActor = null;
                 tokenActor = null;
+                
+                // Show error message to user
+                showErrorMessage('Failed to connect to IC mainnet. Please check your connection and try again.');
             }
+        }
+        
+        // Function to load real data from mainnet canisters
+        async function loadRealData() {
+            try {
+                console.log('Loading real data from mainnet canisters...');
+                
+                // Load system stats from backend canister
+                if (backendActor) {
+                    const statsResult = await backendActor.getSystemStats();
+                    if (statsResult) {
+                        // Update dashboard stats with real data
+                        document.getElementById('totalUsers').textContent = statsResult.totalUsers.toString();
+                        document.getElementById('activeConnections').textContent = statsResult.activeUsers.toString();
+                        document.getElementById('quickTotalUsers').textContent = statsResult.totalUsers.toString();
+                        
+                        // Set system status based on data availability
+                        document.getElementById('systemStatus').textContent = 'Active';
+                        document.getElementById('quickSystemHealth').textContent = '100%';
+                    }
+                }
+                
+                // Load token supply from token canister
+                if (tokenActor) {
+                    try {
+                        const totalSupply = await tokenActor.icrc1_total_supply();
+                        document.getElementById('totalTokens').textContent = totalSupply.toString();
+                    } catch (error) {
+                        console.warn('Failed to load token supply:', error);
+                        document.getElementById('totalTokens').textContent = 'N/A';
+                    }
+                } else {
+                    document.getElementById('totalTokens').textContent = 'N/A';
+                }
+                
+                console.log('Real data loaded successfully from mainnet');
+            } catch (error) {
+                console.error('Failed to load real data:', error);
+                showErrorMessage('Failed to load data from canisters');
+            }
+        }
+        
+        // Function to show error messages to the user
+        function showErrorMessage(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'alert alert-error';
+            errorDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 1000;
+                max-width: 400px;
+                padding: 16px;
+                border-radius: 8px;
+                background-color: #fef2f2;
+                color: #dc2626;
+                border: 1px solid #fecaca;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            `;
+            errorDiv.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="15" y1="9" x2="9" y2="15"/>
+                        <line x1="9" y1="9" x2="15" y2="15"/>
+                    </svg>
+                    <div>
+                        <strong>Error:</strong> ${message}
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" style="
+                        background: none;
+                        border: none;
+                        color: inherit;
+                        cursor: pointer;
+                        padding: 4px;
+                        margin-left: auto;
+                    ">×</button>
+                </div>
+            `;
+            
+            document.body.appendChild(errorDiv);
+            
+            // Auto-remove after 10 seconds
+            setTimeout(() => {
+                if (errorDiv.parentElement) {
+                    errorDiv.remove();
+                }
+            }, 10000);
         }
         
         // Global state
