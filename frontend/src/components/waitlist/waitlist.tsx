@@ -12,8 +12,10 @@ import {
   BarChart3,
   CheckCircle,
   ArrowUpRight,
+  XIcon
 } from "lucide-react";
 import mentalIconDark from "@/images/mental_Icon_mobile_dark1.svg";
+import {  } from "lucide-react";
 
 type ValidTags = "button" | "div" | "span";
 
@@ -58,16 +60,16 @@ function HoverBorderGradient<T extends ValidTags = "button">({
   };
 
   const movingMap = {
-    TOP: "radial-gradient(20.7% 50% at 50% 0%, hsl(0, 0%, 100%) 0%, rgba(255, 255, 255, 0) 100%)",
-    LEFT: "radial-gradient(16.6% 43.1% at 0% 50%, hsl(0, 0%, 100%) 0%, rgba(255, 255, 255, 0) 100%)",
+    TOP: "radial-gradient(20.7% 50% at 50% 0%, hsl(0, 0%, 100%) 0%, rgba(255, 255, 255, 0.05) 100%)",
+    LEFT: "radial-gradient(16.6% 43.1% at 0% 50%, hsl(0, 0%, 100%) 0%, rgba(255, 255, 255, 0.05) 100%)",
     BOTTOM:
-      "radial-gradient(20.7% 50% at 50% 100%, hsl(0, 0%, 100%) 0%, rgba(255, 255, 255, 0) 100%)",
+      "radial-gradient(20.7% 50% at 50% 100%, hsl(0, 0%, 100%) 0%, rgba(255, 255, 255, 0.05) 100%)",
     RIGHT:
-      "radial-gradient(16.2% 41.2% at 100% 50%, hsl(0, 0%, 100%) 0%, rgba(255, 255, 255, 0) 100%)",
+      "radial-gradient(16.2% 41.2% at 100% 50%, hsl(0, 0%, 100%) 0%, rgba(255, 255, 255, 0.05) 100%)",
   };
 
   const highlight =
-    "radial-gradient(75% 181.16% at 50% 50%, #3275F8 0%, rgba(255, 255, 255, 0) 100%)";
+    "radial-gradient(75% 181.16% at 50% 50%, #3275F8 0%, rgba(50, 117, 248, 0.4) 100%)";
 
   useEffect(() => {
     if (!hovered) {
@@ -95,7 +97,7 @@ function HoverBorderGradient<T extends ValidTags = "button">({
       <motion.div
         className="flex-none inset-0 overflow-hidden absolute z-0 rounded-[inherit]"
         style={{
-          filter: "blur(2px)",
+          filter: "blur(2px) brightness(1.5)",
           position: "absolute",
           width: "100%",
           height: "100%",
@@ -108,7 +110,7 @@ function HoverBorderGradient<T extends ValidTags = "button">({
         }}
         transition={{ ease: "linear", duration: duration ?? 1 }}
       />
-      <div className="bg-black absolute z-1 flex-none inset-[2px] rounded-[100px]" />
+      <div className="bg-black absolute z-1 flex-none inset-[500rem] rounded-[500px]" />
     </>
   );
 }
@@ -214,9 +216,9 @@ export default function Waitlist() {
   ];
 
   const partners = [
-    { name: "Xfinity", logo: "🌐" },
-    { name: "ICPHub", logo: "💎" },
-    { name: "ICPHub Nigeria", logo: "🚀" },
+    { name: "Dfinity", logo: "" },
+    { name: "ICPHub", logo: "" },
+    { name: "ICPHub Nigeria", logo: "" },
   ];
 
   return (
@@ -400,27 +402,14 @@ export default function Waitlist() {
 
               {/* Social Links */}
               <div className="flex items-center justify-center gap-3 mt-8">
-                <motion.a
-                  whileHover={{ scale: 1.05 }}
-                  className="bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 py-2 hover:bg-zinc-800/50 transition-colors flex items-center gap-2"
+                <motion.button
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  className="w-12 h-12 bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-xl flex items-center justify-center hover:bg-white/[0.04] transition-colors relative overflow-hidden"
                 >
-                  <X className="w-4 h-4" />
-                  <span className="text-sm">@affanlab</span>
-                </motion.a>
-                <motion.a
-                  whileHover={{ scale: 1.05 }}
-                  className="bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 py-2 hover:bg-zinc-800/50 transition-colors flex items-center gap-2"
-                >
-                  <Facebook className="w-4 h-4" />
-                  <span className="text-sm">@affanlab</span>
-                </motion.a>
-                <motion.a
-                  whileHover={{ scale: 1.05 }}
-                  className="bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 py-2 hover:bg-zinc-800/50 transition-colors flex items-center gap-2"
-                >
-                  <Instagram className="w-4 h-4" />
-                  <span className="text-sm">@affanlab</span>
-                </motion.a>
+                  <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-emerald-900/20 border border-emerald-800/30 rounded-br-2xl rounded-tl-3xl blur-2xl" />
+                  <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-emerald-900/10 rounded-br-2xl rounded-tl-3xl filter blur-3xl" />
+                  <XIcon className="w-5 h-5 relative z-10" />
+                </motion.button>
               </div>
             </div>
           </motion.div>
@@ -571,9 +560,9 @@ export default function Waitlist() {
               >
                 <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-emerald-900/20 border border-emerald-800/30 rounded-br-2xl rounded-tl-3xl blur-2xl" />
                 <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-emerald-900/10 rounded-br-2xl rounded-tl-3xl filter blur-3xl" />
-                <X className="w-5 h-5 relative z-10" />
+                <XIcon className="w-5 h-5 relative z-10" />
               </motion.button>
-              <motion.button
+              {/* <motion.button
                 whileHover={{ scale: 1.1, rotate: -5 }}
                 className="w-12 h-12 bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-xl flex items-center justify-center hover:bg-white/[0.04] transition-colors relative overflow-hidden"
               >
@@ -588,7 +577,7 @@ export default function Waitlist() {
                 <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-emerald-900/20 border border-emerald-800/30 rounded-br-2xl rounded-tl-3xl blur-2xl" />
                 <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-emerald-900/10 rounded-br-2xl rounded-tl-3xl filter blur-3xl" />
                 <Instagram className="w-5 h-5 relative z-10" />
-              </motion.button>
+              </motion.button> */}
             </div>
 
             {/* Contact Cards Grid */}
@@ -650,7 +639,7 @@ export default function Waitlist() {
               transition={{ duration: 0.5 }}
             >
               <p className="text-gray-600 text-sm mb-4">
-                ©2024 Waitlist Template • Build in Framer • 404
+                ©2025 Mentalverse Waitlist 
               </p>
               {/* <div className="inline-flex items-center gap-2 bg-white text-black px-4 py-2 rounded-full text-sm font-medium">
                 <span>🚀</span>
