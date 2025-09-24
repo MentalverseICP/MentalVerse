@@ -13,6 +13,7 @@ import LandingPage from '@/pages/LandingPage'
 import Onboarding from '@/pages/Onboarding'
 import Loader from './components/shared/Loader'
 import { authService } from './services/backend'
+import Waitlist from './components/waitlist/waitlist'
 
 interface SubAppProps {
   onSearchChange: (value: string) => void;
@@ -135,6 +136,7 @@ function AppRouter() {
         path="/"
         element={
           <LandingPage onWalletDisconnect={handleWalletDisconnect} />
+          // <Waitlist />
         }
       />
       <Route
