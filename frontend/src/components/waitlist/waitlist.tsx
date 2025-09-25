@@ -20,15 +20,21 @@ import icpHubNigeria from "@/images/icphub_nigeria.png";
 import { HoverBorderGradient } from "./HoverBorderGradient";
 import { LayoutGrid } from "./LayoutGrid";
 import { FlipText } from "./FlipText";
+import { waitlistService } from "@/services/waitlistService";
 
 export default function Waitlist() {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
 
-  // Initialize EmailJS
+  // Initialize EmailJS and Waitlist Service
   React.useEffect(() => {
     emailjs.init("NsfNf6qAb6ZaEPM1q"); // EmailJS public key
+    
+    // Initialize waitlist service
+    waitlistService.initialize().catch(error => {
+      console.error("Failed to initialize waitlist service:", error);
+    });
   }, []);
 
   const features = [
@@ -93,20 +99,50 @@ export default function Waitlist() {
     setIsLoading(true);
 
     try {
-      const templateParams = {
+      // First, try to add to the canister
+      try {
+        const canisterResult = await waitlistService.addToWaitlist(email);
+        if (!canisterResult.success) {
+          console.warn("Canister submission failed:", canisterResult.message);
+          // Continue with email notifications even if canister fails
+        } else {
+          console.log("Successfully added to canister waitlist");
+        }
+      } catch (canisterError) {
+        console.warn("Canister not available, continuing with email notifications:", canisterError);
+      }
+
+      // Send confirmation email to user
+      const userTemplateParams = {
         to_email: email,
         user_email: email,
-        message: "Thank you for joining the MentalVerse waitlist!",
+        message: "Thank you for joining the MentalVerse waitlist! We'll keep you updated on our progress.",
       };
 
       await emailjs.send(
         "service_19yonvy", // EmailJS service ID
         "template_xo3q85i", // EmailJS template ID
-        templateParams,
+        userTemplateParams,
         "NsfNf6qAb6ZaEPM1q" // public key
       );
 
-      // Store in localStorage
+      // Send notification email to admin
+      const adminTemplateParams = {
+        to_email: "mentalverseinc@gmail.com",
+        user_email: email,
+        message: `New waitlist signup: ${email} joined the MentalVerse waitlist on ${new Date().toLocaleString()}`,
+        from_name: "MentalVerse Waitlist System",
+        subject: "New Waitlist Signup - MentalVerse"
+      };
+
+      await emailjs.send(
+        "service_19yonvy", // EmailJS service ID
+        "template_xo3q85i", // EmailJS template ID for admin notification
+        adminTemplateParams,
+        "NsfNf6qAb6ZaEPM1q" // public key
+      );
+
+      // Store in localStorage (backup storage)
       const waitlistEmails = JSON.parse(
         localStorage.getItem("waitlistEmails") || "[]"
       );

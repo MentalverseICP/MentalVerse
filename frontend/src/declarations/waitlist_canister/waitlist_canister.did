@@ -1,0 +1,21 @@
+type WaitlistEntry = 
+ record {
+   email: text;
+   "principal": opt principal;
+   timestamp: int;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok: text;
+ };
+service : {
+  addToWaitlist: (email: text) -> (Result);
+  exportWaitlistData: () -> (text) query;
+  getWaitlistCount: () -> (nat) query;
+  getWaitlistEntries: () -> (vec WaitlistEntry) query;
+  getWaitlistEntriesByDateRange: (startTime: int, endTime: int) ->
+   (vec WaitlistEntry) query;
+  isEmailInWaitlist: (email: text) -> (bool) query;
+  removeFromWaitlist: (email: text) -> (Result);
+}

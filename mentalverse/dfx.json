@@ -63,7 +63,17 @@
       "source": [
         "./waitlist_dist/"
       ],
-      "type": "assets"
+      "type": "assets",
+      "dependencies": [
+        "waitlist_canister"
+      ]
+    },
+    "waitlist_canister": {
+      "main": "src/waitlist_canister/main.mo",
+      "type": "motoko",
+      "dependencies": [
+        "internet_identity"
+      ]
     }
   },
   "defaults": {

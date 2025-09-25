@@ -14,6 +14,9 @@
   "secure_messaging": {
     "ic": "jzwty-fqaaa-aaaac-a4goq-cai"
   },
+  "waitlist_canister": {
+    "ic": "mooh3-raaaa-aaaac-a4k4q-cai"
+  },
   "waitlist_frontend": {
     "ic": "lijvc-eyaaa-aaaac-a4kma-cai"
   }
