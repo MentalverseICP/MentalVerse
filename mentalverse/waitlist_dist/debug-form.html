@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Form Test</title>
+    <style>
+        body {
+            background: black;
+            color: white;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .form-container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #333;
+            border-radius: 8px;
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #333;
+            border-radius: 4px;
+        }
+        input {
+            background: #111;
+            color: white;
+        }
+        button {
+            background: white;
+            color: black;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #f0f0f0;
+        }
+        .log {
+            margin-top: 20px;
+            padding: 10px;
+            background: #111;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Debug Form Test</h2>
+        <input type="email" id="email" placeholder="Enter email" value="test@example.com">
+        <button onclick="testFormSubmission()">Test Form Submission</button>
+        <div id="log" class="log">
+            <div>Debug Log:</div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import the bundled modules
+        import { e as emailjs } from './assets/emailjs.js';
+        
+        window.emailjs = emailjs;
+        
+        // Make the test function available globally
+        window.testFormSubmission = async function() {
+            const email = document.getElementById('email').value;
+            const logDiv = document.getElementById('log');
+            
+            function log(message) {
+                logDiv.innerHTML += '<div>' + new Date().toLocaleTimeString() + ': ' + message + '</div>';
+                console.log(message);
+            }
+            
+            log('Starting form submission test...');
+            log('Email: ' + email);
+            
+            // Test email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                log('❌ Email validation failed');
+                return;
+            }
+            log('✅ Email validation passed');
+            
+            try {
+                // Test EmailJS initialization
+                log('Initializing EmailJS...');
+                emailjs.init("NsfNf6qAb6ZaEPM1q");
+                log('✅ EmailJS initialized');
+                
+                // Test EmailJS send
+                log('Sending test email...');
+                const templateParams = {
+                    to_email: email,
+                    user_email: email,
+                    message: "Test email from debug form"
+                };
+                
+                const result = await emailjs.send(
+                    "service_19yonvy",
+                    "template_xo3q85i", 
+                    templateParams,
+                    "NsfNf6qAb6ZaEPM1q"
+                );
+                
+                log('✅ EmailJS send successful: ' + JSON.stringify(result));
+                log('🎉 Form submission test completed successfully!');
+                
+            } catch (error) {
+                log('❌ Error during form submission: ' + error.message);
+                log('Error details: ' + JSON.stringify(error));
+            }
+        };
+        
+        // Test on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Debug form loaded');
+        });
+    </script>
+</body>
+</html>

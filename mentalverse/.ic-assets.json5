@@ -1,6 +1,35 @@
 [
   {
+    "match": "/",
+    "redirect": "/waitlist.html",
+    "status_code": 301
+  },
+  {
     "match": "**/*",
-    "security_policy": "standard"
+    "headers": {
+      "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://icp-api.io https://*.icp0.io https://*.ic0.app; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+      "X-Frame-Options": "DENY",
+      "X-Content-Type-Options": "nosniff",
+      "Referrer-Policy": "strict-origin-when-cross-origin"
+    },
+    "allow_raw_access": true
+  },
+  {
+    "match": "*.html",
+    "headers": {
+      "Cache-Control": "no-cache, no-store, must-revalidate"
+    }
+  },
+  {
+    "match": "*.js",
+    "headers": {
+      "Cache-Control": "public, max-age=31536000, immutable"
+    }
+  },
+  {
+    "match": "*.css",
+    "headers": {
+      "Cache-Control": "public, max-age=31536000, immutable"
+    }
   }
 ]

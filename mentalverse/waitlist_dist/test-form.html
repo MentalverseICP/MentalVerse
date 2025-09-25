@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+</head>
+<body style="background: #000; color: #fff; padding: 20px; font-family: Arial;">
+    <h1>Form Submission Test</h1>
+    <div>
+        <input type="email" id="testEmail" placeholder="Enter email" style="padding: 10px; margin: 10px; width: 300px;">
+        <button id="testButton" style="padding: 10px 20px; margin: 10px; cursor: pointer;">Test Submit</button>
+    </div>
+    <div id="result" style="margin: 20px 0; padding: 10px; border: 1px solid #333;"></div>
+
+    <script>
+        // Initialize EmailJS
+        emailjs.init("NsfNf6qAb6ZaEPM1q");
+        
+        const testButton = document.getElementById('testButton');
+        const testEmail = document.getElementById('testEmail');
+        const result = document.getElementById('result');
+        
+        testButton.addEventListener('click', async () => {
+            const email = testEmail.value;
+            result.innerHTML = 'Testing...';
+            
+            if (!email) {
+                result.innerHTML = 'Please enter an email';
+                return;
+            }
+            
+            try {
+                // Test EmailJS
+                const userTemplateParams = {
+                    to_email: email,
+                    user_email: email,
+                    message: "Test email from MentalVerse waitlist!"
+                };
+
+                await emailjs.send(
+                    "service_19yonvy",
+                    "template_xo3q85i", 
+                    userTemplateParams,
+                    "NsfNf6qAb6ZaEPM1q"
+                );
+                
+                result.innerHTML = 'SUCCESS: Email sent successfully!';
+                result.style.color = 'green';
+            } catch (error) {
+                result.innerHTML = 'ERROR: ' + error.toString();
+                result.style.color = 'red';
+                console.error('EmailJS Error:', error);
+            }
+        });
+    </script>
+</body>
+</html>
