@@ -135,8 +135,8 @@ function AppRouter() {
       <Route
         path="/"
         element={
-          // <LandingPage onWalletDisconnect={handleWalletDisconnect} />
-          <Waitlist />
+          <LandingPage onWalletDisconnect={handleWalletDisconnect} />
+          // <Waitlist />
         }
       />
       <Route
