@@ -1,7 +1,5 @@
-import React, { useState } from "react";
+import { Suspense, useState } from "react";
 import { motion } from "framer-motion";
-import { Toaster, toast } from "sonner";
-import emailjs from "@emailjs/browser";
 import { BackgroundRippleEffect } from "@/components/ui/background-ripple-effect";
 import {
   Mail,
@@ -20,22 +18,16 @@ import icpHubNigeria from "@/images/icphub_nigeria.png";
 import { HoverBorderGradient } from "./HoverBorderGradient";
 import { LayoutGrid } from "./LayoutGrid";
 import { FlipText } from "./FlipText";
-import { waitlistService } from "@/services/waitlistService";
+import Background from "./Background";
 
 export default function Waitlist() {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState({ type: "", text: "" });
 
-  // Initialize EmailJS and Waitlist Service
-  React.useEffect(() => {
-    emailjs.init("NsfNf6qAb6ZaEPM1q"); // EmailJS public key
-    
-    // Initialize waitlist service
-    waitlistService.initialize().catch(error => {
-      console.error("Failed to initialize waitlist service:", error);
-    });
-  }, []);
+  // Initialize EmailJS
+  // React.useEffect(() => {
+  //   emailjs.init("NsfNf6qAb6ZaEPM1q"); // EmailJS public key
+  // }, []);
 
   const features = [
     {
@@ -88,85 +80,55 @@ export default function Waitlist() {
     },
   ];
 
-  const handleWaitlistSubmission = async () => {
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      toast.error("Please enter a valid email address.");
-      return;
-    }
+  // const handleWaitlistSubmission = async () => {
+  //   // Email validation
+  //   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  //   if (!emailRegex.test(email)) {
+  //     toast.error("Please enter a valid email address.");
+  //     return;
+  //   }
 
-    setIsLoading(true);
+  //   setIsLoading(true);
 
-    try {
-      // First, try to add to the canister
-      try {
-        const canisterResult = await waitlistService.addToWaitlist(email);
-        if (!canisterResult.success) {
-          console.warn("Canister submission failed:", canisterResult.message);
-          // Continue with email notifications even if canister fails
-        } else {
-          console.log("Successfully added to canister waitlist");
-        }
-      } catch (canisterError) {
-        console.warn("Canister not available, continuing with email notifications:", canisterError);
-      }
+  //   try {
+  //     const templateParams = {
+  //       to_email: email,
+  //       user_email: email,
+  //       message: "Thank you for joining the MentalVerse waitlist!",
+  //     };
 
-      // Send confirmation email to user
-      const userTemplateParams = {
-        to_email: email,
-        user_email: email,
-        message: "Thank you for joining the MentalVerse waitlist! We'll keep you updated on our progress.",
-      };
+  //     await emailjs.send(
+  //       "service_19yonvy", // EmailJS service ID
+  //       "template_xo3q85i", // EmailJS template ID
+  //       templateParams,
+  //       "NsfNf6qAb6ZaEPM1q" // public key
+  //     );
 
-      await emailjs.send(
-        "service_19yonvy", // EmailJS service ID
-        "template_xo3q85i", // EmailJS template ID
-        userTemplateParams,
-        "NsfNf6qAb6ZaEPM1q" // public key
-      );
+  //     // Store in localStorage
+  //     const waitlistEmails = JSON.parse(
+  //       localStorage.getItem("waitlistEmails") || "[]"
+  //     );
+  //     waitlistEmails.push({
+  //       email,
+  //       date: new Date().toISOString(),
+  //     });
+  //     localStorage.setItem("waitlistEmails", JSON.stringify(waitlistEmails));
 
-      // Send notification email to admin
-      const adminTemplateParams = {
-        to_email: "mentalverseinc@gmail.com",
-        user_email: email,
-        message: `New waitlist signup: ${email} joined the MentalVerse waitlist on ${new Date().toLocaleString()}`,
-        from_name: "MentalVerse Waitlist System",
-        subject: "New Waitlist Signup - MentalVerse"
-      };
+  //     // Show success toast
+  //     toast.success(
+  //       "Welcome to MentalVerse! You're now on our waitlist. We'll keep you updated on our progress."
+  //     );
 
-      await emailjs.send(
-        "service_19yonvy", // EmailJS service ID
-        "template_xo3q85i", // EmailJS template ID for admin notification
-        adminTemplateParams,
-        "NsfNf6qAb6ZaEPM1q" // public key
-      );
-
-      // Store in localStorage (backup storage)
-      const waitlistEmails = JSON.parse(
-        localStorage.getItem("waitlistEmails") || "[]"
-      );
-      waitlistEmails.push({
-        email,
-        date: new Date().toISOString(),
-      });
-      localStorage.setItem("waitlistEmails", JSON.stringify(waitlistEmails));
-
-      // Show success toast
-      toast.success(
-        "Welcome to MentalVerse! You're now on our waitlist. We'll keep you updated on our progress."
-      );
-
-      // Clear the email input
-      setEmail("");
-      setMessage({ type: "success", text: "" }); // Clear any existing messages
-    } catch (error) {
-      console.error("Error processing waitlist submission:", error);
-      toast.error("Something went wrong. Please try again later.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  //     // Clear the email input
+  //     setEmail("");
+  //     setMessage({ type: "success", text: "" }); // Clear any existing messages
+  //   } catch (error) {
+  //     console.error("Error processing waitlist submission:", error);
+  //     toast.error("Something went wrong. Please try again later.");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   const partners = [
     {
@@ -202,70 +164,15 @@ export default function Waitlist() {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white overflow-hidden">
-      {/* background effects */}
-      <div className="fixed inset-0 z-0 overflow-hidden">
-        {/* Primary gradient layer */}
-        {/* <motion.div
-          className="absolute inset-0"
-          animate={{
-            background: [
-              "radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.08) 0%, transparent 50%), radial-gradient(circle at 100% 100%, rgba(255, 255, 255, 0.08) 0%, transparent 50%)",
-              "radial-gradient(circle at 100% 0%, rgba(255, 255, 255, 0.08) 0%, transparent 50%), radial-gradient(circle at 0% 100%, rgba(255, 255, 255, 0.08) 0%, transparent 50%)",
-              "radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.08) 0%, transparent 50%), radial-gradient(circle at 100% 100%, rgba(255, 255, 255, 0.08) 0%, transparent 50%)",
-            ],
-          }}
-          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-        /> */}
-
-        {/* Secondary animated gradients */}
-        {/* <motion.div
-          className="absolute inset-0 opacity-20"
-          animate={{
-            background: [
-              "radial-gradient(600px circle at left top, rgba(255, 255, 255, 0.03), transparent 80%)",
-              "radial-gradient(600px circle at right top, rgba(255, 255, 255, 0.03), transparent 80%)",
-              "radial-gradient(600px circle at left bottom, rgba(255, 255, 255, 0.03), transparent 80%)",
-              "radial-gradient(600px circle at right bottom, rgba(255, 255, 255, 0.03), transparent 80%)",
-            ],
-          }}
-          transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-        /> */}
-
-        {/* Noise texture overlay */}
-        {/* <div
-          className="absolute inset-0 opacity-[0.015]"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")`,
-            transform: "scale(1.5)",
-          }}
-        /> */}
-
-        {/* Moving spotlight effect */}
-        {/* <motion.div
-          className="absolute -inset-[100%] opacity-[0.02]"
-          animate={{
-            transform: [
-              "translate(0%, 0%) rotate(0deg)",
-              "translate(50%, 25%) rotate(180deg)",
-              "translate(-25%, 35%) rotate(360deg)",
-              "translate(0%, 0%) rotate(0deg)",
-            ],
-          }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          style={{
-            background:
-              "conic-gradient(from 0deg, transparent, rgba(255,255,255,0.5), transparent)",
-          }}
-        /> */}
-      </div>
-
-      <Toaster position="top-center" theme="dark" richColors closeButton />
+    <div className="min-h-screen  text-white overflow-hidden">
+      <Suspense fallback={<div className="fixed inset-0 bg-background" />}>
+        <Background />
+      </Suspense>
 
       {/* Hero/Waitlist Section */}
       <section
         id="waitlist-hero"
-        className="relative z-10 min-h-screen flex items-center justify-center px-6"
+        className="relative min-h-screen flex items-center justify-center px-6"
       >
         {/* Background Text */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
@@ -298,13 +205,20 @@ export default function Waitlist() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="relative"
+            className="relative group"
           >
-            {/* Animated Grid Background */}
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_70%_70%_at_50%_50%,#000_60%,transparent_100%)]" />
 
             {/* Main Waitlist Card */}
-            <div className="relative bg-[#03050b51] backdrop-filter backdrop-blur-[14px] border border-[#ffffff14] hover:bg-[#03050 rounded-[32px] p-4 sm:p-8 py-6 sm:py-10 before:absolute before:inset-0 before:bg-gradient-to-b before:from-white/5 before:to-transparent before:rounded-[32px]">
+            <div className="relative bg-[#03050b51] backdrop-filter backdrop-blur-[14px] hover:bg-[#03050] rounded-[32px] p-4 sm:p-8 py-6 sm:py-10 overflow-hidden">
+
+              {/* Background lighting for card */}
+              <div className="absolute bottom-0 -right-[245px] w-1/3 h-1/2 bg-[#ffffff] rounded-bl-xl rounded-tl-3xl filter blur-xl" />
+              <div className="absolute -bottom-5 -left-[245px] w-1/3 h-1/2 bg-[#ffffff]   rounded-tl-3xl filter blur-xl" />
+              <div className="absolute -bottom-[400px]  sm:-bottom-[325px]  w-full h-1/2 bg-[#ffffff50] blur-3xl  sm:bg-[#ffffff]  filter sm:blur-xl rounded" />
+              <div className="absolute top-0 -right-[245px] w-1/3 h-1/2 bg-[#ffffff] rounded-br-2xl rounded-tl-xl filter blur-xl" />
+              <div className="absolute top-0 -left-[245px] w-1/3 h-1/2 bg-[#ffffff]  rounded-tl-3xl filter blur-xl" />
+              <div className="absolute -top-[400px]  sm:-top-[325px]  w-full h-1/2  bg-[#ffffff50] blur-3xl sm:bg-[#ffffff] filter sm:blur-xl rounded" />
+
               {/* Heading with Flip Effect */}
               <div className="flex justify-center items-center max-sm:mt-10">
                 <FlipText className="text-3xl sm:text-5xl font-bold mb-4 text-center inline-block">
@@ -313,10 +227,12 @@ export default function Waitlist() {
                   </span>
                 </FlipText>
               </div>
+
               <p className="text-gray-400 mb-4 sm:mb-6 text-sm leading-relaxed text-center px-2 sm:px-0">
                 Sign up for our newsletter to receive the latest updates and
                 insights straight to your inbox.
               </p>{" "}
+
               {/* Email Input Section */}
               <div className="flex flex-col sm:flex-row gap-3 mb-8 w-full">
                 <HoverBorderGradient
@@ -334,13 +250,15 @@ export default function Waitlist() {
                     className="w-full bg-transparent text-white placeholder-gray-500 outline-none py-2 px-4"
                   />
                   <div className="absolute inset-0 bg-[radial-gradient(32%_50%_at_24.325%_25.675%,rgb(255,255,255)_0%,rgba(255,255,255,0)_100%)] opacity-[0.03] blur-[10px] rounded-full pointer-events-none" />
-                </HoverBorderGradient>
-
+                </HoverBorderGradient>  
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   disabled={isLoading || !email}
-                  onClick={handleWaitlistSubmission}
+                  onClick={() => {
+                    console.log("Join waitlist clicked");
+                    // handleWaitlistSubmission();
+                  }}
                   className={`px-6 py-3 bg-white font-semibold rounded-full transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer justify-center max-sm:mt-5
                     ${
                       isLoading
@@ -363,18 +281,8 @@ export default function Waitlist() {
                     <span className="text-black">Join Waitlist</span>
                   )}
                 </motion.button>
-                {message.text && (
-                  <div
-                    className={`mt-2 text-sm ${
-                      message.type === "success"
-                        ? "text-green-400"
-                        : "text-red-400"
-                    }`}
-                  >
-                    {message.text}
-                  </div>
-                )}
               </div>
+
               {/* Component Library Card */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -382,8 +290,10 @@ export default function Waitlist() {
                 transition={{ delay: 0.6, duration: 0.5 }}
                 className="p-6 bg-[#03050b51] backdrop-filter backdrop-blur-[14px] border border-[#ffffff14] rounded-2xl relative overflow-hidden"
               >
-                <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-emerald-900/20 border border-emerald-800/30 rounded-br-2xl rounded-tl-3xl blur-2xl" />
-                <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-emerald-900/10 rounded-br-2xl rounded-tl-3xl filter blur-3xl" />
+                {/* backgound */}
+                {/* <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-emerald-900/20 border border-emerald-800/30 rounded-br-2xl rounded-tl-3xl blur-2xl" />
+                <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-emerald-900/10 rounded-br-2xl rounded-tl-3xl filter blur-3xl" /> */}
+
                 <div className="flex items-start justify-between relative z-10">
                   <div className="flex max-sm:flex-col gap-4">
                     <div className="w-12 h-12 bg-[#03050b51] backdrop-filter backdrop-blur-[14px] border border-[#ffffff14] rounded-xl flex items-center justify-center flex-shrink-0">
@@ -417,6 +327,7 @@ export default function Waitlist() {
                   </span>
                 </div>
               </motion.div>
+
               {/* Social Links */}
               <div className="flex items-center justify-center gap-3 mt-8">
                 <motion.a
@@ -443,6 +354,8 @@ export default function Waitlist() {
                   </div>
                 </motion.a>
               </div>
+
+              {/* <GradientBackgroundForward /> */}
             </div>
           </motion.div>
         </div>
@@ -590,6 +503,7 @@ export default function Waitlist() {
         >
           {/* Contact Card */}
           <div className="relative bg-[#03050b51] backdrop-filter backdrop-blur-[14px] border border-[#ffffff14] hover:bg-[#03050b70] shadow-[0_0_30px_rgba(255,255,255,0.05)]  rounded-[32px] p-12 before:absolute before:inset-0 before:bg-gradient-to-b before:from-white/10 before:to-transparent before:rounded-[32px]">
+
             {/* Logo */}
             <div className="w-20 h-20 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center mb-8 mx-auto overflow-hidden">
               <img
@@ -651,8 +565,8 @@ export default function Waitlist() {
                 whileHover={{ scale: 1.05, y: -2 }}
                 className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:p-5 hover:bg-white/[0.04] transition-all cursor-pointer relative overflow-hidden flex flex-col items-center sm:items-start"
               >
-                <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-emerald-900/20 border border-emerald-800/30 rounded-br-2xl rounded-tl-3xl blur-2xl" />
-                <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-emerald-900/10 rounded-br-2xl rounded-tl-3xl filter blur-3xl" />
+                <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-white-900/20 border border-emerald-800/30 rounded-br-2xl rounded-tl-3xl blur-2xl" />
+                <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-white-900/10 rounded-br-2xl rounded-tl-3xl filter blur-3xl" />
                 <Mail className="w-6 h-6 mb-3 text-gray-400 relative z-10" />
                 <p className="font-semibold text-white mb-1 relative z-10 text-center sm:text-left">
                   Email us
@@ -666,8 +580,8 @@ export default function Waitlist() {
                 whileHover={{ scale: 1.05, y: -2 }}
                 className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-5 hover:bg-white/[0.04] transition-all cursor-pointer relative overflow-hidden"
               >
-                <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-emerald-900/20 border border-emerald-800/30 rounded-br-2xl rounded-tl-3xl blur-2xl" />
-                <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-emerald-900/10 rounded-br-2xl rounded-tl-3xl filter blur-3xl" />
+                <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-white-900/20 border border-emerald-800/30 rounded-br-2xl rounded-tl-3xl blur-2xl" />
+                <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-white-900/10 rounded-br-2xl rounded-tl-3xl filter blur-3xl" />
                 <Phone className="w-6 h-6 mb-3 text-gray-400 relative z-10" />
                 <p className="font-semibold text-white mb-1 relative z-10">
                   Call us
@@ -681,8 +595,8 @@ export default function Waitlist() {
                 whileHover={{ scale: 1.05, y: -2 }}
                 className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-5 hover:bg-white/[0.04] transition-all cursor-pointer relative overflow-hidden"
               >
-                <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-emerald-900/20 border border-emerald-800/30 rounded-br-2xl rounded-tl-3xl blur-2xl" />
-                <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-emerald-900/10 rounded-br-2xl rounded-tl-3xl filter blur-3xl" />
+                <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-white-900/20 border border-emerald-800/30 rounded-br-2xl rounded-tl-3xl blur-2xl" />
+                <div className="absolute bottom-0 right-0 w-1/3 h-1/2 bg-white-900/10 rounded-br-2xl rounded-tl-3xl filter blur-3xl" />
                 <MapPin className="w-6 h-6 mb-3 text-gray-400 relative z-10" />
                 <p className="font-semibold text-white mb-1 relative z-10">
                   Location
@@ -706,10 +620,7 @@ export default function Waitlist() {
               <p className="text-gray-600 text-sm mb-4">
                 ©2025 Mentalverse Waitlist
               </p>
-              {/* <div className="inline-flex items-center gap-2 bg-white text-black px-4 py-2 rounded-full text-sm font-medium">
-                <span>🚀</span>
-                Made in Framer
-              </div> */}
+
             </motion.div>
           </footer>
         </div>
