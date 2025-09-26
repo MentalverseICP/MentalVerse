@@ -40,7 +40,7 @@ const Background = () => {
   };
 
   return (
-    <div className="fixed inset-0 -z-10 overflow-hidden bg-gradient-to-b from-white via-white to-background/5 dark:from-background dark:via-background dark:to-background/90">
+    <div className="fixed inset-0 -z-10 overflow-hidden bg-gradient-to-b from-black via-black to-black ">
       <FloatingParticles />
       <div className="absolute inset-0 bg-grid-small-white/[0.1] dark:bg-grid-small-dark/[0.1]" />
     </div>
