@@ -1,5 +1,9 @@
 [
   {
+    "match": ".well-known",
+    "ignore": false
+  },
+  {
     "match": "/",
     "redirect": "/waitlist.html",
     "status_code": 301
