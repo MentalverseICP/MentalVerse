@@ -18,9 +18,9 @@ interface LandingPageProps {
 const LandingPage: React.FC<LandingPageProps> = ({ onWalletDisconnect }) => {
   return (
     <div className="min-h-screen text-foreground overflow-x-hidden relative">
-      {/* <Suspense fallback={<div className="fixed inset-0 bg-background" />}>
+      <Suspense fallback={<div className="fixed inset-0 bg-background" />}>
         <Background />
-      </Suspense> */}
+      </Suspense>
       <Header onWalletDisconnect={onWalletDisconnect} />
       <Hero />
       <SmilesSection />

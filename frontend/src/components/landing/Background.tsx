@@ -7,7 +7,7 @@ const Background = () => {
         {[...Array(50)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-2 h-2 rounded-full bg-primary/30 dark:bg-primary/20"
+            className="absolute w-2 h-2 rounded-full bg-primary/30 dark:bg-primary/30"
             initial={{
               x: Math.random() * window.innerWidth,
               y: Math.random() * window.innerHeight,
