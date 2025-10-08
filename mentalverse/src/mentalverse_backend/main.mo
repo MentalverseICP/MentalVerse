@@ -404,6 +404,45 @@ persistent actor MentalVerseBackend {
         }
     };
     
+    // Relay: Spend tokens on behalf of caller (authorized via backend)
+    public shared(msg) func relaySpendTokens(spendingType: MVTTokenInterface.SpendingType, amount: ?Nat) : async Result.Result<MVTTokenInterface.TxIndex, Text> {
+        // Security check
+        if (not securityModule.checkRateLimitSimple(msg.caller)) {
+            return #err("Rate limit exceeded");
+        };
+        
+        switch (mvtTokenCanister) {
+            case (null) { #err("MVT Token service unavailable") };
+            case (?tokenCanister) {
+                try {
+                    await tokenCanister.spend_tokens(msg.caller, spendingType, amount)
+                } catch (_error) {
+                    #err("Error spending tokens")
+                }
+            };
+        }
+    };
+    
+    // Relay: Stake tokens on behalf of caller (authorized via backend)
+    public shared(msg) func relayStakeTokens(amount: Nat, lock_period: MVTTokenInterface.Duration) : async Result.Result<(), Text> {
+        // Security check
+        if (not securityModule.checkRateLimitSimple(msg.caller)) {
+            return #err("Rate limit exceeded");
+        };
+        
+        switch (mvtTokenCanister) {
+            case (null) { #err("MVT Token service unavailable") };
+            case (?tokenCanister) {
+                try {
+                    await tokenCanister.stake_tokens(msg.caller, amount, lock_period)
+                } catch (_error) {
+                    #err("Error staking tokens")
+                }
+            };
+        }
+    };
+
+    
     // Get user's transaction history
     public shared(msg) func getTransactionHistory(limit: ?Nat64, offset: ?Nat64) : async Result.Result<[MVTTokenInterface.Transaction], Text> {
         // Security check

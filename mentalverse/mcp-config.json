@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "mentalverse-prometheus": {
+      "command": "dfx",
+      "args": ["canister", "call", "prometheus_wrapper", "list_tools", "()", "--network", "ic"],
+      "env": {}
+    }
+  }
+}
