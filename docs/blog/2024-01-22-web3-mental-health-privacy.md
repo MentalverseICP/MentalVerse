@@ -198,4 +198,4 @@ The question isn't whether Web3 will transform mental health privacy, but how qu
 
 *Want to experience the future of mental health privacy? [Join MentalVerse](https://app.mentalverse.com) and take control of your mental health data.*
 
-*For technical discussions, join our [developer Discord](https://discord.gg/mentalverse-dev) or check out our [GitHub repository](https://github.com/mentalverse/mentalverse).*
+*For technical discussions, join our [developer Discord](https://discord.gg/mentalverse-dev) or check out our [GitHub repository](https://github.com/MentalverseICP/MentalVerse).*

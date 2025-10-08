@@ -150,7 +150,7 @@ The platform features a robust staking mechanism that allows users to:
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/mentalverse/mentalverse.git
+   git clone https://github.com/MentalverseICP/MentalVerse.git
    cd mentalverse
    ```
 
@@ -390,7 +390,7 @@ MentalVerse is deployed on the Internet Computer mainnet:
 - **Documentation**: [docs.mentalverse.com](https://docs.mentalverse.com)
 - **Discord**: [Join our community](https://discord.gg/mentalverse)
 - **Email**: support@mentalverse.com
-- **GitHub Issues**: [Report bugs or request features](https://github.com/mentalverse/mentalverse/issues)
+- **GitHub Issues**: [Report bugs or request features](https://github.com/MentalverseICP/MentalVerse/issues)
 
 ## 🙏 Acknowledgments
 

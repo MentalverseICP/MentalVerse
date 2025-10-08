@@ -14,7 +14,7 @@ A Model Context Protocol (MCP) server that provides secure token staking and pay
 
 1. **Clone the repository:**
 ```bash
-git clone https://github.com/MentalVerse/MentalVerse.git
+git clone https://github.com/MentalverseICP/MentalVerse.git
 cd MentalVerse/mentalverse
 ```
 

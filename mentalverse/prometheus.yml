@@ -10,7 +10,7 @@ submission:
   publisher: MentalVerse Team
   category: Health & Wellness
   deployment_type: global
-  repo_url: https://github.com/mentalverse/mentalverse
+  repo_url: https://github.com/MentalverseICP/MentalVerse/tree/main/mentalverse
   mcp_path: /mcp
   why_this_app: This app provides secure, privacy-focused mental health support with AI assistance and peer connections on Web3 infrastructure.
   key_features:
@@ -26,9 +26,9 @@ submission:
     - privacy
     - healthcare
   visuals:
-    icon_url: https://example.com/icon.png
-    banner_url: https://example.com/banner.png
+    icon_url: https://github.com/MentalverseICP/MentalVerse/blob/main/mentalverse/assets/icon.svg
+    banner_url: https://github.com/MentalverseICP/MentalVerse/blob/main/mentalverse/assets/banner.svg
     gallery_images:
       - https://example.com/banner.png
-  git_commit: '8424c6d1f7a58c35ecddf1976a1c2b4fb0e5e698'
+  git_commit: 'a2fc077d625b9dc2f8b3d8de435735f7723aca79'
   wasm_path: ./.dfx/local/canisters/prometheus_wrapper/prometheus_wrapper.wasm
