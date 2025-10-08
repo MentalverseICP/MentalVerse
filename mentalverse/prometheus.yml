@@ -1,0 +1,34 @@
+# Prometheus Application Manifest
+# This is the permanent, unique identifier for your application.
+namespace: com.mentalverse.prometheus
+
+# This section contains all data for a specific version. This entire package will be submitted for review and locked to the audit of this version.
+# deployment_type: 'global' (shared infrastructure, recommended) or 'provisioned' (dedicated resources)
+submission:
+  name: MentalVerse Prometheus Wrapper
+  description: A mental health support platform with AI-powered assistance and secure messaging built on Internet Computer
+  publisher: MentalVerse Team
+  category: Health & Wellness
+  deployment_type: global
+  repo_url: https://github.com/mentalverse/mentalverse
+  mcp_path: /mcp
+  why_this_app: This app provides secure, privacy-focused mental health support with AI assistance and peer connections on Web3 infrastructure.
+  key_features:
+    - AI-powered mental health chatbot
+    - Secure peer-to-peer messaging
+    - Privacy-focused Web3 architecture
+    - Token-based incentive system
+    - Decentralized identity management
+  tags:
+    - mental-health
+    - ai-assistant
+    - web3
+    - privacy
+    - healthcare
+  visuals:
+    icon_url: https://example.com/icon.png
+    banner_url: https://example.com/banner.png
+    gallery_images:
+      - https://example.com/banner.png
+  git_commit: '8424c6d1f7a58c35ecddf1976a1c2b4fb0e5e698'
+  wasm_path: ./.dfx/local/canisters/prometheus_wrapper/prometheus_wrapper.wasm
