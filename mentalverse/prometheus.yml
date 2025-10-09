@@ -30,5 +30,5 @@ submission:
     banner_url: https://github.com/MentalverseICP/MentalVerse/releases/latest/download/banner.svg
     gallery_images:
       - https://github.com/MentalverseICP/MentalVerse/releases/latest/download/banner.svg
-  git_commit: 'a2fc077d625b9dc2f8b3d8de435735f7723aca79'
+  git_commit: 'c981d911d2eefb77dee89760c1eeba3d473f57bc'
   wasm_path: ./.dfx/local/canisters/prometheus_wrapper/prometheus_wrapper.wasm
