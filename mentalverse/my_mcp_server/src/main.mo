@@ -68,25 +68,26 @@ shared ({ caller = deployer }) persistent actor class McpServer(
   // =================================================================================
 
   // --- UNCOMMENT THIS BLOCK TO ENABLE AUTHENTICATION ---
-  let issuerUrl = "https://bfggx-7yaaa-aaaai-q32gq-cai.icp0.io";
-  let requiredScopes = ["openid"];
+  // let issuerUrl = "https://bfggx-7yaaa-aaaai-q32gq-cai.icp0.io";
+  // let requiredScopes = ["openid"];
 
-  public query func transformJwksResponse({
-    context : Blob;
-    response : IC.HttpRequestResult;
-  }) : async IC.HttpRequestResult {
-    {
-      response with headers = [];
-    };
-  };
+  // public query func transformJwksResponse({
+  //   context : Blob;
+  //   response : IC.HttpRequestResult;
+  // }) : async IC.HttpRequestResult {
+  //   {
+  //     response with headers = [];
+  //   };
+  // };
 
-  let authContext : ?AuthTypes.AuthContext = ?AuthState.init(
-    Principal.fromActor(self),
-    owner,
-    issuerUrl,
-    requiredScopes,
-    transformJwksResponse,
-  );
+  let authContext : ?AuthTypes.AuthContext = null; // Disabled for testing
+  // ?AuthState.init(
+  //   Principal.fromActor(self),
+  //   owner,
+  //   issuerUrl,
+  //   requiredScopes,
+  //   transformJwksResponse,
+  // );
   // --- END OF AUTHENTICATION BLOCK ---
 
   // =================================================================================

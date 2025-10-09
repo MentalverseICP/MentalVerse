@@ -1,33 +1,68 @@
-import express from "express";
-import fetch from "node-fetch";
+import express from 'express';
+import fetch from 'node-fetch';
+import bodyParser from 'body-parser';
 
 const app = express();
-app.use(express.json());
+app.use(bodyParser.json());
 
-const CANISTER_ID = "uxrrr-q7777-77774-qaaaq-cai";
-const DFX_URL = "http://127.0.0.1:4943";
+const CANISTER_ID = process.env.CANISTER_ID || "uxrrr-q7777-77774-qaaaq-cai";
+const DFX_URL = process.env.DFX_URL || "http://127.0.0.1:4943";
 
 app.post("/mcp", async (req, res) => {
   try {
-    console.log("Received MCP request:", JSON.stringify(req.body, null, 2));
+    console.log('Received MCP request:', JSON.stringify(req.body, null, 2));
     
-    // Forward the request to the IC canister
-    const icRes = await fetch(`${DFX_URL}/api/v2/canister/${CANISTER_ID}/call`, {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/cbor",
-        "Accept": "application/cbor"
+    // Use raw domain to bypass certification issues
+    const canisterUrl = `http://${CANISTER_ID}.localhost:4943/mcp`;
+    
+    const canisterResponse = await fetch(canisterUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(req.body)
     });
+
+    console.log('Canister Response status:', canisterResponse.status);
+    console.log('Canister Response headers:', canisterResponse.headers.raw());
+
+    if (!canisterResponse.ok) {
+      console.error('Canister HTTP request failed:', canisterResponse.status, canisterResponse.statusText);
+      return res.status(500).json({
+        jsonrpc: '2.0',
+        id: req.body.id || null,
+        error: {
+          code: -32603,
+          message: `Canister HTTP request failed: ${canisterResponse.status} ${canisterResponse.statusText}`
+        }
+      });
+    }
+
+    // Get response content type from canister
+    const contentType = canisterResponse.headers.get('content-type') || 'application/json';
     
-    const data = await icRes.text();
-    console.log("IC response:", data);
+    // Forward the response with the same content type
+    res.setHeader('Content-Type', contentType);
     
-    res.send(data);
-  } catch (err) {
-    console.error("Proxy error:", err);
-    res.status(500).send({ error: err.message });
+    // Handle different response types
+    if (contentType.includes('application/json')) {
+      const jsonResponse = await canisterResponse.json();
+      res.json(jsonResponse);
+    } else {
+      const responseBuffer = await canisterResponse.buffer();
+      res.send(responseBuffer);
+    }
+
+  } catch (error) {
+    console.error('Proxy error:', error);
+    res.status(500).json({
+      jsonrpc: '2.0',
+      id: req.body.id || null,
+      error: {
+        code: -32603,
+        message: error.message
+      }
+    });
   }
 });
 
