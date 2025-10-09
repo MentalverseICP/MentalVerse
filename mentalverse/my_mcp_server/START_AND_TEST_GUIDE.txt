@@ -1,0 +1,41 @@
+My MCP Server - Start and Test Guide
+
+Prerequisites:
+- Node.js >= 18
+- DFX (DFINITY Canister SDK)
+- MOPS (Motoko Package Manager)
+
+Environment variables (create or update .env in my_mcp_server):
+- WRAPPER_CANISTER_ID=znjvm-maaaa-aaaac-a4ora-cai
+- CANISTER_ID=znjvm-maaaa-aaaac-a4ora-cai
+- DFX_URL=http://127.0.0.1:4943
+- PORT=8080
+
+Install dependencies:
+1) npm install
+2) npm run mops:install
+
+Start local replica:
+- npm run start
+  This launches the local DFX replica in the background.
+
+Deploy the canister locally:
+- npm run deploy
+  This deploys the my_mcp_server canister defined in dfx.json.
+
+Run the proxy server:
+- node proxy.js
+  Loads .env, reads CANISTER_ID, and forwards MCP requests to http://{CANISTER_ID}.localhost:4943/mcp
+
+Health check:
+- curl http://localhost:8080/health
+  Expected JSON: { "status": "ok", "canister_id": "<CANISTER_ID>", "dfx_url": "http://127.0.0.1:4943" }
+
+Test with MCP Inspector:
+1) npm run inspector
+2) Open: http://127.0.0.1:4943/mcp/?canisterId=<your_local_canister_id>
+   Note: For local testing, you can get the canister id from the deploy output or with:
+   dfx canister id my_mcp_server
+
+Stop local replica:
+- npm run stop
