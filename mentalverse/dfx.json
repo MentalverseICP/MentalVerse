@@ -74,14 +74,6 @@
       "dependencies": [
         "internet_identity"
       ]
-    },
-    "prometheus_wrapper": {
-      "main": "src/prometheus_wrapper/main.mo",
-      "type": "motoko",
-      "dependencies": [
-        "internet_identity",
-        "mvt_token_canister"
-      ]
     }
   },
   "defaults": {

@@ -6,8 +6,7 @@
       "cwd": "./my_mcp_server",
       "env": {
         "BACKEND_CANISTER_ID": "cytcv-raaaa-aaaac-a4aoa-cai",
-        "MVT_TOKEN_CANISTER_ID": "c7seb-4yaaa-aaaac-a4aoq-cai",
-        "PROMETHEUS_WRAPPER_CANISTER_ID": "znjvm-maaaa-aaaac-a4ora-cai"
+        "MVT_TOKEN_CANISTER_ID": "c7seb-4yaaa-aaaac-a4aoq-cai"
       }
     }
   }

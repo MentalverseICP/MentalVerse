@@ -6,10 +6,25 @@ Prerequisites:
 - MOPS (Motoko Package Manager)
 
 Environment variables (create or update .env in my_mcp_server):
-- WRAPPER_CANISTER_ID=znjvm-maaaa-aaaac-a4ora-cai
-- CANISTER_ID=znjvm-maaaa-aaaac-a4ora-cai
+- CANISTER_ID=<your_local_my_mcp_server_canister_id>
 - DFX_URL=http://127.0.0.1:4943
 - PORT=8080
+
+Tip: Set CANISTER_ID from dfx output:
+- PowerShell:
+  $cid = dfx canister id my_mcp_server
+  @"
+  CANISTER_ID=$cid
+  DFX_URL=http://127.0.0.1:4943
+  PORT=8080
+  "@ | Set-Content -Path .env -Encoding utf8
+- Bash/WSL:
+  CID=$(dfx canister id my_mcp_server)
+  cat > .env <<EOF
+  CANISTER_ID=$CID
+  DFX_URL=http://127.0.0.1:4943
+  PORT=8080
+  EOF
 
 Install dependencies:
 1) npm install

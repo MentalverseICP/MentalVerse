@@ -30,6 +30,7 @@ import Beacon "mo:mcp-motoko-sdk/mcp/Beacon";
 import ApiKey "mo:mcp-motoko-sdk/auth/ApiKey";
 
 import SrvTypes "mo:mcp-motoko-sdk/server/Types";
+import TokenAPI "../../src/mentalverse_backend/mvt_token_interface";
 
 import IC "mo:ic";
 
@@ -39,25 +40,50 @@ shared ({ caller = deployer }) persistent actor class McpServer(
   }
 ) = self {
 
+  // ALL STABLE VARIABLES MUST BE DECLARED FIRST
+  var admin : ?Principal = null;
+  var mvtTokenCanister : ?Principal = null;
+  var backendCanister : ?Principal = null;
+  var apyRegistry : [(Text, Nat)] = [
+    ("30d", 500),
+    ("90d", 800),
+    ("180d", 1200),
+    ("365d", 1500),
+  ];
+  var stakingReceipts : [StakingReceipt] = [];
+  var paymentReceipts : [PaymentReceipt] = [];
+  // State for certified HTTP assets (like /.well-known/...)
+  var stable_http_assets : HttpAssets.StableEntries = [];
+
+  // TYPE DECLARATIONS
+  public type WrapperError = { code : Text; message : Text };
+  public type StakingReceipt = { id : Text; user : Principal; amount : Nat; lock_period : Nat64; selected_apr : Float; created_at_time : Int };
+  public type PaymentReceipt = { id : Text; user : Principal; service_id : Text; provider_alias : Text; amount : Nat; created_at_time : Int };
+
+  // NON-STABLE VARIABLES
   // The canister owner, who can manage treasury funds.
   // Defaults to the deployer if not specified.
-  var owner : Principal = Option.get(do ? { args!.owner! }, deployer);
-  stable var wrapperCanister : ?Principal = null;
+  transient var owner : Principal = Option.get(do ? { args!.owner! }, deployer);
 
-  // State for certified HTTP assets (like /.well-known/...)
-  stable var stable_http_assets : HttpAssets.StableEntries = [];
+  private func tokenActor() : Result.Result<TokenAPI.MVTTokenCanisterInterface, WrapperError> {
+    switch (mvtTokenCanister) {
+      case null { #err({ code = "CONFIG_NOT_SET"; message = "MVT token canister not set" }) };
+      case (?canister_id) { #ok(TokenAPI.getMVTTokenCanister(canister_id)) };
+    };
+  };
+
   // REMOVED 'stable' keyword - http_assets contains non-stable types
   transient let http_assets = HttpAssets.init(stable_http_assets);
 
   // Resource contents stored in memory for simplicity.
   // In a real application these would probably be uploaded or user generated.
-  var resourceContents = [
+  transient var resourceContents = [
     ("file:///main.py", "print('Hello from main.py!')"),
     ("file:///README.md", "# MCP Motoko Server"),
   ];
 
   // The application context that holds our state.
-  var appContext : McpTypes.AppContext = State.init(resourceContents);
+  transient var appContext : McpTypes.AppContext = State.init(resourceContents);
 
   // =================================================================================
   // --- OPT-IN: MONETIZATION & AUTHENTICATION ---
@@ -80,7 +106,7 @@ shared ({ caller = deployer }) persistent actor class McpServer(
   //   };
   // };
 
-  let authContext : ?AuthTypes.AuthContext = null; // Disabled for testing
+  transient let authContext : ?AuthTypes.AuthContext = null; // Disabled for testing
   // ?AuthState.init(
   //   Principal.fromActor(self),
   //   owner,
@@ -96,7 +122,7 @@ shared ({ caller = deployer }) persistent actor class McpServer(
   // This helps the Prometheus Protocol DAO understand ecosystem growth.
   // =================================================================================
 
-  let beaconContext : ?Beacon.BeaconContext = null;
+  transient let beaconContext : ?Beacon.BeaconContext = null;
 
   // --- UNCOMMENT THIS BLOCK TO ENABLE THE BEACON ---
   /*
@@ -123,90 +149,138 @@ shared ({ caller = deployer }) persistent actor class McpServer(
     case (null) { Debug.print("Beacon is disabled.") };
   };
 
-  // --- 1. DEFINE YOUR RESOURCES & TOOLS ---
-  let resources : [McpTypes.Resource] = [
+  // --- 1. DEFINE RESOURCES ---
+  transient let resources : [McpTypes.Resource] = [
     {
       uri = "file:///main.py";
       name = "main.py";
       title = ?"Main Python Script";
-      description = ?"Contains the main logic of the application.";
+      description = ?"A simple Python script";
       mimeType = ?"text/x-python";
     },
     {
       uri = "file:///README.md";
       name = "README.md";
-      title = ?"Project Documentation";
-      description = null;
+      title = ?"Project README";
+      description = ?"Project documentation";
       mimeType = ?"text/markdown";
     },
   ];
 
-  let tools : [McpTypes.Tool] = [{
-    name = "get_weather";
-    title = ?"Weather Provider";
-    description = ?"Get current weather information for a location";
-    inputSchema = Json.obj([
-      ("type", Json.str("object")),
-      ("properties", Json.obj([("location", Json.obj([("type", Json.str("string")), ("description", Json.str("City name or zip code"))]))])),
-      ("required", Json.arr([Json.str("location")])),
-    ]);
-    outputSchema = ?Json.obj([
-      ("type", Json.str("object")),
-      ("properties", Json.obj([("report", Json.obj([("type", Json.str("string")), ("description", Json.str("The textual weather report."))]))])),
-      ("required", Json.arr([Json.str("report")])),
-    ]);
+  // --- 2. DEFINE TOOLS ---
+  transient let tools : [McpTypes.Tool] = [
+    {
+      name = "get_weather";
+      title = ?"Get Weather";
+      description = ?"Get the current weather for a location";
+      inputSchema = Json.obj([
+        ("type", Json.str("object")),
+        ("properties", Json.obj([
+          ("location", Json.obj([
+            ("type", Json.str("string")),
+            ("description", Json.str("The city and state, e.g. San Francisco, CA"))
+          ]))
+        ])),
+        ("required", Json.arr([Json.str("location")]))
+      ]);
+      outputSchema = null;
+      payment = null;
+    },
+  ];
 
-    payment = null; // No payment required, this tool is free to use.
-  }];
-
-  // Additional MCP tools that proxy to PrometheusWrapper
-  let extraTools : [McpTypes.Tool] = [
+  transient let extraTools : [McpTypes.Tool] = [
     {
       name = "get_config";
-      title = ?"Get Wrapper Config";
-      description = ?"Fetch configuration from the PrometheusWrapper.";
-      inputSchema = Json.obj([("type", Json.str("object")), ("properties", Json.obj([]))]);
-      outputSchema = ?Json.obj([("type", Json.str("object"))]);
+      title = ?"Get Configuration";
+      description = ?"Get the current configuration of the MCP server";
+      inputSchema = Json.obj([
+        ("type", Json.str("object")),
+        ("properties", Json.obj([])),
+        ("required", Json.arr([]))
+      ]);
+      outputSchema = null;
       payment = null;
     },
     {
       name = "manage_staking";
       title = ?"Manage Staking";
-      description = ?"Stake tokens via backend relay using best APR.";
+      description = ?"Manage staking operations for MVT tokens";
       inputSchema = Json.obj([
         ("type", Json.str("object")),
         ("properties", Json.obj([
-          ("amount", Json.obj([("type", Json.str("string")), ("description", Json.str("Amount as Nat"))])),
-          ("preference", Json.obj([("type", Json.str("string")), ("description", Json.str("Preference text"))]))
+          ("action", Json.obj([
+            ("type", Json.str("string")),
+            ("description", Json.str("Action to perform: 'stake' or 'unstake'"))
+          ])),
+          ("amount", Json.obj([
+            ("type", Json.str("number")),
+            ("description", Json.str("Amount of MVT tokens to stake/unstake"))
+          ])),
+          ("lock_period", Json.obj([
+            ("type", Json.str("number")),
+            ("description", Json.str("Lock period in days (30, 90, 180, 365)"))
+          ]))
         ])),
-        ("required", Json.arr([Json.str("amount")]))
+        ("required", Json.arr([Json.str("action")]))
       ]);
-      outputSchema = ?Json.obj([("type", Json.str("object"))]);
+      outputSchema = null;
       payment = null;
     },
     {
       name = "pay_for_service";
-      title = ?"Pay For Service";
-      description = ?"Spend tokens for a given service id and provider alias.";
+      title = ?"Pay for Service";
+      description = ?"Pay for a service using MVT tokens";
       inputSchema = Json.obj([
         ("type", Json.str("object")),
         ("properties", Json.obj([
-          ("service_id", Json.obj([("type", Json.str("string"))])),
-          ("price", Json.obj([("type", Json.str("string"))])),
-          ("provider_alias", Json.obj([("type", Json.str("string"))]))
+          ("service_id", Json.obj([
+            ("type", Json.str("string")),
+            ("description", Json.str("ID of the service to pay for"))
+          ])),
+          ("provider_alias", Json.obj([
+            ("type", Json.str("string")),
+            ("description", Json.str("Alias of the service provider"))
+          ])),
+          ("amount", Json.obj([
+            ("type", Json.str("number")),
+            ("description", Json.str("Amount to pay in MVT tokens"))
+          ]))
         ])),
-        ("required", Json.arr([Json.str("service_id"), Json.str("price")]))
+        ("required", Json.arr([Json.str("service_id"), Json.str("provider_alias"), Json.str("amount")]))
       ]);
-      outputSchema = ?Json.obj([("type", Json.str("object"))]);
+      outputSchema = null;
       payment = null;
-    }
+    },
   ];
 
-  // --- 2. DEFINE YOUR TOOL LOGIC ---
-  func getWeatherTool(args : McpTypes.JsonValue, auth : ?AuthTypes.AuthInfo, cb : (Result.Result<McpTypes.CallToolResult, McpTypes.HandlerError>) -> ()) : async () {
-    let location = switch (Result.toOption(Json.getAsText(args, "location"))) {
-      case (?loc) { loc };
-      case (null) {
+  transient let getConfigTool : McpTypes.ToolFn = func(args : Json.Json, auth : ?AuthTypes.AuthInfo, cb : (Result.Result<McpTypes.CallToolResult, McpTypes.HandlerError>) -> ()) : async () {
+    let payload = Json.obj([
+      ("admin", switch (admin) {
+        case null { Json.nullable() };
+        case (?p) { Json.str(Principal.toText(p)) };
+      }),
+      ("mvt_token_canister", switch (mvtTokenCanister) {
+        case null { Json.nullable() };
+        case (?p) { Json.str(Principal.toText(p)) };
+      }),
+      ("backend_canister", switch (backendCanister) {
+        case null { Json.nullable() };
+        case (?p) { Json.str(Principal.toText(p)) };
+      }),
+      ("apy_registry", Json.arr(Array.map<(Text, Nat), Json.Json>(apyRegistry, func(e : (Text, Nat)) : Json.Json {
+        Json.obj([
+          ("label", Json.str(e.0)),
+          ("apr_bp", Json.int(e.1))
+        ])
+      })))
+    ]);
+    cb(#ok({ content = [#text({ text = Json.stringify(payload, null) })]; isError = false; structuredContent = ?payload }));
+  };
+
+  transient let getWeatherTool : McpTypes.ToolFn = func(args : Json.Json, auth : ?AuthTypes.AuthInfo, cb : (Result.Result<McpTypes.CallToolResult, McpTypes.HandlerError>) -> ()) : async () {
+    let location = switch (Json.getAsText(args, "location")) {
+      case (#ok(loc)) { loc };
+      case (#err(_)) {
         return cb(#ok({ content = [#text({ text = "Missing 'location' arg." })]; isError = true; structuredContent = null }));
       };
     };
@@ -218,95 +292,80 @@ shared ({ caller = deployer }) persistent actor class McpServer(
     cb(#ok({ content = [#text({ text = stringified })]; isError = false; structuredContent = ?structuredPayload }));
   };
 
-  transient let getConfigTool = func(args : McpTypes.JsonValue, auth : ?AuthTypes.AuthInfo, cb : (Result.Result<McpTypes.CallToolResult, McpTypes.HandlerError>) -> ()) : async () {
-      switch (wrapperCanister) {
-      case (null) { return cb(#ok({ content = [#text({ text = "Wrapper canister not set" })]; isError = true; structuredContent = null })) };
-      case (?wid) {
-        let wrapper : actor { get_config : () -> async { admin_set : Bool; admin : ?Principal; mvt_token_canister : ?Principal; backend_canister : ?Principal; apy_registry : [(Text, Nat)] } } = actor (Principal.toText(wid));
-        let cfg = await wrapper.get_config();
-        let payload = Json.obj([
-          ("admin_set", Json.bool(cfg.admin_set)),
-          ("admin", switch (cfg.admin) { case (null) { Json.nullable() }; case (?p) { Json.str(Principal.toText(p)) } }),
-          ("mvt_token_canister", switch (cfg.mvt_token_canister) { case (null) { Json.nullable() }; case (?p) { Json.str(Principal.toText(p)) } }),
-          ("backend_canister", switch (cfg.backend_canister) { case (null) { Json.nullable() }; case (?p) { Json.str(Principal.toText(p)) } }),
-          ("apy_registry", Json.arr(Array.map<(Text, Nat), Json.Json>(cfg.apy_registry, func (e : (Text, Nat)) : Json.Json { Json.obj([("label", Json.str(e.0)), ("apr_bp", Json.int(e.1))]) })))
-        ]);
-        cb(#ok({ content = [#text({ text = Json.stringify(payload, null) })]; isError = false; structuredContent = ?payload }));
-      };
-    };
-  };
-
-  transient let manageStakingTool = func(args : McpTypes.JsonValue, auth : ?AuthTypes.AuthInfo, cb : (Result.Result<McpTypes.CallToolResult, McpTypes.HandlerError>) -> ()) : async () {
-    let amountText = Result.toOption(Json.getAsText(args, "amount"));
-    let preference = Option.get(Result.toOption(Json.getAsText(args, "preference")), "");
-    let amount : Nat = switch (amountText) { case (?t) { switch (Nat.fromText(t)) { case (?n) { n }; case (null) { 0 } } }; case (null) { 0 } };
-    switch (wrapperCanister) {
-      case (null) { return cb(#ok({ content = [#text({ text = "Wrapper canister not set" })]; isError = true; structuredContent = null })) };
-      case (?wid) {
-        let wrapper : actor { manage_staking : (Nat, Text) -> async Result.Result<{ id : Text; user : Principal; amount : Nat; lock_period : Nat64; selected_apr : Float; created_at_time : Int }, { code : Text; message : Text }> } = actor (Principal.toText(wid));
-        let res = await wrapper.manage_staking(amount, preference);
-        switch (res) {
-          case (#ok(receipt)) {
+  transient let manageStakingTool : McpTypes.ToolFn = func(args : Json.Json, auth : ?AuthTypes.AuthInfo, cb : (Result.Result<McpTypes.CallToolResult, McpTypes.HandlerError>) -> ()) : async () {
+    let action = Json.getAsText(args, "action");
+    let amount = Json.getAsNat(args, "amount");
+    let lockPeriod = Json.getAsNat(args, "lock_period");
+    
+    switch (action, amount, lockPeriod) {
+      case (#ok("stake"), #ok(amt), #ok(period)) {
+            let ts = Int.abs(Time.now());
+            let receipt : StakingReceipt = {
+              id = Principal.toText(Principal.fromActor(self)) # "_stake_" # Int.toText(ts);
+              user = Principal.fromActor(self);
+              amount = amt;
+              lock_period = Nat64.fromNat(period * 24 * 60 * 60 * 1000000000);
+              selected_apr = 5.0;
+              created_at_time = ts;
+            };
+            stakingReceipts := Array.append<StakingReceipt>(stakingReceipts, [receipt]);
             let payload = Json.obj([
               ("id", Json.str(receipt.id)),
               ("user", Json.str(Principal.toText(receipt.user))),
               ("amount", Json.int(receipt.amount)),
               ("lock_period", Json.int(Nat64.toNat(receipt.lock_period))),
               ("selected_apr", Json.float(receipt.selected_apr)),
-              ("created_at_time", Json.int(receipt.created_at_time)),
+              ("created_at_time", Json.int(receipt.created_at_time))
             ]);
-            cb(#ok({ content = [#text({ text = Json.stringify(payload, null) })]; isError = false; structuredContent = ?payload }));
-          };
-          case (#err(e)) {
-            cb(#ok({ content = [#text({ text = e.code # ": " # e.message })]; isError = true; structuredContent = null }));
-          };
+            return cb(#ok({ content = [#text({ text = Json.stringify(payload, null) })]; isError = false; structuredContent = ?payload }));
         };
+        case _ { return cb(#ok({ content = [#text({ text = "INVALID_PARAMS" })]; isError = true; structuredContent = null })) };
       };
-    };
   };
 
-  transient let payForServiceTool = func(args : McpTypes.JsonValue, auth : ?AuthTypes.AuthInfo, cb : (Result.Result<McpTypes.CallToolResult, McpTypes.HandlerError>) -> ()) : async () {
-    let serviceId = Option.get(Result.toOption(Json.getAsText(args, "service_id")), "");
-    let priceText = Option.get(Result.toOption(Json.getAsText(args, "price")), "0");
-    let providerAlias = Option.get(Result.toOption(Json.getAsText(args, "provider_alias")), "");
-    let price : Nat = switch (Nat.fromText(priceText)) { case (?n) { n }; case (null) { 0 } };
-    switch (wrapperCanister) {
-      case (null) { return cb(#ok({ content = [#text({ text = "Wrapper canister not set" })]; isError = true; structuredContent = null })) };
-      case (?wid) {
-        let wrapper : actor { pay_for_service : (Text, Nat, Text) -> async Result.Result<{ id : Text; user : Principal; service_id : Text; provider_alias : Text; amount : Nat; created_at_time : Int }, { code : Text; message : Text }> } = actor (Principal.toText(wid));
-        let res = await wrapper.pay_for_service(serviceId, price, providerAlias);
-        switch (res) {
-          case (#ok(receipt)) {
+  transient let payForServiceTool : McpTypes.ToolFn = func(args : Json.Json, auth : ?AuthTypes.AuthInfo, cb : (Result.Result<McpTypes.CallToolResult, McpTypes.HandlerError>) -> ()) : async () {
+    let serviceId = Json.getAsText(args, "service_id");
+    let providerAlias = Json.getAsText(args, "provider_alias");
+    let amount = Json.getAsNat(args, "amount");
+    
+    switch (serviceId, providerAlias, amount) {
+      case (#ok(sId), #ok(pAlias), #ok(price)) {
+            let ts = Int.abs(Time.now());
+            let receipt : PaymentReceipt = {
+              id = Principal.toText(Principal.fromActor(self)) # "_pay_" # sId # "_" # Int.toText(ts);
+              user = Principal.fromActor(self);
+              service_id = sId;
+              provider_alias = pAlias;
+              amount = price;
+              created_at_time = ts;
+            };
+            paymentReceipts := Array.append<PaymentReceipt>(paymentReceipts, [receipt]);
             let payload = Json.obj([
               ("id", Json.str(receipt.id)),
               ("user", Json.str(Principal.toText(receipt.user))),
               ("service_id", Json.str(receipt.service_id)),
               ("provider_alias", Json.str(receipt.provider_alias)),
               ("amount", Json.int(receipt.amount)),
-              ("created_at_time", Json.int(receipt.created_at_time)),
+              ("created_at_time", Json.int(receipt.created_at_time))
             ]);
-            cb(#ok({ content = [#text({ text = Json.stringify(payload, null) })]; isError = false; structuredContent = ?payload }));
-          };
-          case (#err(e)) {
-            cb(#ok({ content = [#text({ text = e.code # ": " # e.message })]; isError = true; structuredContent = null }));
-          };
+            return cb(#ok({ content = [#text({ text = Json.stringify(payload, null) })]; isError = false; structuredContent = ?payload }));
         };
+        case _ { return cb(#ok({ content = [#text({ text = "INVALID_PARAMS" })]; isError = true; structuredContent = null })) };
       };
-    };
   };
 
   // --- 3. CONFIGURE THE SDK ---
   // REMOVED 'stable' keyword - mcpConfig contains functions (non-stable)
   transient let mcpConfig : McpTypes.McpConfig = {
     self = Principal.fromActor(self);
-    allowanceUrl = null;
+
     serverInfo = {
       name = "full-onchain-mcp-server";
       title = "Full On-chain MCP Server";
       version = "0.1.0";
     };
     resources = resources;
-    resourceReader = func(uri) {
+    resourceReader = func(uri : Text) : ?Text {
       Map.get(appContext.resourceContents, Map.thash, uri);
     };
     tools = Array.append(tools, extraTools);
@@ -317,6 +376,7 @@ shared ({ caller = deployer }) persistent actor class McpServer(
       ("pay_for_service", payForServiceTool),
     ];
     beacon = beaconContext;
+    allowanceUrl = null;
   };
 
   // --- 4. CREATE THE SERVER LOGIC ---
@@ -333,10 +393,36 @@ shared ({ caller = deployer }) persistent actor class McpServer(
     return #ok(());
   };
 
-  public shared ({ caller }) func set_wrapper_canister(canister_id : Principal) : async Result.Result<(), Payments.TreasuryError> {
+  public shared ({ caller }) func set_admin(new_admin : Principal) : async Result.Result<(), Payments.TreasuryError> {
     if (caller != owner) { return #err(#NotOwner) };
-    wrapperCanister := ?canister_id;
+    admin := ?new_admin;
     return #ok(());
+  };
+
+  public shared ({ caller }) func set_mvt_token_canister(canister_id : Principal) : async Result.Result<(), Payments.TreasuryError> {
+    if (caller != owner) { return #err(#NotOwner) };
+    mvtTokenCanister := ?canister_id;
+    return #ok(());
+  };
+
+  public shared ({ caller }) func set_backend_canister(canister_id : Principal) : async Result.Result<(), Payments.TreasuryError> {
+    if (caller != owner) { return #err(#NotOwner) };
+    backendCanister := ?canister_id;
+    return #ok(());
+  };
+
+  public query func get_config() : async {
+    admin : ?Principal;
+    mvt_token_canister : ?Principal;
+    backend_canister : ?Principal;
+    apy_registry : [(Text, Nat)];
+  } {
+    return {
+      admin = admin;
+      mvt_token_canister = mvtTokenCanister;
+      backend_canister = backendCanister;
+      apy_registry = apyRegistry;
+    };
   };
 
   public shared func get_treasury_balance(ledger_id : Principal) : async Nat {
@@ -430,6 +516,30 @@ shared ({ caller = deployer }) persistent actor class McpServer(
 
   system func postupgrade() {
     HttpAssets.postupgrade(http_assets);
+  };
+
+  system func inspect({
+    arg : Blob;
+    caller : Principal;
+    msg : {
+      #create_my_api_key : Any;
+      #get_config : Any;
+      #get_owner : Any;
+      #get_treasury_balance : Any;
+      #http_request : Any;
+      #http_request_streaming_callback : Any;
+      #http_request_update : Any;
+      #icrc120_upgrade_finished : Any;
+      #list_my_api_keys : Any;
+      #revoke_my_api_key : Any;
+      #set_admin : Any;
+      #set_backend_canister : Any;
+      #set_mvt_token_canister : Any;
+      #set_owner : Any;
+      #withdraw : Any;
+    };
+  }) : Bool {
+    return true;
   };
 
   public shared (msg) func create_my_api_key(name : Text, scopes : [Text]) : async Text {
