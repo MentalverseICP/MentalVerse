@@ -1,0 +1,26 @@
+[package]
+name = "my-mcp-server"
+version = "1.0.0"
+description = "A Motoko MCP server created with create-motoko-mcp-server"
+repository = "https://github.com/username/my-mcp-server"
+keywords = [ ]
+license = "MIT"
+
+[dependencies]
+base = "0.16.0"
+json = "1.4.0"
+map = "9.0.1"
+http-types = "1.0.1"
+base-x-encoder = "2.1.0"
+jwt = "2.1.0"
+ecdsa = "7.1.0"
+certified-cache = "0.3.0"
+sha2 = "0.1.6"
+ic = "3.2.0"
+mcp-motoko-sdk = "2.0.2"
+
+[dev-dependencies]
+test = "2.1.1"
+
+[toolchain]
+moc = "0.16.0"
