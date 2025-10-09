@@ -17,6 +17,7 @@
   "dependencies": {
     "body-parser": "^2.2.0",
     "cbor": "^10.0.11",
+    "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "node-fetch": "^3.3.2"
   },

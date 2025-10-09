@@ -1,11 +1,16 @@
 import express from 'express';
 import fetch from 'node-fetch';
 import bodyParser from 'body-parser';
+import dotenv from "dotenv";
+
+
+dotenv.config();
+console.log("Loaded canister:", process.env.CANISTER_ID);
 
 const app = express();
 app.use(bodyParser.json());
 
-const CANISTER_ID = process.env.CANISTER_ID || "uxrrr-q7777-77774-qaaaq-cai";
+const CANISTER_ID = process.env.CANISTER_ID || "znjvm-maaaa-aaaac-a4ora-cai";
 const DFX_URL = process.env.DFX_URL || "http://127.0.0.1:4943";
 
 app.post("/mcp", async (req, res) => {
