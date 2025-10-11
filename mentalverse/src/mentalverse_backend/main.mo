@@ -45,18 +45,26 @@ persistent actor MentalVerseBackend {
         last_health_check: Int;
     };
     
+    // Add BackendInterface-compatible request type for payments
+    public type PaymentRequest = {
+        amount: Nat;
+        currency: Text;
+        description: Text;
+        recipient: ?UserId;
+    };
+    
     // === STABLE STORAGE ===
     
     // System configuration and health monitoring
-    private var systemInitialized: Bool = false;
-    private var lastHealthCheck: Int = 0;
-    private var canisterIds: [(Text, Principal)] = [];
+    private transient var systemInitialized: Bool = false;
+    private transient var lastHealthCheck: Int = 0;
+    private transient var canisterIds: [(Text, Principal)] = [];
     
     // Module instances
-    private transient var authModule = Auth.AuthManager();
-    private transient var storageModule = Storage.Storage();
-    private transient var securityModule = Security.Security();
-    private transient var paymentModule = Payment.PaymentProcessor();
+    private transient let authModule = Auth.AuthManager();
+    private transient let storageModule = Storage.Storage();
+    private transient let securityModule = Security.Security();
+    private transient let paymentModule = Payment.PaymentProcessor();
     
     // Inter-canister references
     private transient var mvtTokenCanister: ?MVTTokenInterface.MVTTokenCanisterInterface = null;
@@ -83,17 +91,17 @@ persistent actor MentalVerseBackend {
     // === INTER-CANISTER COMMUNICATION SETUP ===
     
     // Set MVT Token Canister reference
-    public func setMVTTokenCanister(canisterId: Principal) : async Result.Result<Text, Text> {
+    public func setMVTTokenCanister(canisterId: Principal) : async Result.Result<(), Text> {
         try {
             let canister: MVTTokenInterface.MVTTokenCanisterInterface = actor(Principal.toText(canisterId));
             
             // Test connection
-            let name = await canister.icrc1_name();
+            let _name = await canister.icrc1_name();
             
             mvtTokenCanister := ?canister;
             canisterIds := Array.append(canisterIds, [("mvt_token", canisterId)]);
             
-            #ok("MVT Token Canister connected successfully: " # name)
+            #ok(())
         } catch (_error) {
             #err("Failed to connect to MVT Token Canister")
         }
@@ -442,6 +450,69 @@ persistent actor MentalVerseBackend {
         }
     };
 
+    // BackendInterface-compatible staking function
+    public shared(msg) func stake_mvt(userId: UserId, amount: Nat) : async Result.Result<(), Text> {
+        // Security check
+        if (not securityModule.checkRateLimitSimple(msg.caller)) {
+            return #err("Rate limit exceeded");
+        };
+        // Authorization: ensure caller matches userId
+        if (msg.caller != userId) {
+            return #err("Unauthorized: caller does not match userId");
+        };
+        
+        switch (mvtTokenCanister) {
+            case (null) { #err("MVT Token service unavailable") };
+            case (?tokenCanister) {
+                try {
+                    // Default lock period: 30 days in nanoseconds
+                    let default_lock_period : MVTTokenInterface.Duration = 2_592_000_000_000_000;
+                    let res = await tokenCanister.stake_tokens(userId, amount, default_lock_period);
+                    switch (res) {
+                        case (#ok(_)) { #ok(()) };
+                        case (#err(err)) { #err(err) };
+                    }
+                } catch (_error) {
+                    #err("Error staking tokens")
+                }
+            };
+        }
+    };
+
+    // BackendInterface-compatible payment function
+    public shared(msg) func process_payment(userId: UserId, request: PaymentRequest) : async Result.Result<Text, Text> {
+        // Security check
+        if (not securityModule.checkRateLimitSimple(msg.caller)) {
+            return #err("Rate limit exceeded");
+        };
+        // Authorization: ensure caller matches userId
+        if (msg.caller != userId) {
+            return #err("Unauthorized: caller does not match userId");
+        };
+        
+        // Create payment transaction
+        let recipient = switch (request.recipient) { case null { userId }; case (?r) { r } };
+        let created = paymentModule.createPaymentTransaction(
+            userId,
+            recipient,
+            request.amount,
+            request.description,
+            #mvt_token,
+            false,
+            null
+        );
+        
+        switch (created) {
+            case (#err(error)) { #err(error) };
+            case (#ok(paymentId)) {
+                // Immediately process the payment
+                switch (paymentModule.processPayment(paymentId, userId)) {
+                    case (#ok(_)) { #ok(paymentId) };
+                    case (#err(error)) { #err(error) };
+                }
+            };
+        }
+    };
     
     // Get user's transaction history
     public shared(msg) func getTransactionHistory(limit: ?Nat64, offset: ?Nat64) : async Result.Result<[MVTTokenInterface.Transaction], Text> {

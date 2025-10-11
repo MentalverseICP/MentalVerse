@@ -10,6 +10,7 @@ import Array "mo:base/Array";
 import Nat "mo:base/Nat";
 import Nat64 "mo:base/Nat64";
 import Float "mo:base/Float";
+import Error "mo:base/Error";
 
 import HttpTypes "mo:http-types";
 import Map "mo:map/Map";
@@ -31,6 +32,8 @@ import ApiKey "mo:mcp-motoko-sdk/auth/ApiKey";
 
 import SrvTypes "mo:mcp-motoko-sdk/server/Types";
 import TokenAPI "../../src/mentalverse_backend/mvt_token_interface";
+import BackendInterface "../../src/mentalverse_backend/backend_interface";
+import SecureMessagingInterface "../../src/mentalverse_backend/secure_messaging_interface";
 
 import IC "mo:ic";
 
@@ -41,9 +44,10 @@ shared ({ caller = deployer }) persistent actor class McpServer(
 ) = self {
 
   // ALL STABLE VARIABLES MUST BE DECLARED FIRST
-  var admin : ?Principal = null;
+  // Note: admin role consolidated with owner - owner serves as admin
   var mvtTokenCanister : ?Principal = null;
   var backendCanister : ?Principal = null;
+  var secureMessagingCanister : ?Principal = null;
   var apyRegistry : [(Text, Nat)] = [
     ("30d", 500),
     ("90d", 800),
@@ -69,6 +73,26 @@ shared ({ caller = deployer }) persistent actor class McpServer(
     switch (mvtTokenCanister) {
       case null { #err({ code = "CONFIG_NOT_SET"; message = "MVT token canister not set" }) };
       case (?canister_id) { #ok(TokenAPI.getMVTTokenCanister(canister_id)) };
+    };
+  };
+
+  private func backendActor() : Result.Result<BackendInterface.BackendCanisterInterface, WrapperError> {
+    switch (backendCanister) {
+      case null { #err({ code = "CONFIG_NOT_SET"; message = "Backend canister not set" }) };
+      case (?canister_id) { 
+        let backend : BackendInterface.BackendCanisterInterface = actor(Principal.toText(canister_id));
+        #ok(backend)
+      };
+    };
+  };
+
+  private func messagingActor() : Result.Result<SecureMessagingInterface.SecureMessagingCanisterInterface, WrapperError> {
+    switch (secureMessagingCanister) {
+      case null { #err({ code = "CONFIG_NOT_SET"; message = "Secure messaging canister not set" }) };
+      case (?canister_id) { 
+        let messaging : SecureMessagingInterface.SecureMessagingCanisterInterface = actor(Principal.toText(canister_id));
+        #ok(messaging)
+      };
     };
   };
 
@@ -255,15 +279,16 @@ shared ({ caller = deployer }) persistent actor class McpServer(
 
   transient let getConfigTool : McpTypes.ToolFn = func(args : Json.Json, auth : ?AuthTypes.AuthInfo, cb : (Result.Result<McpTypes.CallToolResult, McpTypes.HandlerError>) -> ()) : async () {
     let payload = Json.obj([
-      ("admin", switch (admin) {
-        case null { Json.nullable() };
-        case (?p) { Json.str(Principal.toText(p)) };
-      }),
+      ("owner", Json.str(Principal.toText(owner))), // Owner serves as admin
       ("mvt_token_canister", switch (mvtTokenCanister) {
         case null { Json.nullable() };
         case (?p) { Json.str(Principal.toText(p)) };
       }),
       ("backend_canister", switch (backendCanister) {
+        case null { Json.nullable() };
+        case (?p) { Json.str(Principal.toText(p)) };
+      }),
+      ("secure_messaging_canister", switch (secureMessagingCanister) {
         case null { Json.nullable() };
         case (?p) { Json.str(Principal.toText(p)) };
       }),
@@ -275,6 +300,149 @@ shared ({ caller = deployer }) persistent actor class McpServer(
       })))
     ]);
     cb(#ok({ content = [#text({ text = Json.stringify(payload, null) })]; isError = false; structuredContent = ?payload }));
+  };
+
+  transient let getBackendHealthTool : McpTypes.ToolFn = func(args : Json.Json, auth : ?AuthTypes.AuthInfo, cb : (Result.Result<McpTypes.CallToolResult, McpTypes.HandlerError>) -> ()) : async () {
+    switch (backendActor()) {
+      case (#err(error)) {
+        let errorPayload = Json.obj([("error", Json.str(error.message))]);
+        cb(#ok({ content = [#text({ text = Json.stringify(errorPayload, null) })]; isError = true; structuredContent = ?errorPayload }));
+      };
+      case (#ok(backend)) {
+        try {
+          let health = await backend.getSystemHealth();
+          let payload = Json.obj([
+            ("backend_status", Json.str(switch (health.backend_status) {
+              case (#active) "active";
+              case (#inactive) "inactive";
+              case (#error(msg)) "error: " # msg;
+            })),
+            ("mvt_token_status", Json.str(switch (health.mvt_token_status) {
+              case (#active) "active";
+              case (#inactive) "inactive";
+              case (#error(msg)) "error: " # msg;
+            })),
+            ("last_health_check", Json.int(health.last_health_check))
+          ]);
+          cb(#ok({ content = [#text({ text = Json.stringify(payload, null) })]; isError = false; structuredContent = ?payload }));
+        } catch (error) {
+          let errorPayload = Json.obj([("error", Json.str("Backend health check failed"))]);
+          cb(#ok({ content = [#text({ text = Json.stringify(errorPayload, null) })]; isError = true; structuredContent = ?errorPayload }));
+        };
+      };
+    };
+  };
+
+  transient let getUserProfileTool : McpTypes.ToolFn = func(args : Json.Json, auth : ?AuthTypes.AuthInfo, cb : (Result.Result<McpTypes.CallToolResult, McpTypes.HandlerError>) -> ()) : async () {
+    let userId = switch (Json.getAsText(args, "user_id")) {
+      case (#ok(id)) { 
+        switch (Principal.fromText(id)) {
+          case (principal) { principal };
+        };
+      };
+      case (#err(_)) {
+        let errorPayload = Json.obj([("error", Json.str("Missing or invalid 'user_id' parameter"))]);
+        return cb(#ok({ content = [#text({ text = Json.stringify(errorPayload, null) })]; isError = true; structuredContent = ?errorPayload }));
+      };
+    };
+
+    switch (backendActor()) {
+      case (#err(error)) {
+        let errorPayload = Json.obj([("error", Json.str(error.message))]);
+        cb(#ok({ content = [#text({ text = Json.stringify(errorPayload, null) })]; isError = true; structuredContent = ?errorPayload }));
+      };
+      case (#ok(backend)) {
+        try {
+          let profile = await backend.getUserProfile(userId);
+          switch (profile) {
+            case (#ok(userProfile)) {
+              let payload = Json.obj([
+                ("user_id", Json.str(Principal.toText(userId))),
+                ("profile", Json.str("Profile retrieved successfully"))
+              ]);
+              cb(#ok({ content = [#text({ text = Json.stringify(payload, null) })]; isError = false; structuredContent = ?payload }));
+            };
+            case (#err(errorMsg)) {
+              let errorPayload = Json.obj([("error", Json.str(errorMsg))]);
+              cb(#ok({ content = [#text({ text = Json.stringify(errorPayload, null) })]; isError = true; structuredContent = ?errorPayload }));
+            };
+          };
+        } catch (error) {
+          let errorPayload = Json.obj([("error", Json.str("Failed to retrieve user profile"))]);
+          cb(#ok({ content = [#text({ text = Json.stringify(errorPayload, null) })]; isError = true; structuredContent = ?errorPayload }));
+        };
+      };
+    };
+  };
+
+  transient let sendSecureMessageTool : McpTypes.ToolFn = func(args : Json.Json, auth : ?AuthTypes.AuthInfo, cb : (Result.Result<McpTypes.CallToolResult, McpTypes.HandlerError>) -> ()) : async () {
+    let recipientId = switch (Json.getAsText(args, "recipient_id")) {
+      case (#ok(id)) { 
+        switch (Principal.fromText(id)) {
+          case (principal) { principal };
+        };
+      };
+      case (#err(_)) {
+        let errorPayload = Json.obj([("error", Json.str("Missing or invalid 'recipient_id' parameter"))]);
+        return cb(#ok({ content = [#text({ text = Json.stringify(errorPayload, null) })]; isError = true; structuredContent = ?errorPayload }));
+      };
+    };
+
+    let content = switch (Json.getAsText(args, "content")) {
+      case (#ok(text)) { text };
+      case (#err(_)) {
+        let errorPayload = Json.obj([("error", Json.str("Missing 'content' parameter"))]);
+        return cb(#ok({ content = [#text({ text = Json.stringify(errorPayload, null) })]; isError = true; structuredContent = ?errorPayload }));
+      };
+    };
+
+    let messageType = switch (Json.getAsText(args, "message_type")) {
+      case (#ok(msgType)) { msgType };
+      case (#err(_)) {
+        let errorPayload = Json.obj([("error", Json.str("Missing 'message_type' parameter"))]);
+        return cb(#ok({ content = [#text({ text = Json.stringify(errorPayload, null) })]; isError = true; structuredContent = ?errorPayload }));
+      };
+    };
+
+    switch (messagingActor()) {
+      case (#err(error)) {
+        let errorPayload = Json.obj([("error", Json.str(error.message))]);
+        cb(#ok({ content = [#text({ text = Json.stringify(errorPayload, null) })]; isError = true; structuredContent = ?errorPayload }));
+      };
+      case (#ok(messaging)) {
+        try {
+          let sendRequest : SecureMessagingInterface.SendMessageRequest = {
+            recipient_id = recipientId;
+            content = content;
+            message_type = switch (messageType) {
+              case ("text") { #Text };
+              case ("appointment") { #System };
+              case ("medical") { #System };
+              case (_) { #Text };
+            };
+            attachments = [];
+          };
+          
+          let result = await messaging.send_message(sendRequest);
+          switch (result) {
+            case (#ok(messageId)) {
+              let payload = Json.obj([
+                ("message_id", Json.int(Nat64.toNat(messageId))),
+                ("status", Json.str("Message sent successfully"))
+              ]);
+              cb(#ok({ content = [#text({ text = Json.stringify(payload, null) })]; isError = false; structuredContent = ?payload }));
+            };
+            case (#err(errorMsg)) {
+              let errorPayload = Json.obj([("error", Json.str(errorMsg))]);
+              cb(#ok({ content = [#text({ text = Json.stringify(errorPayload, null) })]; isError = true; structuredContent = ?errorPayload }));
+            };
+          };
+        } catch (error) {
+          let errorPayload = Json.obj([("error", Json.str("Failed to send secure message"))]);
+          cb(#ok({ content = [#text({ text = Json.stringify(errorPayload, null) })]; isError = true; structuredContent = ?errorPayload }));
+        };
+      };
+    };
   };
 
   transient let getWeatherTool : McpTypes.ToolFn = func(args : Json.Json, auth : ?AuthTypes.AuthInfo, cb : (Result.Result<McpTypes.CallToolResult, McpTypes.HandlerError>) -> ()) : async () {
@@ -299,28 +467,102 @@ shared ({ caller = deployer }) persistent actor class McpServer(
     
     switch (action, amount, lockPeriod) {
       case (#ok("stake"), #ok(amt), #ok(period)) {
-            let ts = Int.abs(Time.now());
-            let receipt : StakingReceipt = {
-              id = Principal.toText(Principal.fromActor(self)) # "_stake_" # Int.toText(ts);
-              user = Principal.fromActor(self);
-              amount = amt;
-              lock_period = Nat64.fromNat(period * 24 * 60 * 60 * 1000000000);
-              selected_apr = 5.0;
-              created_at_time = ts;
+        // Use backend integration for staking operations
+        switch (backendActor()) {
+          case (#err(error)) {
+            return cb(#ok({ content = [#text({ text = "Backend connection error: " # error.message })]; isError = true; structuredContent = null }));
+          };
+          case (#ok(backend)) {
+            try {
+              // Call backend staking function
+              let user = Principal.fromActor(self);
+              let result = await backend.stake_mvt(user, amt);
+              
+              switch (result) {
+                case (#ok(data)) {
+                  // Create receipt for successful staking
+                  let ts = Int.abs(Time.now());
+                  let receipt : StakingReceipt = {
+                    id = Principal.toText(Principal.fromActor(self)) # "_stake_" # Int.toText(ts);
+                    user = user;
+                    amount = amt;
+                    lock_period = Nat64.fromNat(period * 24 * 60 * 60 * 1000000000);
+                    selected_apr = 5.0;
+                    created_at_time = ts;
+                  };
+                  stakingReceipts := Array.append<StakingReceipt>(stakingReceipts, [receipt]);
+                  
+                  let payload = Json.obj([
+                    ("id", Json.str(receipt.id)),
+                    ("user", Json.str(Principal.toText(receipt.user))),
+                    ("amount", Json.int(receipt.amount)),
+                    ("lock_period", Json.int(Nat64.toNat(receipt.lock_period))),
+                    ("selected_apr", Json.float(receipt.selected_apr)),
+                    ("created_at_time", Json.int(receipt.created_at_time)),
+                    ("backend_result", Json.str("Success"))
+                  ]);
+                  return cb(#ok({ content = [#text({ text = Json.stringify(payload, null) })]; isError = false; structuredContent = ?payload }));
+                };
+                case (#err(error)) {
+                  // Attempt auto-configuration if backend reports missing token canister
+                  if (error == "MVT Token service unavailable") {
+                    switch (mvtTokenCanister) {
+                      case (null) {
+                        let errorPayload = Json.obj([("error", Json.str("MVT Token canister not configured on MCP server. Ask the owner to call set_mvt_token_canister first."))]);
+                        return cb(#ok({ content = [#text({ text = Json.stringify(errorPayload, null) })]; isError = true; structuredContent = ?errorPayload }));
+                      };
+                      case (?token_id) {
+                        // Configure backend with the known MVT token canister and retry once
+                        try {
+                          let _ = await backend.setMVTTokenCanister(token_id);
+                          let retry = await backend.stake_mvt(user, amt);
+                          switch (retry) {
+                            case (#ok(_)) {
+                              let ts = Int.abs(Time.now());
+                              let receipt : StakingReceipt = {
+                                id = Principal.toText(Principal.fromActor(self)) # "_stake_" # Int.toText(ts);
+                                user = user;
+                                amount = amt;
+                                lock_period = Nat64.fromNat(period * 24 * 60 * 60 * 1000000000);
+                                selected_apr = 5.0;
+                                created_at_time = ts;
+                              };
+                              stakingReceipts := Array.append<StakingReceipt>(stakingReceipts, [receipt]);
+                              let payload = Json.obj([
+                                ("id", Json.str(receipt.id)),
+                                ("user", Json.str(Principal.toText(receipt.user))),
+                                ("amount", Json.int(receipt.amount)),
+                                ("lock_period", Json.int(Nat64.toNat(receipt.lock_period))),
+                                ("selected_apr", Json.float(receipt.selected_apr)),
+                                ("created_at_time", Json.int(receipt.created_at_time)),
+                                ("backend_result", Json.str("Success"))
+                              ]);
+                              return cb(#ok({ content = [#text({ text = Json.stringify(payload, null) })]; isError = false; structuredContent = ?payload }));
+                            };
+                            case (#err(err2)) {
+                              let errorPayload = Json.obj([("error", Json.str(err2))]);
+                              return cb(#ok({ content = [#text({ text = Json.stringify(errorPayload, null) })]; isError = true; structuredContent = ?errorPayload }));
+                            };
+                          };
+                        } catch (e) {
+                          let errorPayload = Json.obj([("error", Json.str("Failed to configure backend MVT token canister"))]);
+                          return cb(#ok({ content = [#text({ text = Json.stringify(errorPayload, null) })]; isError = true; structuredContent = ?errorPayload }));
+                        };
+                      };
+                    };
+                  };
+                  let errorPayload = Json.obj([("error", Json.str(error))]);
+                  return cb(#ok({ content = [#text({ text = Json.stringify(errorPayload, null) })]; isError = true; structuredContent = ?errorPayload }));
+                };
+              };
+            } catch (error) {
+              return cb(#ok({ content = [#text({ text = "Backend call failed" })]; isError = true; structuredContent = null }));
             };
-            stakingReceipts := Array.append<StakingReceipt>(stakingReceipts, [receipt]);
-            let payload = Json.obj([
-              ("id", Json.str(receipt.id)),
-              ("user", Json.str(Principal.toText(receipt.user))),
-              ("amount", Json.int(receipt.amount)),
-              ("lock_period", Json.int(Nat64.toNat(receipt.lock_period))),
-              ("selected_apr", Json.float(receipt.selected_apr)),
-              ("created_at_time", Json.int(receipt.created_at_time))
-            ]);
-            return cb(#ok({ content = [#text({ text = Json.stringify(payload, null) })]; isError = false; structuredContent = ?payload }));
+          };
         };
-        case _ { return cb(#ok({ content = [#text({ text = "INVALID_PARAMS" })]; isError = true; structuredContent = null })) };
       };
+      case _ { return cb(#ok({ content = [#text({ text = "INVALID_PARAMS" })]; isError = true; structuredContent = null })) };
+    };
   };
 
   transient let payForServiceTool : McpTypes.ToolFn = func(args : Json.Json, auth : ?AuthTypes.AuthInfo, cb : (Result.Result<McpTypes.CallToolResult, McpTypes.HandlerError>) -> ()) : async () {
@@ -330,28 +572,61 @@ shared ({ caller = deployer }) persistent actor class McpServer(
     
     switch (serviceId, providerAlias, amount) {
       case (#ok(sId), #ok(pAlias), #ok(price)) {
-            let ts = Int.abs(Time.now());
-            let receipt : PaymentReceipt = {
-              id = Principal.toText(Principal.fromActor(self)) # "_pay_" # sId # "_" # Int.toText(ts);
-              user = Principal.fromActor(self);
-              service_id = sId;
-              provider_alias = pAlias;
-              amount = price;
-              created_at_time = ts;
+        // Use backend integration for payment processing
+        switch (backendActor()) {
+          case (#err(error)) {
+            return cb(#ok({ content = [#text({ text = "Backend connection error: " # error.message })]; isError = true; structuredContent = null }));
+          };
+          case (#ok(backend)) {
+            try {
+              // Call backend payment function
+              let user = Principal.fromActor(self);
+              let paymentRequest : BackendInterface.PaymentRequest = {
+                amount = price;
+                currency = "MVT";
+                description = "Service payment for " # sId;
+                recipient = null;
+              };
+              let result = await backend.process_payment(user, paymentRequest);
+              
+              switch (result) {
+                case (#ok(data)) {
+                  // Create receipt for successful payment
+                  let ts = Int.abs(Time.now());
+                  let receipt : PaymentReceipt = {
+                    id = Principal.toText(Principal.fromActor(self)) # "_pay_" # sId # "_" # Int.toText(ts);
+                    user = user;
+                    service_id = sId;
+                    provider_alias = pAlias;
+                    amount = price;
+                    created_at_time = ts;
+                  };
+                  paymentReceipts := Array.append<PaymentReceipt>(paymentReceipts, [receipt]);
+                  
+                  let payload = Json.obj([
+                    ("id", Json.str(receipt.id)),
+                    ("user", Json.str(Principal.toText(receipt.user))),
+                    ("service_id", Json.str(receipt.service_id)),
+                    ("provider_alias", Json.str(receipt.provider_alias)),
+                    ("amount", Json.int(receipt.amount)),
+                    ("created_at_time", Json.int(receipt.created_at_time)),
+                    ("backend_result", Json.str(data))
+                  ]);
+                  return cb(#ok({ content = [#text({ text = Json.stringify(payload, null) })]; isError = false; structuredContent = ?payload }));
+                };
+                case (#err(error)) {
+                  let errorPayload = Json.obj([("error", Json.str(error))]);
+                  return cb(#ok({ content = [#text({ text = Json.stringify(errorPayload, null) })]; isError = true; structuredContent = ?errorPayload }));
+                };
+              };
+            } catch (error) {
+              return cb(#ok({ content = [#text({ text = "Backend call failed" })]; isError = true; structuredContent = null }));
             };
-            paymentReceipts := Array.append<PaymentReceipt>(paymentReceipts, [receipt]);
-            let payload = Json.obj([
-              ("id", Json.str(receipt.id)),
-              ("user", Json.str(Principal.toText(receipt.user))),
-              ("service_id", Json.str(receipt.service_id)),
-              ("provider_alias", Json.str(receipt.provider_alias)),
-              ("amount", Json.int(receipt.amount)),
-              ("created_at_time", Json.int(receipt.created_at_time))
-            ]);
-            return cb(#ok({ content = [#text({ text = Json.stringify(payload, null) })]; isError = false; structuredContent = ?payload }));
+          };
         };
-        case _ { return cb(#ok({ content = [#text({ text = "INVALID_PARAMS" })]; isError = true; structuredContent = null })) };
       };
+      case _ { return cb(#ok({ content = [#text({ text = "INVALID_PARAMS" })]; isError = true; structuredContent = null })) };
+    };
   };
 
   // --- 3. CONFIGURE THE SDK ---
@@ -372,6 +647,9 @@ shared ({ caller = deployer }) persistent actor class McpServer(
     toolImplementations = [
       ("get_weather", getWeatherTool),
       ("get_config", getConfigTool),
+      ("get_backend_health", getBackendHealthTool),
+      ("get_user_profile", getUserProfileTool),
+      ("send_secure_message", sendSecureMessageTool),
       ("manage_staking", manageStakingTool),
       ("pay_for_service", payForServiceTool),
     ];
@@ -385,6 +663,42 @@ shared ({ caller = deployer }) persistent actor class McpServer(
 
   // --- PUBLIC ENTRY POINTS ---
 
+  // Helper function to validate backend connection
+  private func validateBackendConnection() : async Bool {
+    switch (backendCanister) {
+      case null { false };
+      case (?backend_id) {
+        try {
+          // Attempt a simple health check with the backend
+          let backend = actor(Principal.toText(backend_id)) : actor {
+            get_config : () -> async { status : Text };
+          };
+          let config = await backend.get_config();
+          true
+        } catch (error) {
+          false
+        };
+      };
+    };
+  };
+
+  // Enhanced backend communication helper
+  private func communicateWithBackend<T>(operation : Text, data : T) : async Result.Result<Text, Text> {
+    switch (backendCanister) {
+      case null { #err("Backend canister not configured") };
+      case (?backend_id) {
+        try {
+          // This is a placeholder for actual backend communication
+          // In a real implementation, you would call specific backend functions
+          #ok("Backend operation '" # operation # "' completed successfully")
+        } catch (error) {
+          #err("Backend communication failed: " # Error.message(error))
+        };
+      };
+    };
+  };
+
+  // Owner/Admin management (consolidated)
   public query func get_owner() : async Principal { return owner };
 
   public shared ({ caller }) func set_owner(new_owner : Principal) : async Result.Result<(), Payments.TreasuryError> {
@@ -393,12 +707,7 @@ shared ({ caller = deployer }) persistent actor class McpServer(
     return #ok(());
   };
 
-  public shared ({ caller }) func set_admin(new_admin : Principal) : async Result.Result<(), Payments.TreasuryError> {
-    if (caller != owner) { return #err(#NotOwner) };
-    admin := ?new_admin;
-    return #ok(());
-  };
-
+  // Admin functions (owner serves as admin)
   public shared ({ caller }) func set_mvt_token_canister(canister_id : Principal) : async Result.Result<(), Payments.TreasuryError> {
     if (caller != owner) { return #err(#NotOwner) };
     mvtTokenCanister := ?canister_id;
@@ -411,17 +720,30 @@ shared ({ caller = deployer }) persistent actor class McpServer(
     return #ok(());
   };
 
+  public shared ({ caller }) func set_secure_messaging_canister(canister_id : Principal) : async Result.Result<(), Payments.TreasuryError> {
+    if (caller != owner) { return #err(#NotOwner) };
+    secureMessagingCanister := ?canister_id;
+    return #ok(());
+  };
+
   public query func get_config() : async {
-    admin : ?Principal;
+    owner : Principal; // Owner serves as admin
     mvt_token_canister : ?Principal;
     backend_canister : ?Principal;
     apy_registry : [(Text, Nat)];
+    backend_status : Text;
   } {
+    let backend_status = switch (backendCanister) {
+      case null { "not_configured" };
+      case (?_) { "configured" };
+    };
+    
     return {
-      admin = admin;
+      owner = owner; // Owner serves as admin
       mvt_token_canister = mvtTokenCanister;
       backend_canister = backendCanister;
       apy_registry = apyRegistry;
+      backend_status = backend_status;
     };
   };
 
@@ -522,21 +844,21 @@ shared ({ caller = deployer }) persistent actor class McpServer(
     arg : Blob;
     caller : Principal;
     msg : {
-      #create_my_api_key : Any;
-      #get_config : Any;
-      #get_owner : Any;
-      #get_treasury_balance : Any;
-      #http_request : Any;
-      #http_request_streaming_callback : Any;
-      #http_request_update : Any;
-      #icrc120_upgrade_finished : Any;
-      #list_my_api_keys : Any;
-      #revoke_my_api_key : Any;
-      #set_admin : Any;
-      #set_backend_canister : Any;
-      #set_mvt_token_canister : Any;
-      #set_owner : Any;
-      #withdraw : Any;
+      #create_my_api_key : () -> (name : Text, scopes : [Text]);
+      #get_config : () -> ();
+      #get_owner : () -> ();
+      #get_treasury_balance : () -> (ledger_id : Principal);
+      #http_request : () -> (req : SrvTypes.HttpRequest);
+      #http_request_streaming_callback : () -> (token : HttpTypes.StreamingToken);
+      #http_request_update : () -> (req : SrvTypes.HttpRequest);
+      #icrc120_upgrade_finished : () -> ();
+      #list_my_api_keys : () -> ();
+      #revoke_my_api_key : () -> (key_id : Text);
+      #set_backend_canister : () -> (canister_id : Principal);
+      #set_mvt_token_canister : () -> (canister_id : Principal);
+      #set_owner : () -> (new_owner : Principal);
+      #set_secure_messaging_canister : () -> (canister_id : Principal);
+      #withdraw : () -> (ledger_id : Principal, amount : Nat, destination : Payments.Destination);
     };
   }) : Bool {
     return true;
