@@ -4,7 +4,7 @@ import { ShoppingBag, Clock } from "lucide-react";
 import { Edit } from "lucide-react";
 import moment from "moment";
 
-interface MonthPopoverProps {
+interface EditPopoverProps {
   event: Event;
   onClose: () => void;
   style?: React.CSSProperties;
@@ -36,12 +36,12 @@ interface Event {
   endTime?: string;
 }
 
-const MonthPopover = ({
+const EditPopover = ({
   event,
   onClose,
   style = {},
   onEdit,
-}: MonthPopoverProps) => {
+}: EditPopoverProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -135,4 +135,4 @@ const MonthPopover = ({
   );
 };
 
-export default MonthPopover;
+export default EditPopover;

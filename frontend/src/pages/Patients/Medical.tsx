@@ -90,16 +90,38 @@ const Medical: React.FC = () => {
     >
       {/* Main Container */}
       <div
-        className={`rounded-3xl overflow-hidden backdrop-blur-xl border border-white/10 relative p-6 md:p-8 ${
-          theme === "dark" ? "bg-[#0B0B0C]/60" : "bg-white/60"
+        className={`rounded-3xl overflow-hidden backdrop-blur-xl border transition-all relative p-6 md:p-8 ${
+          theme === "dark"
+            ? "border-white/10 bg-[#0B0B0C]/60"
+            : "border-black/15 bg-white/60"
         }`}
       >
-      {/* Corner accent glows */}
-      <div className="absolute top-0 -left-20 w-40 h-40 bg-[#18E614]/10 rounded-full blur-3xl" />
-      <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-[#18E614]/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 -left-20 w-40 h-40 bg-[#18E614]/10 rounded-full blur-3xl" />
-      <div className="absolute -top-20 -right-20 w-40 h-40 bg-[#18E614]/10 rounded-full blur-3xl" />
-      <div className="absolute top-1/4 right-1/4 w-[40rem] h-[40rem] bg-[#18e61404] rounded-full blur-3xl" />
+        {/* Corner accent glows */}
+        <div
+          className={`absolute top-0 -left-20 w-40 h-40 ${
+            theme === "dark" ? "bg-[#18E614]/10" : "bg-[#18E614]/30"
+          } rounded-full blur-3xl`}
+        />
+        <div
+          className={`absolute -bottom-20 -right-20 w-40 h-40 ${
+            theme === "dark" ? "bg-[#18E614]/10" : "bg-[#18E614]/30"
+          } rounded-full blur-3xl`}
+        />
+        <div
+          className={`absolute bottom-0 -left-20 w-40 h-40 ${
+            theme === "dark" ? "bg-[#18E614]/10" : "bg-[#18E614]/30"
+          } rounded-full blur-3xl`}
+        />
+        <div
+          className={`absolute -top-20 -right-20 w-40 h-40 ${
+            theme === "dark" ? "bg-[#18E614]/10" : "bg-[#18E614]/30"
+          } rounded-full blur-3xl`}
+        />
+        <div
+          className={`absolute top-1/4 right-1/4 w-[40rem] h-[40rem] ${
+            theme === "dark" ? "bg-[#18e61404]" : "bg-[#18e61408]"
+          } rounded-full blur-3xl`}
+        />
 
         {/* Top gradient accent line */}
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
@@ -129,7 +151,11 @@ const Medical: React.FC = () => {
           </div>
 
           {/* Filter Bar */}
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8 pb-6 border-b border-white/10">
+          <div
+            className={`flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8 pb-6 border-b ${
+              theme === "dark" ? "border-white/10" : "border-black/10"
+            }`}
+          >
             <div className="flex flex-wrap gap-3 items-center">
               <Select
                 value={show.toString()}
@@ -320,7 +346,11 @@ const Medical: React.FC = () => {
           )}
 
           {/* Pagination */}
-          <div className="mt-8 pt-6 border-t border-white/10">
+          <div
+            className={`mt-8 pt-6 border-t ${
+              theme === "dark" ? "border-white/10" : "border-black/10"
+            }`}
+          >
             <div
               className={`text-sm mb-4 ${
                 theme === "dark" ? "text-gray-400" : "text-gray-600"

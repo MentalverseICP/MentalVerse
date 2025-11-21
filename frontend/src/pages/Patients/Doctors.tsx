@@ -104,16 +104,34 @@ const Doctors: React.FC<DoctorsProps> = ({
     >
       {/* Main Container with glassmorphic background */}
       <div
-        className={`rounded-3xl overflow-hidden backdrop-blur-xl border border-white/10 relative p-6 md:p-8 ${
-          theme === "dark" ? "bg-[#0B0B0C]/60" : "bg-white/60"
+        className={`rounded-3xl overflow-hidden backdrop-blur-xl border transition-all p-6 md:p-8 ${
+          theme === "dark"
+            ? "border-white/10 bg-[#0B0B0C]/60"
+            : "border-black/15 bg-white/60"
         }`}
       >
-      {/* Corner accent glows */}
-      <div className="absolute top-0 -left-20 w-40 h-40 bg-[#18E614]/10 rounded-full blur-3xl" />
-      <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-[#18E614]/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 -left-20 w-40 h-40 bg-[#18E614]/10 rounded-full blur-3xl" />
-      <div className="absolute -top-20 -right-20 w-40 h-40 bg-[#18E614]/10 rounded-full blur-3xl" />
-      <div className="absolute top-1/4 right-1/4 w-[40rem] h-[40rem] bg-[#18e61404] rounded-full blur-3xl" />
+        {/* Corner accent glows */}
+        <div
+          className={`absolute top-0 -left-20 w-40 h-40 ${
+            theme === "dark" ? "bg-[#18E614]/10" : "bg-[#18E614]/30"
+          } rounded-full blur-3xl`}
+        />
+        <div
+          className={`absolute -bottom-20 -right-20 w-40 h-40 ${
+            theme === "dark" ? "bg-[#18E614]/10" : "bg-[#18E614]/30"
+          } rounded-full blur-3xl`}
+        />
+        <div
+          className={`absolute bottom-0 -left-20 w-40 h-40 ${
+            theme === "dark" ? "bg-[#18E614]/10" : "bg-[#18E614]/30"
+          } rounded-full blur-3xl`}
+        />
+        <div
+          className={`absolute -top-20 -right-20 w-40 h-40 ${
+            theme === "dark" ? "bg-[#18E614]/10" : "bg-[#18E614]/30"
+          } rounded-full blur-3xl`}
+        />
+        <div className="absolute top-1/4 right-1/4 w-[40rem] h-[40rem] bg-[#18e61404] rounded-full blur-3xl" />
 
         {/* Top gradient accent line */}
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
@@ -143,7 +161,11 @@ const Doctors: React.FC<DoctorsProps> = ({
           </div>
 
           {/* Filter Bar */}
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8 pb-6 border-b border-white/10">
+          <div
+            className={`flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8 pb-6 border-b ${
+              theme === "dark" ? "border-white/10" : "border-black/10"
+            }`}
+          >
             <div className="flex flex-wrap gap-3 items-center">
               <Select
                 value={show.toString()}
@@ -156,7 +178,7 @@ const Doctors: React.FC<DoctorsProps> = ({
                   className={`w-24 rounded-lg ${
                     theme === "dark"
                       ? "bg-white/[0.02] border-white/20 text-white"
-                      : "bg-black/[0.02] border-black/20 text-gray-900"
+                      : "bg-black/[0.05] border-black/15 text-gray-900"
                   }`}
                 >
                   <SelectValue placeholder="Show" />
@@ -181,7 +203,7 @@ const Doctors: React.FC<DoctorsProps> = ({
                   className={`w-28 rounded-lg ${
                     theme === "dark"
                       ? "bg-white/[0.02] border-white/20 text-white"
-                      : "bg-black/[0.02] border-black/20 text-gray-900"
+                      : "bg-black/[0.05] border-black/15 text-gray-900"
                   }`}
                 >
                   <SelectValue placeholder="Status" />
@@ -201,7 +223,7 @@ const Doctors: React.FC<DoctorsProps> = ({
                   className={`pl-10 rounded-lg ${
                     theme === "dark"
                       ? "bg-white/[0.02] border-white/20 text-white placeholder:text-gray-500"
-                      : "bg-black/[0.02] border-black/20 text-gray-900 placeholder:text-gray-500"
+                      : "bg-black/[0.05] border-black/15 text-gray-900 placeholder:text-gray-600"
                   }`}
                   placeholder="Search doctors..."
                   value={search}
@@ -228,7 +250,7 @@ const Doctors: React.FC<DoctorsProps> = ({
                       ? "bg-[#18E614]/40 text-white shadow-lg shadow-[#18E614]/20"
                       : theme === "dark"
                       ? "bg-white/[0.05] border border-white/20 text-gray-300 hover:bg-white/[0.1]"
-                      : "bg-black/[0.05] border border-black/20 text-gray-700 hover:bg-black/[0.1]"
+                      : "bg-black/[0.08] border border-black/20 text-gray-800 hover:bg-black/[0.12]"
                   }`}
                 >
                   {opt.label}
@@ -246,10 +268,10 @@ const Doctors: React.FC<DoctorsProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 + idx * 0.05 }}
                 whileHover={{ y: -4 }}
-                className={`rounded-2xl overflow-hidden backdrop-blur-lg border border-white/10 p-4 md:p-6 flex flex-col items-center transition-all ${
+                className={`rounded-2xl overflow-hidden backdrop-blur-lg border transition-all p-4 md:p-6 flex flex-col items-center ${
                   theme === "dark"
-                    ? "bg-white/[0.05] hover:bg-white/[0.08]"
-                    : "bg-black/[0.02] hover:bg-black/[0.04]"
+                    ? "border-white/10 bg-white/[0.05] hover:bg-white/[0.08]"
+                    : "border-black/10 bg-black/[0.04] hover:bg-black/[0.07]"
                 }`}
               >
                 {/* Doctor Avatar */}
@@ -327,10 +349,10 @@ const Doctors: React.FC<DoctorsProps> = ({
                       bookedDoctors.includes(doc.id)
                         ? theme === "dark"
                           ? "bg-[#18E614]/20 border-[#18E614]/40 text-[#18E614]"
-                          : "bg-[#18E614]/10 border-[#18E614]/20 text-[#18E614]"
+                          : "bg-[#18E614]/15 border-[#18E614]/30 text-[#12B80E]"
                         : theme === "dark"
                         ? "bg-white/[0.02] border-white/20 text-gray-300 hover:bg-white/[0.05]"
-                        : "bg-black/[0.02] border-black/20 text-gray-700 hover:bg-black/[0.05]"
+                        : "bg-black/[0.05] border-black/20 text-gray-700 hover:bg-black/[0.08]"
                     }`}
                   >
                     <BookOpen className="w-4 h-4 inline mr-1" />
@@ -356,7 +378,11 @@ const Doctors: React.FC<DoctorsProps> = ({
           )}
 
           {/* Pagination Section */}
-          <div className="mt-8 pt-6 border-t border-white/10">
+          <div
+            className={`mt-8 pt-6 border-t ${
+              theme === "dark" ? "border-white/10" : "border-black/10"
+            }`}
+          >
             <div
               className={`text-sm mb-4 ${
                 theme === "dark" ? "text-gray-400" : "text-gray-600"

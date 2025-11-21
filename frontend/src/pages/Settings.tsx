@@ -178,10 +178,20 @@ const Settings: React.FC = () => {
           transition={{ delay: 0.2 }}
           className={`relative rounded-3xl overflow-hidden ${
             theme === "dark" ? "bg-[#0B0B0C]/60" : "bg-white/60"
-          } backdrop-blur-xl border border-white/10`}
+          } backdrop-blur-xl border ${
+            theme === "dark" ? "border-white/10" : "border-black/15"
+          }`}
         >
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-[#18E614]/10 rounded-full blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-[#18E614]/10 rounded-full blur-3xl" />
+          <div
+            className={`absolute -top-40 -right-40 w-80 h-80 ${
+              theme === "dark" ? "bg-[#18E614]/10" : "bg-[#18E614]/30"
+            } rounded-full blur-3xl`}
+          />
+          <div
+            className={`absolute -bottom-40 -left-40 w-80 h-80 ${
+              theme === "dark" ? "bg-[#18E614]/10" : "bg-[#18E614]/30"
+            } rounded-full blur-3xl`}
+          />
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
 
           <div className="relative p-6 sm:p-8 md:p-10">

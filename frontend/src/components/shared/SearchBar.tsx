@@ -90,11 +90,23 @@ const SearchBar: React.FC<SearchBarProps> = ({
       />
 
       {/* Border */}
-      <div className="absolute inset-0 border-2 border-white/10 dark:border-[#2f3339] rounded-b-3xl max-lg:rounded-bl-none" />
+      <div
+        className={`absolute inset-0 border-2 ${
+          theme === "dark" ? "border-white/10" : "border-black/15"
+        } dark:border-[#2f3339] rounded-b-3xl max-lg:rounded-bl-none`}
+      />
 
       {/* Accent glows */}
-      <div className="absolute -top-10 left-1/4 w-40 h-40 bg-[#18E614]/10 rounded-full blur-3xl" />
-      <div className="absolute -bottom-10 right-1/4 w-40 h-40 bg-[#18E614]/10 rounded-full blur-3xl" />
+      <div
+        className={`absolute -top-10 left-1/4 w-40 h-40 ${
+          theme === "dark" ? "bg-[#18E614]/10" : "bg-[#18E614]/30"
+        } rounded-full blur-3xl`}
+      />
+      <div
+        className={`absolute -bottom-10 right-1/4 w-40 h-40 ${
+          theme === "dark" ? "bg-[#18E614]/10" : "bg-[#18E614]/30"
+        } rounded-full blur-3xl`}
+      />
 
       <div className="relative flex items-center justify-start px-1 z-[52] flex-shrink-0">
         <img

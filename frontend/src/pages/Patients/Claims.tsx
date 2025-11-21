@@ -133,9 +133,15 @@ const Claims: React.FC = () => {
           transition={{ delay: 0.3 }}
           className={`relative rounded-3xl overflow-hidden ${
             theme === "dark" ? "bg-[#0B0B0C]/60" : "bg-white/60"
-          } backdrop-blur-xl border border-white/10`}
+          } backdrop-blur-xl border ${
+            theme === "dark" ? "border-white/10" : "border-black/15"
+          }`}
         >
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-[#18E614]/10 rounded-full blur-3xl" />
+          <div
+            className={`absolute -top-40 -right-40 w-80 h-80 ${
+              theme === "dark" ? "bg-[#18E614]/10" : "bg-[#18E614]/30"
+            } rounded-full blur-3xl`}
+          />
           <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl" />
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
 
@@ -145,7 +151,7 @@ const Claims: React.FC = () => {
                 className={`flex-grow flex items-center rounded-xl p-2 overflow-hidden ${
                   theme === "dark"
                     ? "bg-white/[0.02] border border-white/10"
-                    : "bg-black/[0.02] border border-black/10"
+                    : "bg-black/[0.05] border border-black/10"
                 }`}
               >
                 <Search className="h-5 w-5 flex-none text-gray-500 ml-3" />
@@ -170,7 +176,7 @@ const Claims: React.FC = () => {
                         ? "bg-[#18E614]/40 text-white"
                         : theme === "dark"
                         ? "bg-white/10 text-gray-300 hover:bg-white/20"
-                        : "bg-black/10 text-gray-700 hover:bg-black/20"
+                        : "bg-black/[0.08] text-gray-800 hover:bg-black/[0.12]"
                     }`}
                   >
                     {option}
@@ -190,7 +196,7 @@ const Claims: React.FC = () => {
                     className={`p-4 rounded-xl border ${
                       theme === "dark"
                         ? "bg-white/[0.02] border-white/10 hover:bg-white/[0.05]"
-                        : "bg-black/[0.02] border-black/10 hover:bg-black/[0.05]"
+                        : "bg-black/[0.04] border-black/10 hover:bg-black/[0.07]"
                     } transition-all cursor-pointer group`}
                   >
                     <div className="flex items-start justify-between">
