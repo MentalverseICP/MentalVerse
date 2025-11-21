@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ArrowUpRight, Star } from 'lucide-react';
+import { ArrowUpRight, Star, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
         
@@ -13,19 +13,19 @@ const HeroActionButtons = () => {
     return (
       <div className="flex flex-col sm:flex-row gap-4">
         <motion.button
-          whileHover={{ scale: 1.05 }}
+          whileHover={{ scale: 1.05, y: -2 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => navigate('/app')}
-          className="bg-[#18E614] hover:bg-[#18E614]/90 text-white px-8 py-3 rounded-2xl text-md font-semibold transition-all duration-300 flex items-center justify-center space-x-2"
+          className="bg-[#18E614] hover:bg-[#18E614]/90 text-white px-8 py-3 rounded-xl text-md font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-md hover:shadow-[#18E614]/30"
         >
           <span>Go to Dashboard</span>
           <ArrowUpRight className="w-5 h-5" />
         </motion.button>
         <motion.button
-          whileHover={{ scale: 1.05 }}
+          whileHover={{ scale: 1.05, y: -2 }}
           whileTap={{ scale: 0.95 }}
           onClick={logout}
-          className="bg-destructive hover:bg-destructive/90 text-white px-8 py-3 rounded-2xl text-md font-semibold transition-all duration-300 flex items-center justify-center space-x-2"
+          className="bg-destructive hover:bg-destructive/90 text-white px-8 py-3 rounded-xl text-md font-semibold transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
         >
           <span>Disconnect</span>
           <ArrowUpRight className="w-4 h-4" />
@@ -36,10 +36,10 @@ const HeroActionButtons = () => {
   
   return (
     <motion.button
-      whileHover={{ scale: 1.05 }}
+      whileHover={{ scale: 1.05, y: -2 }}
       whileTap={{ scale: 0.95 }}
       onClick={login}
-      className="bg-[#18E614] hover:bg-[#18E614]/90 text-white px-8 py-3 rounded-2xl text-md font-semibold transition-all duration-300 flex items-center space-x-2"
+      className="bg-[#18E614] hover:bg-[#18E614]/90 text-white px-8 py-3 rounded-xl text-md font-semibold transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl hover:shadow-[#18E614]/30"
     >
       <span>Book Appointment</span>
       <ArrowUpRight className="w-5 h-5" />
@@ -56,7 +56,7 @@ export const Hero = () => {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="relative bg-card rounded-3xl shadow-2xl overflow-hidden max-w-[90rem] mx-auto min-h-[600px]"
+          className="relative bg-card rounded-3xl shadow-2xl overflow-hidden max-w-[90rem] mx-auto min-h-[600px] border border-border/20"
         >
           {/* Full Background Image */}
           <div className="absolute inset-0 w-full h-full">
@@ -65,8 +65,8 @@ export const Hero = () => {
               alt="Mental wellness and meditation" 
               className="w-full h-full object-cover"
             />
-            {/* Gradient overlay for better text readability */}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/30"></div>
+            {/* Enhanced Gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/55 to-black/35"></div>
           </div>
 
           {/* Main Content */}
@@ -76,9 +76,11 @@ export const Hero = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="w-fit flex items-center space-x-2 bg-[#18E614]/10 border border-[#18E614]/30 text-[#3aa03f] px-4 py-2 rounded-full text-sm font-medium mb-8 backdrop-blur-sm"
+              className="w-fit flex items-center space-x-2 bg-[#18E614]/15 border border-[#18E614]/40 text-[#3aa03f] px-4 py-2 rounded-full text-sm font-semibold mb-8 backdrop-blur-sm hover:bg-[#18E614]/25 hover:border-[#18E614]/60 transition-all duration-300"
             >
-              <Star className="w-4 h-4 fill-current" />
+              <motion.div animate={{ rotate: 360 }} transition={{ duration: 3, repeat: Infinity }}>
+                <Sparkles className="w-4 h-4 fill-current" />
+              </motion.div>
               <span>24K Happy Customers</span>
             </motion.div>
 
@@ -97,7 +99,7 @@ export const Hero = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="text-white/80 text-lg mb-8 leading-relaxed max-w-lg"
+              className="text-white/85 text-lg mb-8 leading-relaxed max-w-lg font-light"
             >
               Our mission is to drive progress and enhance the lives of our customers by delivering superior products and services that exceed expectations.
             </motion.p>

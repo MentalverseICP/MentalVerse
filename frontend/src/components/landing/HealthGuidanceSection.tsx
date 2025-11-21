@@ -43,15 +43,16 @@ export const HealthGuidanceSection: React.FC = () => {
               transition={{ duration: 0.8, delay: index * 0.2 }}
               viewport={{ once: true }}
               whileHover={{ scale: 1.02 }}
-              className="bg-card border border-border/30 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer"
+              className="bg-card border border-border/30 hover:border-[#18E614]/70 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer"
             >
-              <div className="relative">
-                <img
+              <div className="relative overflow-hidden rounded-t-xl">
+                <motion.img
+                  whileHover={{ scale: 1.08 }}
+                  transition={{ duration: 0.3 }}
                   src={article.image}
                   alt={article.title}
                   className="w-full h-48 object-cover"
                 />
-                <div className="absolute inset-0 bg-black/20 hover:bg-black/10 transition-all duration-300"></div>
               </div>
               <div className="p-6">
                 <h3 className="text-foreground font-semibold text-lg leading-tight">

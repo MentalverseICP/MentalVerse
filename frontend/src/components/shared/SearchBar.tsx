@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Bot, Search, SearchIcon, SearchX } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import notification from "@/images/Notification Icon.svg";
 import { useTheme } from "./theme-provider";
 import { cn } from "@/lib/utils";
@@ -15,10 +16,9 @@ import mentalIconMobileDark from "@/images/mental_Icon_mobile_dark1.svg";
 
 import { ThemeToggle } from "./theme-toggle";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
-import { motion, AnimatePresence } from "framer-motion";
 
 interface SearchBarProps {
-  onSearchChange: (value: string) => void; // Callback for handling input changes
+  onSearchChange: (value: string) => void;
   placeholder?: string;
   className?: string;
 }
@@ -36,7 +36,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const [userPhoto, setUserPhoto] = useState<string | null>(null);
   const { performSearch, searchResults, isSearching } = useSearch();
 
-  // Load user photo from localStorage
   useEffect(() => {
     const userProfile = localStorage.getItem("userProfile");
     if (userProfile) {
@@ -45,7 +44,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
     }
   }, []);
 
-  // Listen for storage changes to update photo
   useEffect(() => {
     const handleStorageChange = () => {
       const userProfile = localStorage.getItem("userProfile");
@@ -55,7 +53,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
       }
     };
 
-    // Listen for both storage events (cross-tab) and custom events (same-tab)
     window.addEventListener("storage", handleStorageChange);
     window.addEventListener("profileUpdated", handleStorageChange);
 
@@ -65,26 +62,41 @@ const SearchBar: React.FC<SearchBarProps> = ({
     };
   }, []);
 
-  // Debounced search
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (searchInput.trim()) {
         performSearch(searchInput);
         onSearchChange(searchInput);
       } else {
-        // Clear results when search is empty
         performSearch("");
       }
-    }, 300); // Optimized delay for better UX
+    }, 300);
 
     return () => clearTimeout(timeoutId);
   }, [searchInput, performSearch, onSearchChange]);
 
   return (
-    <div
-      className={`dark:border-[#2f3339] border-2 rounded-b-3xl max-lg:rounded-bl-none h-24 mx-2 p-5 max-sm:p-3 grid xl:gap-8 lg:gap-6 md:gap-4 sm:gap-3 gap-2 grid-flow-col items-center justify-between z-20 ${className}`}
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className={`relative rounded-b-3xl max-lg:rounded-bl-none h-24 mx-2 p-5 max-sm:p-3 grid xl:gap-8 lg:gap-6 md:gap-4 sm:gap-3 gap-2 grid-flow-col items-center justify-between z-20 overflow-hidden ${className}`}
     >
-      <div className="flex items-center justify-start px-1 relative z-[52] flex-shrink-0">
+      {/* Glassmorphic background */}
+      <div
+        className={`absolute inset-0 ${
+          theme === "dark" ? "bg-[#0B0B0C]/90" : "bg-[#F7F7F7]/90"
+        } backdrop-blur-xl`}
+      />
+
+      {/* Border */}
+      <div className="absolute inset-0 border-2 border-white/10 dark:border-[#2f3339] rounded-b-3xl max-lg:rounded-bl-none" />
+
+      {/* Accent glows */}
+      <div className="absolute -top-10 left-1/4 w-40 h-40 bg-[#18E614]/10 rounded-full blur-3xl" />
+      <div className="absolute -bottom-10 right-1/4 w-40 h-40 bg-[#18E614]/10 rounded-full blur-3xl" />
+
+      <div className="relative flex items-center justify-start px-1 z-[52] flex-shrink-0">
         <img
           src={
             isLargeScreen
@@ -96,32 +108,42 @@ const SearchBar: React.FC<SearchBarProps> = ({
               : mentalIconMobileLight
           }
           alt="Mental Verse"
-          className={cn("logo fill-mental transition max-h-12 w-auto")}
+          className={cn("logo transition max-h-12 w-auto")}
         />
       </div>
 
-      <div
-        className={`flex xl:gap-4 lg:gap-3 sm:gap-2 gap-1 items-center justify-end flex-shrink-0`}
-      >
+      <div className="relative flex xl:gap-4 lg:gap-3 sm:gap-2 gap-1 items-center justify-end flex-shrink-0">
         {/* Search */}
         <div className="flex items-center relative z-50">
-          {isOpen && (
-            <motion.div className="flex-1 flex items-center rounded-md p-1 bg-[#f7f7f7f7] shadow-sm border overflow-hidden min-w-0 mx-2 h-10">
-              <Search className="h-4 w-4 flex-none text-gray-500 dark:text-gray-400 ml-3" />
-              <input
-                type="text"
-                placeholder={
-                  isSmallScreen
-                    ? "Search doctors, appointments, features..."
-                    : "Search"
-                }
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                className="flex-1 bg-transparent outline-none text-gray-500 dark:text-gray-500 py-2 px-3 text-sm min-w-0 placeholder:text-xs"
-                aria-label="Search"
-              />
-            </motion.div>
-          )}
+          <AnimatePresence>
+            {isOpen && (
+              <motion.div
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: "auto", opacity: 1 }}
+                exit={{ width: 0, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className={`flex-1 flex items-center rounded-xl p-1 overflow-hidden min-w-0 mx-2 h-10 ${
+                  theme === "dark"
+                    ? "bg-white/[0.05] border border-white/10"
+                    : "bg-black/[0.05] border border-black/10"
+                } backdrop-blur-md shadow-sm`}
+              >
+                <Search className="h-4 w-4 flex-none text-gray-500 dark:text-gray-400 ml-3" />
+                <input
+                  type="text"
+                  placeholder={
+                    isSmallScreen
+                      ? "Search doctors, appointments, features..."
+                      : "Search"
+                  }
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  className="flex-1 bg-transparent outline-none text-gray-700 dark:text-gray-300 py-2 px-3 text-sm min-w-0 placeholder:text-xs"
+                  aria-label="Search"
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Search Results Dropdown */}
           {isOpen && searchInput && (
@@ -129,18 +151,28 @@ const SearchBar: React.FC<SearchBarProps> = ({
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="absolute top-full left-2 right-2 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-64 overflow-y-auto z-[9999]"
+              className={`absolute top-full left-2 right-2 mt-2 rounded-xl overflow-hidden shadow-xl z-[9999] max-h-64 overflow-y-auto ${
+                theme === "dark"
+                  ? "bg-gray-800/95 border border-gray-700"
+                  : "bg-white/95 border border-gray-200"
+              } backdrop-blur-xl`}
             >
               {searchResults.length > 0 ? (
                 <div className="p-2">
                   {searchResults.slice(0, 5).map((result, index) => (
-                    <div
+                    <motion.div
                       key={index}
-                      className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className={`p-2 rounded-lg cursor-pointer ${
+                        theme === "dark"
+                          ? "hover:bg-gray-700/50"
+                          : "hover:bg-gray-100"
+                      }`}
                       onClick={() => {
                         setSearchInput("");
                         setIsOpen(false);
-                        // Navigate to the result's route
                         if (result.route) {
                           navigate(result.route);
                         }
@@ -149,17 +181,27 @@ const SearchBar: React.FC<SearchBarProps> = ({
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 bg-[#18E614] rounded-full"></div>
                         <div>
-                          <p className="text-sm font-medium text-gray-900 dark:text-white">
+                          <p
+                            className={`text-sm font-medium ${
+                              theme === "dark" ? "text-white" : "text-gray-900"
+                            }`}
+                          >
                             {result.name || result.title}
                           </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                          <p
+                            className={`text-xs ${
+                              theme === "dark"
+                                ? "text-gray-400"
+                                : "text-gray-500"
+                            }`}
+                          >
                             {result.specialization ||
                               result.condition ||
                               result.description}
                           </p>
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               ) : !isSearching && searchInput ? (
@@ -169,13 +211,17 @@ const SearchBar: React.FC<SearchBarProps> = ({
               ) : null}
             </motion.div>
           )}
+
           <motion.button
-            whileHover={{ scale: 0.92 }}
-            whileTap={{ scale: 0.8 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => setIsOpen(!isOpen)}
-            className="w-9 h-9 bg-gradient-to-r from-[#18E614a1] to-emerald-700 text-white rounded-full shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center"
-            aria-label={isOpen ? "Close chat" : "Open chat"}
+            className="relative w-9 h-9 bg-[#18E614]/40 text-white rounded-full shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center overflow-hidden"
+            aria-label={isOpen ? "Close search" : "Open search"}
           >
+            {/* Subtle glow effect */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-full" />
+
             <AnimatePresence mode="wait">
               {isOpen ? (
                 <motion.div
@@ -202,35 +248,39 @@ const SearchBar: React.FC<SearchBarProps> = ({
           </motion.button>
         </div>
 
-        {/* Theme - Updated to use new ThemeToggle */}
-        <div className="max-sm:hidden">
+        {/* Theme Toggle */}
+        <div className="relative max-sm:hidden">
           <ThemeToggle />
         </div>
 
         {/* Notification */}
-        <button
+        <motion.button
+          whileHover={{ y: -2 }}
+          whileTap={{ scale: 0.95 }}
           type="button"
           title="Notifications"
           className={cn(
-            "-ml-1 lg:w-10 w-7 lg:h-10 h-7 flex items-center justify-center hover:-translate-y-1 rounded-lg transition-all duration-300 hover:border-t hover:border-b flex-shrink-0",
+            "relative lg:w-10 w-7 lg:h-10 h-7 flex items-center justify-center rounded-lg transition-all duration-300 overflow-hidden flex-shrink-0",
             theme === "dark"
-              ? "bg-background hover:bg-black hover:shadow-[0_2px_0_0_rgba(204,255,0,0.811)] hover:border-[#18E614]"
-              : "hover:bg-zinc-100 bg-white hover:border-black hover:shadow-[0_2px_0_0_rgba(0,0,0,0.811)]"
+              ? "bg-white/[0.02] border border-white/10 hover:border-[#18E614] hover:shadow-[0_2px_10px_rgba(24,230,20,0.3)]"
+              : "bg-black/[0.02] border border-black/10 hover:border-black hover:shadow-[0_2px_10px_rgba(0,0,0,0.2)]"
           )}
         >
           <div className="relative z-10">
-            <img src={notification} alt="notification" />
+            <img src={notification} alt="notification" className="w-5 h-5" />
           </div>
-        </button>
+        </motion.button>
 
         <Separator
           orientation="vertical"
-          className="w-px h-5 bg-gray-300 max-xs:hidden"
+          className="w-px h-5 bg-gray-300 dark:bg-gray-700 max-xs:hidden"
         />
-        <div className="flex-shrink-0">
+
+        {/* User Profile */}
+        <div className="relative flex-shrink-0">
           {true ? (
             <div className="flex items-center gap-2 sm:mt-1">
-              <div className=" lg:w-12 lg:h-12 w-7 h-7 max-sm:w-10 max-sm:h-10 border border-[#18E614] rounded-full flex-shrink-0">
+              <div className="lg:w-12 lg:h-12 w-7 h-7 max-sm:w-10 max-sm:h-10 border-2 border-[#18E614] rounded-full flex-shrink-0 overflow-hidden">
                 {userPhoto ? (
                   <img
                     src={userPhoto}
@@ -246,7 +296,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                 )}
               </div>
               <div className="flex flex-col justify-items-center max-sm:hidden min-w-0">
-                <span className="md:text-sm text-xs whitespace-nowrap overflow-hidden text-ellipsis">
+                <span className="md:text-sm text-xs whitespace-nowrap overflow-hidden text-ellipsis font-semibold">
                   {(() => {
                     const userProfile = localStorage.getItem("userProfile");
                     if (userProfile) {
@@ -256,7 +306,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                     return "User";
                   })()}
                 </span>
-                <span className="text-[10px] tracking-wider text-[#18E614] whitespace-nowrap">
+                <span className="text-[10px] tracking-wider text-[#18E614] font-bold whitespace-nowrap">
                   {(() => {
                     const userRole = localStorage.getItem("userRole");
                     return userRole ? userRole.toUpperCase() : "USER";
@@ -271,7 +321,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

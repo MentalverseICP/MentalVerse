@@ -1,5 +1,6 @@
 import * as Popover from "@radix-ui/react-popover";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { motion } from "framer-motion";
 import { X, ChevronDown, Plus, ShoppingBag, Clock } from "lucide-react";
 import { Edit } from 'lucide-react';
 import DatePicker from "react-datepicker";
@@ -11,16 +12,11 @@ const eventColors: { [key: string]: string } = {
   emergency: "bg-[#074A2D]",
   examination: "bg-[#FECA57]",
   routine: "bg-[#F80D38]",
-  consultation: "bg-[#0DB16A]",
+  consultation: "bg-[#18E614]",
   sick: "bg-[#18E614]",
 };
 
-type EventType =
-  | "emergency"
-  | "examination"
-  | "routine"
-  | "consultation"
-  | "sick";
+type EventType = "emergency" | "examination" | "routine" | "consultation" | "sick";
 
 interface Event {
   id?: string;
@@ -72,199 +68,196 @@ const Week$DayPopover = ({
 
   return (
     <Popover.Content
-      className="bg-white dark:bg-black text-black dark:text-white shadow-xl rounded-xl p-6 w-64 absolute z-30 border border-[#DFE0E2] dark:border-[#3D3D3D]"
+      className="bg-white/95 dark:bg-[#0B0B0C]/95 backdrop-blur-xl text-black dark:text-white shadow-2xl rounded-2xl p-5 w-80 max-h-[500px] absolute z-30 border border-[#DFE0E2]/20 dark:border-[#3D3D3D]/30 overflow-y-auto scrollbar-custom"
       style={{ top: popoverPosition.top, left: popoverPosition.left }}
+      asChild
     >
-      <div>
-        <div className="border-b border-[#2f3339] pb-2 flex justify-between items-center">
-          <h3 className="uppercase text-xs font-bold">make new appointment</h3>
-          <button
-            type="button"
-            className="bg-transparent border-[#2f3339] text-black dark:text-white p-2 rounded-full border-2 hover:-translate-y-0.5 transition-all duration-300 hover:bg-white dark:hover:bg-black hover:shadow-[0_2px_0_0_rgba(0, 38, 255, 0.976)] hover:border-[#1429e6] hover:border-b-[3px]"
-            onClick={closePopover}
-            title="Close"
-          >
-            <X size={12} />
-          </button>
-        </div>
-
-        <div>
-          <label
-            htmlFor="title"
-            className="block mt-4 ml-1 text-[#2f3339] dark:text-gray-200 font-medium text-[10px] uppercase"
-          >
-            Title
-          </label>
-          <input
-            type="text"
-            className="w-full border border-[#2f3339] dark:border-[#2f3339] bg-transparent p-1.5 rounded-full focus:outline-none focus:ring-1 focus:ring-[#18E614] placeholder:text-xs text-xs"
-            placeholder="Enter Title"
-            id="title"
-            name="title"
-            value={eventTitle}
-            onChange={(e) => setEventTitle(e.target.value)}
-          />
-        </div>
-
-        <div>
-          <label
-            htmlFor="eventType"
-            className="block mt-4 ml-1 text-[#2f3339] dark:text-gray-200 font-medium text-[10px] uppercase"
-          >
-            Categories
-          </label>
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger asChild>
-              <button
-                type="button"
-                className="w-full border border-[#2f3339] dark:border-[#2f3339] bg-transparent p-1.5 text-xs rounded-full flex justify-between items-center focus:outline-none focus:ring-1 focus:ring-[#18E614]"
-              >
-                {eventType.charAt(0).toUpperCase() + eventType.slice(1)}
-                <ChevronDown size={16} />
-              </button>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Content className="bg-white dark:bg-black border border-[#2f3339] dark:border-[#2f3339] shadow-md rounded-md w-44 text-xs z-10">
-              {Object.keys(eventColors).map((type) => (
-                <DropdownMenu.Item
-                  key={type}
-                  className="p-2 hover:bg-gray-200 dark:hover:bg-[#2f3339] cursor-pointer"
-                  onSelect={() => setEventType(type as EventType)}
-                >
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
-                </DropdownMenu.Item>
-              ))}
-            </DropdownMenu.Content>
-          </DropdownMenu.Root>
-        </div>
-
-        <div>
-          <label
-            htmlFor="doctor"
-            className="block mt-4 ml-1 text-[#2f3339] dark:text-gray-200 font-medium text-[10px] uppercase"
-          >
-            Doctors
-          </label>
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger asChild>
-              <button
-                type="button"
-                className="w-full border border-[#2f3339] dark:border-[#2f3339] bg-transparent p-1.5 text-xs rounded-full flex justify-between items-center focus:outline-none focus:ring-1 focus:ring-[#18E614]"
-              >
-                {selectedDoctor || "Select Doctor"}
-                <ChevronDown size={16} />
-              </button>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Content className="bg-white dark:bg-black border border-[#2f3339] dark:border-[#2f3339] shadow-md rounded-md w-44 text-xs z-10">
-              {doctors.map((doctor) => (
-                <DropdownMenu.Item
-                  key={doctor}
-                  className="p-2 hover:bg-gray-200 dark:hover:bg-[#2f3339] cursor-pointer"
-                  onSelect={() => setSelectedDoctor(doctor)}
-                >
-                  {doctor}
-                </DropdownMenu.Item>
-              ))}
-            </DropdownMenu.Content>
-          </DropdownMenu.Root>
-        </div>
-
-        <div className="flex justify-between gap-5">
-          <div className="flex flex-col">
-            <label className="block mt-4 ml-1 text-[#2f3339] dark:text-gray-200 font-bold text-[10px] uppercase">
-              Start Time
-            </label>
-            <div className="relative flex items-center">
-              <Clock
-                className="absolute left-2 text-[#2f3339] dark:text-gray-400"
-                size={16}
-              />
-              <DatePicker
-                selected={
-                  startTime ? moment(startTime, "HH:mm").toDate() : null
-                }
-                onChange={(date) =>
-                  setStartTime(date ? moment(date).format("HH:mm") : "")
-                }
-                showTimeSelect
-                showTimeSelectOnly
-                timeIntervals={15}
-                timeCaption="Time"
-                dateFormat="HH:mm"
-                className="w-full pl-8 border border-[#2f3339] dark:border-[#2f3339] bg-transparent p-1.5 text-xs rounded-full focus:outline-none focus:ring-1 focus:ring-[#18E614] hover:border-[#18E614] dark:hover:border-[#18E614]"
-                onChangeRaw={(e) => {
-                  if (e && e.target) {
-                    const target = e.target as HTMLInputElement;
-                    target.value = target.value.replace(/[^0-9:]/g, "");
-                  }
-                }}
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col">
-            <label className="block mt-4 ml-1 text-[#2f3339] dark:text-gray-200 font-bold text-[10px] uppercase">
-              End Time
-            </label>
-            <div className="relative flex items-center">
-              <Clock
-                className="absolute left-2 text-[#2f3339] dark:text-gray-400"
-                size={16}
-              />
-              <DatePicker
-                selected={endTime ? moment(endTime, "HH:mm").toDate() : null}
-                onChange={(date) =>
-                  setEndTime(date ? moment(date).format("HH:mm") : "")
-                }
-                showTimeSelect
-                showTimeSelectOnly
-                timeIntervals={15}
-                timeCaption="Time"
-                dateFormat="HH:mm"
-                className="w-full pl-8 border border-[#2f3339] dark:border-[#2f3339] bg-transparent p-1.5 text-xs rounded-full focus:outline-none focus:ring-1 focus:ring-[#18E614] hover:border-[#18E614] dark:hover:border-[#18E614]"
-                onChangeRaw={(e) => {
-                  if (e && e.target) {
-                    const target = e.target as HTMLInputElement;
-                    target.value = target.value.replace(/[^0-9:]/g, "");
-                  }
-                }}
-              />
-            </div>
-          </div>
-        </div>
-        <div className="mt-4 flex justify-between">
-          {selectedEvent && (
-            <button
+      <motion.div
+        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.2 }}
+      >
+        {/* Ambient background effects */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-[#18E614]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
+        
+        <div className="relative z-10">
+          <div className="border-b border-[#DFE0E2]/30 dark:border-[#3D3D3D]/50 pb-3 flex justify-between items-center mb-4">
+            <h3 className="uppercase text-xs font-bold tracking-wider bg-gradient-to-r from-black to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
+              {selectedEvent ? 'Edit Appointment' : 'New Appointment'}
+            </h3>
+            <motion.button
+              whileHover={{ scale: 1.1, rotate: 90 }}
+              whileTap={{ scale: 0.9 }}
               type="button"
-              className="bg-transparent border-[#2f3339] text-black dark:text-white p-2 rounded-full border hover:-translate-y-0.5 transition-all duration-300 hover:border-t hover:border-b hover:bg-white dark:hover:bg-black hover:shadow-[0_2px_0_0_rgb(255, 0, 81)] hover:border-[#e61414] hover:border-b-2"
-              onClick={deleteEvent}
-              title="Delete Event"
+              className="bg-white/50 dark:bg-[#1f1f1f]/50 backdrop-blur-sm border border-[#DFE0E2]/30 dark:border-[#3D3D3D]/50 text-black dark:text-white p-2 rounded-xl hover:-translate-y-0.5 transition-all duration-300 hover:shadow-lg hover:border-[#18E614]"
+              onClick={closePopover}
+              title="Close"
             >
-              <ShoppingBag size={20} />
-            </button>
-          )}
-          <button
-            type="button"
-            className="bg-transparent border-[#2f3339] text-black dark:text-white p-2 rounded-full border hover:-translate-y-1 transition-all duration-300 hover:border-t hover:border-b dark:bg-black dark:hover:bg-black dark:hover:shadow-[0_2px_0_0_rgba(204,255,0,0.811)] dark:hover:border-[#18E614] bg-white hover:border-black hover:shadow-[0_2px_0_0_rgba(0,0,0,0.811)]"
-            onClick={addOrUpdateEvent}
-          >
-            {selectedEvent ? (
-              <div className="flex items-center gap-1">
-                <Edit size={10} />
-                <span className="block text-[#2f3339] dark:text-gray-200 font-bold dark:font-medium text-[10px] uppercase">
-                  Edit appointment
-                </span>
+              <X size={14} />
+            </motion.button>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="title" className="block mb-2 ml-1 text-[#2f3339] dark:text-gray-300 font-medium text-[10px] uppercase tracking-wider">
+                Title
+              </label>
+              <input
+                type="text"
+                className="w-full border border-[#DFE0E2]/30 dark:border-[#3D3D3D]/50 bg-white/50 dark:bg-[#1f1f1f]/50 backdrop-blur-sm p-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#18E614]/50 focus:border-[#18E614] placeholder:text-xs text-xs text-black dark:text-white transition-all"
+                placeholder="Enter appointment title"
+                id="title"
+                name="title"
+                value={eventTitle}
+                onChange={(e) => setEventTitle(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="eventType" className="block mb-2 ml-1 text-[#2f3339] dark:text-gray-300 font-medium text-[10px] uppercase tracking-wider">
+                Category
+              </label>
+              <DropdownMenu.Root>
+                <DropdownMenu.Trigger asChild>
+                  <motion.button
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    type="button"
+                    className="w-full border border-[#DFE0E2]/30 dark:border-[#3D3D3D]/50 bg-white/50 dark:bg-[#1f1f1f]/50 backdrop-blur-sm p-2.5 text-xs rounded-xl flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-[#18E614]/50 focus:border-[#18E614] transition-all"
+                  >
+                    <span className="capitalize">{eventType}</span>
+                    <ChevronDown size={16} />
+                  </motion.button>
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Content className="bg-white/95 dark:bg-[#0B0B0C]/95 backdrop-blur-xl border border-[#DFE0E2]/20 dark:border-[#3D3D3D]/30 shadow-xl rounded-xl w-64 text-xs z-50 p-1">
+                  {Object.keys(eventColors).map((type) => (
+                    <DropdownMenu.Item
+                      key={type}
+                      className="p-2.5 hover:bg-[#DFE0E2]/50 dark:hover:bg-[#1f1f1f]/70 cursor-pointer rounded-lg transition-all capitalize"
+                      onSelect={() => setEventType(type as EventType)}
+                    >
+                      {type}
+                    </DropdownMenu.Item>
+                  ))}
+                </DropdownMenu.Content>
+              </DropdownMenu.Root>
+            </div>
+
+            <div>
+              <label htmlFor="doctor" className="block mb-2 ml-1 text-[#2f3339] dark:text-gray-300 font-medium text-[10px] uppercase tracking-wider">
+                Doctor
+              </label>
+              <DropdownMenu.Root>
+                <DropdownMenu.Trigger asChild>
+                  <motion.button
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    type="button"
+                    className="w-full border border-[#DFE0E2]/30 dark:border-[#3D3D3D]/50 bg-white/50 dark:bg-[#1f1f1f]/50 backdrop-blur-sm p-2.5 text-xs rounded-xl flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-[#18E614]/50 focus:border-[#18E614] transition-all"
+                  >
+                    <span>{selectedDoctor || "Select Doctor"}</span>
+                    <ChevronDown size={16} />
+                  </motion.button>
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Content className="bg-white/95 dark:bg-[#0B0B0C]/95 backdrop-blur-xl border border-[#DFE0E2]/20 dark:border-[#3D3D3D]/30 shadow-xl rounded-xl w-64 text-xs z-50 p-1 max-h-48 overflow-y-auto">
+                  {doctors.map((doctor) => (
+                    <DropdownMenu.Item
+                      key={doctor}
+                      className="p-2.5 hover:bg-[#DFE0E2]/50 dark:hover:bg-[#1f1f1f]/70 cursor-pointer rounded-lg transition-all"
+                      onSelect={() => setSelectedDoctor(doctor)}
+                    >
+                      {doctor}
+                    </DropdownMenu.Item>
+                  ))}
+                </DropdownMenu.Content>
+              </DropdownMenu.Root>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block mb-2 ml-1 text-[#2f3339] dark:text-gray-300 font-medium text-[10px] uppercase tracking-wider">
+                  Start
+                </label>
+                <div className="relative">
+                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-[#2f3339] dark:text-gray-400 pointer-events-none z-10" size={14} />
+                  <DatePicker
+                    selected={startTime ? moment(startTime, "HH:mm").toDate() : null}
+                    onChange={(date) => setStartTime(date ? moment(date).format("HH:mm") : "")}
+                    showTimeSelect
+                    showTimeSelectOnly
+                    timeIntervals={15}
+                    timeCaption="Time"
+                    dateFormat="HH:mm"
+                    className="w-full pl-9 pr-3 border border-[#DFE0E2]/30 dark:border-[#3D3D3D]/50 bg-white/50 dark:bg-[#1f1f1f]/50 backdrop-blur-sm p-2.5 text-xs rounded-xl focus:outline-none focus:ring-2 focus:ring-[#18E614]/50 focus:border-[#18E614] transition-all"
+                    onChangeRaw={(e) => {
+                      if (e && e.target) {
+                        const target = e.target as HTMLInputElement;
+                        target.value = target.value.replace(/[^0-9:]/g, "");
+                      }
+                    }}
+                  />
+                </div>
               </div>
-            ) : (
-              <div className="flex items-center gap-1">
-                <Plus size={10} />
-                <span className="block text-[#2f3339] dark:text-gray-200 font-bold dark:font-medium text-[10px] uppercase">
-                  New appointment
-                </span>
+
+              <div>
+                <label className="block mb-2 ml-1 text-[#2f3339] dark:text-gray-300 font-medium text-[10px] uppercase tracking-wider">
+                  End
+                </label>
+                <div className="relative">
+                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-[#2f3339] dark:text-gray-400 pointer-events-none z-10" size={14} />
+                  <DatePicker
+                    selected={endTime ? moment(endTime, "HH:mm").toDate() : null}
+                    onChange={(date) => setEndTime(date ? moment(date).format("HH:mm") : "")}
+                    showTimeSelect
+                    showTimeSelectOnly
+                    timeIntervals={15}
+                    timeCaption="Time"
+                    dateFormat="HH:mm"
+                    className="w-full pl-9 pr-3 border border-[#DFE0E2]/30 dark:border-[#3D3D3D]/50 bg-white/50 dark:bg-[#1f1f1f]/50 backdrop-blur-sm p-2.5 text-xs rounded-xl focus:outline-none focus:ring-2 focus:ring-[#18E614]/50 focus:border-[#18E614] transition-all"
+                    onChangeRaw={(e) => {
+                      if (e && e.target) {
+                        const target = e.target as HTMLInputElement;
+                        target.value = target.value.replace(/[^0-9:]/g, "");
+                      }
+                    }}
+                  />
+                </div>
               </div>
-            )}
-          </button>
+            </div>
+
+            <div className="flex justify-between items-center pt-2 gap-2">
+              {selectedEvent && (
+                <motion.button
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  type="button"
+                  className="bg-white/50 dark:bg-[#1f1f1f]/50 backdrop-blur-sm border border-[#F80D38]/30 text-[#F80D38] p-2.5 rounded-xl transition-all duration-300 hover:bg-[#F80D38] hover:text-white hover:shadow-lg hover:shadow-[#F80D38]/20"
+                  onClick={deleteEvent}
+                  title="Delete Event"
+                >
+                  <ShoppingBag size={18} />
+                </motion.button>
+              )}
+              <motion.button
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                type="button"
+                className="flex-1 bg-gradient-to-r from-white/70 to-white/50 dark:from-[#1f1f1f]/70 dark:to-[#1f1f1f]/50 backdrop-blur-sm border border-[#18E614]/30 text-black dark:text-white px-4 py-2.5 rounded-xl transition-all duration-300 hover:border-[#18E614] hover:shadow-lg hover:shadow-[#18E614]/20"
+                onClick={addOrUpdateEvent}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  {selectedEvent ? <Edit size={14} /> : <Plus size={14} />}
+                  <span className="text-[11px] uppercase font-bold tracking-wider">
+                    {selectedEvent ? "Update" : "Create"}
+                  </span>
+                </div>
+              </motion.button>
+            </div>
+          </div>
         </div>
-      </div>
+      </motion.div>
     </Popover.Content>
   );
 };

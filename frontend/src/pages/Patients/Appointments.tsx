@@ -6,7 +6,6 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import * as Popover from "@radix-ui/react-popover";
 
 import { useSidebar } from "@/components/ui/Sidebar";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 import MonthPopover from "@/components/appointmentsComp/MonthPopover";
 import Week$DayPopover from "@/components/appointmentsComp/Week$DayPopover";
@@ -51,7 +50,7 @@ const eventColors = {
   emergency: "bg-[#074A2D]",
   examination: "bg-[#FECA57]",
   routine: "bg-[#F80D38]",
-  consultation: "bg-[#0DB16A]",
+  consultation: "bg-[#18E614]",
   sick: "bg-[#18E614]",
 };
 
@@ -86,16 +85,14 @@ const CustomCalendar = () => {
   const [eventType, setEventType] = useState("consultation");
 
   const [popoverPosition, setPopoverPosition] = useState({
-    top: 200,
-    left: 50,
+    top: window.innerHeight / 2 - 200,
+    left: window.innerWidth / 2 - 150,
   });
   const calendarRef = useRef<HTMLDivElement>(null);
   const [currentView, setCurrentView] = useState("month");
 
   const [selectedDoctor, setSelectedDoctor] = useState("");
   const [showEditPopover, setShowEditPopover] = useState(false);
-
-  const isSmallScreen = useMediaQuery("(max-width: 640px)");
 
   useEffect(() => {
     localStorage.setItem("events", JSON.stringify(events));
@@ -194,6 +191,7 @@ const CustomCalendar = () => {
       const windowWidth = window.innerWidth;
       const windowHeight = window.innerHeight;
 
+      // Try to position at click point first
       if (left + popoverWidth > windowWidth) {
         left = windowWidth - popoverWidth - 20;
       }
@@ -201,7 +199,23 @@ const CustomCalendar = () => {
         top = windowHeight - popoverHeight - 20;
       }
 
+      // If still off-screen, center it
+      if (left < 20) {
+        left = windowWidth / 2 - popoverWidth / 2;
+      }
+      if (top < 20) {
+        top = windowHeight / 2 - popoverHeight / 2;
+      }
+
       setPopoverPosition({ top, left });
+    } else {
+      // Default to center if no box position provided
+      const popoverWidth = 300;
+      const popoverHeight = 400;
+      setPopoverPosition({
+        top: window.innerHeight / 2 - popoverHeight / 2,
+        left: window.innerWidth / 2 - popoverWidth / 2,
+      });
     }
 
     setSelectedEvent(null);
@@ -232,6 +246,7 @@ const CustomCalendar = () => {
       const windowWidth = window.innerWidth;
       const windowHeight = window.innerHeight;
 
+      // Try to position at click point first
       if (left + popoverWidth > windowWidth) {
         left = windowWidth - popoverWidth - 20;
       }
@@ -239,7 +254,23 @@ const CustomCalendar = () => {
         top = windowHeight - popoverHeight - 20;
       }
 
+      // If still off-screen, center it
+      if (left < 20) {
+        left = windowWidth / 2 - popoverWidth / 2;
+      }
+      if (top < 20) {
+        top = windowHeight / 2 - popoverHeight / 2;
+      }
+
       setPopoverPosition({ top, left });
+    } else {
+      // Default to center if no calendar ref
+      const popoverWidth = isCollapsed ? 500 : 700;
+      const popoverHeight = 400;
+      setPopoverPosition({
+        top: window.innerHeight / 2 - popoverHeight / 2,
+        left: window.innerWidth / 2 - popoverWidth / 2,
+      });
     }
   };
 
@@ -351,7 +382,7 @@ const CustomCalendar = () => {
   return (
     <div
       ref={calendarRef}
-      className={`p-5 relative max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 
+      className={`p-5 relative min-h-screen max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 
       max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)] 
       transition-all dark:bg-transparent 
       scrollbar-custom grid
@@ -368,10 +399,10 @@ const CustomCalendar = () => {
         style={{
           height:
             currentView === "month" || currentView === "agenda"
-              ? "calc(100vh - 6rem)"
+              ? "calc(100vh - 8rem)"
               : "100%",
         }}
-        className={`w-full max-[640px]:min-w-[600px] max-sm:w-screen max-sm:-mr-5`}
+        className={`w-full max-[640px]:min-w-[600px] max-sm:w-screen max-sm:-mr-5 scrollbar-custom`}
         eventPropGetter={(event) => eventStyleGetter(event)}
         dayPropGetter={dayPropGetter}
         slotPropGetter={slotPropGetter}
@@ -432,3 +463,12 @@ const CustomCalendar = () => {
 };
 
 export default CustomCalendar;
+
+// 1. the sidebar items position has been distorted correct it and align the icons that are not in the middle to the center, also use a different icon for the dropdown
+// 2. also the emerald you are using seems like a dull color, use a better shade of green '#18E614'  #codebase in all the pages
+// 3. the searchbar page was not redesigned 
+// 4. use the gradient background used in the diagnosticschart in the mapcomponent and also in the doctorlist
+// 5. use the gradient background used in the patientschart in the chart-radar-dots component
+// 6. there are some pages that do not take the full width of their page, check the pages and correct that #codebase 
+// 7. the pasted image shows how the size of the popover of the appointment page should be like
+// 8. the height of the highlighted section is not correct and use the scrollbar-custom style in the index.css file

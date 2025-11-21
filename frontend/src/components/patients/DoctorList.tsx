@@ -1,17 +1,10 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Search } from "lucide-react";
+import { motion } from "framer-motion";
 import chats from "@/images/Chats Icon.svg";
 import { useTheme } from "@/components/shared/theme-provider";
 import doctorsData, { Doctor } from "@/data/DoctorsData";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 
 interface prop {
   className: string;
@@ -57,161 +50,269 @@ const DoctorList: React.FC<prop> = ({ className }) => {
   );
 
   return (
-    <div
-      className={`bg-transparent p-6 rounded-3xl shadow-md border w-full ${className}`}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: 0.4 }}
+      className={`relative rounded-3xl overflow-hidden ${className}`}
     >
-      <div className="flex flex-wrap items-center gap-4 mb-4">
-        <h1 className="uppercase font-bold text-xs max-lg:text-md mr-5 sm:mr-10 lg:mr-20">
-          DOCTORS
-        </h1>
-        <div className="flex-grow flex items-center rounded-md p-1 bg-transparent shadow-sm overflow-hidden dark:border-[#2f3339] border-2">
-          <Search className="h-4 w-4 flex-none text-gray-500 dark:text-gray-400 ml-3" />
-          <input
-            type="text"
-            placeholder="Search doctors by name or role"
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1 bg-transparent outline-none text-gray-500 py-2 px-3 text-sm"
-            value={searchTerm}
-          />
-        </div>
+      {/* Glassmorphic background */}
+      <div
+        className={`absolute inset-0 ${
+          theme === "dark" ? "bg-[#0B0B0C]/80" : "bg-white/80"
+        } backdrop-blur-xl`}
+      />
 
-        <div className="flex rounded-md overflow-hidden dark:border-[#2f3339] border-2">
-          {["All", "Men", "Women"].map((gender) => (
-            <button
-              type="button"
-              key={gender}
-              onClick={() =>
-                setSelectedGender(gender as "All" | "Men" | "Women")
-              }
-              className={`px-3 sm:px-4 py-2 text-xs sm:text-sm ${
-                selectedGender === gender
-                  ? "bg-[#F80D38] text-white"
-                  : "border-x dark:border-[#2f3339]"
-              }`}
-            >
-              {gender}
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* Border */}
+      <div className="absolute inset-0 rounded-3xl border border-white/10" />
 
-      <div className="w-full overflow-x-auto scrollbar-custom">
-        <table className="w-full table-auto border-separate border-spacing-y-3">
-          <thead>
-            <tr
-              className={`bg-transparent ${
-                theme === "dark" ? "text-white" : "text-black"
-              }`}
-            >
-              <th className="p-4 text-left">Name</th>
-              <th className="p-4 text-left">Role</th>
-              <th className="p-4 text-left">Booked Appointments</th>
-              <th className="p-4 text-left">Chat</th>
-              <th className="p-4 text-left">Book New Appointments</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedDoctors.map((doctor) => (
-              <tr
-                key={doctor.id}
-                className={`rounded-lg ${
-                  theme === "dark" ? "text-white" : "text-black"
+      {/* Corner accent glows */}
+      <div className="absolute top-0 -left-20 w-40 h-40 bg-[#18E614]/10 rounded-full blur-3xl" />
+      <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-[#18E614]/10 rounded-full blur-3xl" />
+
+      {/* Top highlight */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+
+      <div className="relative p-6 md:p-8">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col md:flex-row md:items-center gap-4 mb-6"
+        >
+          <h1 className="uppercase font-bold text-lg text-white">👨‍⚕️ Doctors</h1>
+
+          <div
+            className={`flex-grow flex items-center rounded-xl p-2 overflow-hidden ${
+              theme === "dark"
+                ? "bg-white/[0.02] border border-white/10"
+                : "bg-black/[0.02] border border-black/10"
+            } backdrop-blur-md shadow-sm`}
+          >
+            <Search className="h-5 w-5 flex-none text-gray-500 dark:text-gray-400 ml-3" />
+            <input
+              type="text"
+              placeholder="Search doctors..."
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="flex-1 bg-transparent outline-none text-gray-700 dark:text-gray-300 py-2 px-4 text-sm placeholder:text-gray-500"
+              value={searchTerm}
+            />
+          </div>
+
+          <div
+            className={`flex rounded-xl overflow-hidden ${
+              theme === "dark"
+                ? "bg-white/[0.02] border border-white/10"
+                : "bg-black/[0.02] border border-black/10"
+            } backdrop-blur-md`}
+          >
+            {["All", "Men", "Women"].map((gender) => (
+              <motion.button
+                key={gender}
+                type="button"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() =>
+                  setSelectedGender(gender as "All" | "Men" | "Women")
+                }
+                className={`px-4 py-2 text-xs font-bold transition-all ${
+                  selectedGender === gender
+                    ? "bg-[#18E614]/40 text-white"
+                    : theme === "dark"
+                    ? "text-gray-400 hover:text-gray-200"
+                    : "text-gray-700 hover:text-gray-900"
                 }`}
               >
-                <td className="p-4 flex items-center gap-4">
-                  <div className="w-10 h-10 max-sm:w-8 max-sm:h-8 bg-gray-200 dark:bg-gray-700 rounded-full lg:flex lg:items-center lg:justify-center text-gray-500 dark:text-gray-300 font-bold text-sm max-sm:text-xs uppercase hidden">
-                    {doctor.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .slice(0, 2)}
-                  </div>
-                  <span className="text-sm max-sm:text-xs">{doctor.name}</span>
-                </td>
-                <td className="p-4 text-sm max-sm:text-xs">{doctor.role}</td>
-                <td className="p-4 text-[#ff0000] font-bold text-sm max-sm:text-xs">
-                  {doctor.appointments}
-                </td>
-                <td className="p-4">
-                  <Link to={`/chats/${doctor.id}`}>
-                    <button
-                      type="button"
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <img
-                        src={chats}
-                        alt="Chat"
-                        className="hover:w-5 hover:h-5 hover:transition-all"
-                      />
-                    </button>
-                  </Link>
-                </td>
-                <td className="p-4">
-                  <button
-                    type="button"
-                    onClick={() => handleBookClick(doctor.id)}
-                    className={`px-5 sm:px-6 py-2 rounded-full font-bold border hover:-translate-y-1 transition-all duration-300 hover:border-t hover:border-b text-xs ${
-                      doctor.booked
-                        ? theme === "dark"
-                          ? "bg-[#1d1b1b]"
-                          : "bg-zinc-100"
-                        : theme === "dark"
-                        ? "bg-background hover:bg-black hover:shadow-[0_2px_0_0_rgba(204,255,0,0.811)] hover:border-[#18E614]"
-                        : "hover:bg-zinc-100 bg-white hover:border-black hover:shadow-[0_2px_0_0_rgba(0,0,0,0.811)]"
+                {gender}
+              </motion.button>
+            ))}
+          </div>
+        </motion.div>
+
+        <div className="w-full overflow-x-auto scrollbar-custom max-h-96">
+          <table className="w-full">
+            <thead>
+              <tr
+                className={`border-b ${
+                  theme === "dark"
+                    ? "border-white/10 text-gray-300"
+                    : "border-black/10 text-gray-700"
+                }`}
+              >
+                <th className="px-4 py-3 text-left text-xs uppercase font-bold tracking-wider">
+                  Name
+                </th>
+                <th className="px-4 py-3 text-left text-xs uppercase font-bold tracking-wider">
+                  Role
+                </th>
+                <th className="px-4 py-3 text-left text-xs uppercase font-bold tracking-wider">
+                  Appointments
+                </th>
+                <th className="px-4 py-3 text-center text-xs uppercase font-bold tracking-wider">
+                  Chat
+                </th>
+                <th className="px-4 py-3 text-center text-xs uppercase font-bold tracking-wider">
+                  Action
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedDoctors.map((doctor, index) => (
+                <motion.tr
+                  key={doctor.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className={`border-b ${
+                    theme === "dark"
+                      ? "border-white/5 hover:bg-white/[0.02]"
+                      : "border-black/5 hover:bg-black/[0.02]"
+                  } transition-colors`}
+                >
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 ${
+                          theme === "dark"
+                            ? "bg-gradient-to-br from-[#18E614]/30 to-[#18E614]/20 border border-[#18E614]/40"
+                            : "bg-gradient-to-br from-[#18E614]/20 to-[#18E614]/10 border border-[#18E614]/20"
+                        }`}
+                      >
+                        {doctor.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .slice(0, 2)}
+                      </div>
+                      <div>
+                        <p
+                          className={`font-semibold text-sm ${
+                            theme === "dark" ? "text-white" : "text-gray-900"
+                          }`}
+                        >
+                          {doctor.name}
+                        </p>
+                      </div>
+                    </div>
+                  </td>
+                  <td
+                    className={`px-4 py-3 text-sm ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-700"
                     }`}
                   >
-                    {doctor.booked ? "BOOKED" : "BOOK"}
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                    {doctor.role}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-[#18E614]/20 text-[#12B80E] border border-[#18E614]/40">
+                      {doctor.appointments}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <Link to={`/chats/${doctor.id}`}>
+                      <motion.button
+                        whileHover={{ scale: 1.15 }}
+                        whileTap={{ scale: 0.9 }}
+                        type="button"
+                        className="inline-flex items-center justify-center p-2 rounded-lg hover:bg-white/10 transition-all"
+                      >
+                        <img src={chats} alt="Chat" className="w-5 h-5" />
+                      </motion.button>
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <motion.button
+                      type="button"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handleBookClick(doctor.id)}
+                      className={`px-4 py-1.5 rounded-full font-bold text-xs transition-all ${
+                        doctor.booked
+                          ? theme === "dark"
+                            ? "bg-white/5 border border-white/10 text-gray-500"
+                            : "bg-black/5 border border-black/10 text-gray-500"
+                          : theme === "dark"
+                          ? "bg-gradient-to-r from-[#18E614] to-[#12B80E] text-white hover:shadow-lg hover:shadow-[#18E614]/40"
+                          : "bg-gradient-to-r from-[#18E614] to-[#12B80E] text-white hover:shadow-lg hover:shadow-[#18E614]/30"
+                      }`}
+                    >
+                      {doctor.booked ? "BOOKED" : "BOOK"}
+                    </motion.button>
+                  </td>
+                </motion.tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-      {/* Pagination */}
-      <div className="mt-4 flex justify-end">
-        <Pagination>
-          <PaginationContent className="cursor-pointer">
-            <PaginationItem>
-              <PaginationPrevious
-                onClick={page === 1 ? undefined : () => setPage((p) => Math.max(1, p - 1))}
-                className={page === 1 ? "pointer-events-none opacity-50" : ""}
-              />
-            </PaginationItem>
+        <div className="mt-6 flex justify-between items-center">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+              page === 1
+                ? "opacity-50 cursor-not-allowed"
+                : theme === "dark"
+                ? "bg-white/10 hover:bg-white/20"
+                : "bg-black/10 hover:bg-black/20"
+            }`}
+          >
+            ← Previous
+          </motion.button>
+
+          <div className="flex gap-2">
             {[...Array(totalPages)].map((_, i) => (
-              <PaginationItem key={i}>
-                <PaginationLink
-                  isActive={page === i + 1}
-                  onClick={() => setPage(i + 1)}
-                >
-                  {i + 1}
-                </PaginationLink>
-              </PaginationItem>
+              <motion.button
+                key={i}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setPage(i + 1)}
+                className={`w-8 h-8 rounded-lg font-bold text-xs transition-all ${
+                  page === i + 1
+                    ? "bg-[#18E614]/40 text-white"
+                    : theme === "dark"
+                    ? "bg-white/10 hover:bg-white/20"
+                    : "bg-black/10 hover:bg-black/20"
+                }`}
+              >
+                {i + 1}
+              </motion.button>
             ))}
-            <PaginationItem>
-              <PaginationNext
-                onClick={page === totalPages ? undefined : () => setPage((p) => Math.min(totalPages, p + 1))}
-                className={page === totalPages ? "pointer-events-none opacity-50" : ""}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </div>
+          </div>
 
-      <Link to={"/doctors"} className="mt-6 flex justify-center">
-        <button
-          type="button"
-          className={`px-6 sm:px-8 py-2 sm:py-3 rounded-full font-bold border hover:-translate-y-1 transition-all duration-300 hover:border-t hover:border-b text-sm ${
-            theme === "dark"
-              ? "bg-background hover:bg-black hover:shadow-[0_2px_0_0_rgba(204,255,0,0.811)] hover:border-[#18E614]"
-              : "hover:bg-zinc-100 bg-white hover:border-black hover:shadow-[0_2px_0_0_rgba(0,0,0,0.811)]"
-          }`}
-        >
-          GO TO DOCTORS
-        </button>
-      </Link>
-    </div>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+            className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+              page === totalPages
+                ? "opacity-50 cursor-not-allowed"
+                : theme === "dark"
+                ? "bg-white/10 hover:bg-white/20"
+                : "bg-black/10 hover:bg-black/20"
+            }`}
+          >
+            Next →
+          </motion.button>
+        </div>
+
+        <Link to={"/doctors"} className="mt-8 flex justify-center">
+          <motion.button
+            type="button"
+            whileHover={{ y: -2, scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className={`px-8 py-3 rounded-xl font-bold text-sm transition-all ${
+              theme === "dark"
+                ? "bg-gradient-to-r from-[#18E614] to-[#12B80E] text-white hover:shadow-lg hover:shadow-[#18E614]/40"
+                : "bg-gradient-to-r from-[#18E614] to-[#12B80E] text-white hover:shadow-lg hover:shadow-[#18E614]/30"
+            }`}
+          >
+            View All Doctors →
+          </motion.button>
+        </Link>
+      </div>
+    </motion.div>
   );
 };
 

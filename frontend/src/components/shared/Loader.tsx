@@ -27,17 +27,17 @@ function Loader() {
         <div className="relative mb-8">
           <div 
             className={`w-32 h-32 rounded-full border-2 border-[#1e5c1d8b] flex items-center justify-center mx-auto transition-all duration-2000 ease-in-out ${
-              breathe ? 'scale-110 border-emerald-300/70' : 'scale-100 border-[#18E614a1]'
+              breathe ? 'scale-110 border-[#18E614]/70' : 'scale-100 border-[#18E614a1]'
             }`}
           >
             {/* Inner circle with brain */}
             <div 
-              className={`w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500/20 to-teal-500/20 backdrop-blur-sm flex items-center justify-center transition-all duration-2000 ${
+              className={`w-20 h-20 rounded-full bg-gradient-to-br from-[#18E614]/20 to-teal-500/20 backdrop-blur-sm flex items-center justify-center transition-all duration-2000 ${
                 breathe ? 'scale-105' : 'scale-100'
               }`}
             >
               <Brain 
-                className={`text-emerald-400 transition-all duration-2000 ${
+                className={`text-[#18E614] transition-all duration-2000 ${
                   breathe ? 'scale-110' : 'scale-100'
                 }`} 
                 size={36} 
@@ -47,17 +47,17 @@ function Loader() {
           
           {/* Ripple effects */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-40 h-40 border border-emerald-400/20 rounded-full animate-ping" style={{animationDuration: '3s'}}></div>
+            <div className="w-40 h-40 border border-[#18E614]/20 rounded-full animate-ping" style={{animationDuration: '3s'}}></div>
           </div>
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-48 h-48 border border-emerald-400/10 rounded-full animate-ping" style={{animationDuration: '4s', animationDelay: '1s'}}></div>
+            <div className="w-48 h-48 border border-[#18E614]/10 rounded-full animate-ping" style={{animationDuration: '4s', animationDelay: '1s'}}></div>
           </div>
         </div>
 
         {/* Brand text */}
         <div className="mb-6">
           <h2 className="text-3xl font-light text-white mb-2 tracking-wide">
-            Mental<span className="text-emerald-400 font-medium">Verse</span>
+            Mental<span className="text-[#18E614] font-medium">Verse</span>
           </h2>
           <p className="text-gray-400 text-sm font-light">
             Connecting minds, securing wellness
@@ -97,7 +97,7 @@ function Loader() {
             </div>
             
             {/* Connecting lines */}
-            <div className="absolute top-1 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-400/30 to-transparent"></div>
+            <div className="absolute top-1 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#18E614]/30 to-transparent"></div>
           </div>
         </div>
       </div>

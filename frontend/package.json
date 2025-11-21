@@ -41,7 +41,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dompurify": "^3.2.6",
-    "framer-motion": "^12.23.0",
+    "framer-motion": "^12.23.23",
     "gsap": "^3.13.0",
     "lucide-react": "^0.544.0",
     "moment": "^2.30.1",

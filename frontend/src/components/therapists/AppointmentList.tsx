@@ -106,7 +106,7 @@ const mockAppointments: Appointment[] = [
 ];
 
 interface AppointmentListProps {
-  className: string;
+  className?: string;
 }
 
 const AppointmentList: React.FC<AppointmentListProps> = ({ className }) => {
@@ -159,79 +159,81 @@ const AppointmentList: React.FC<AppointmentListProps> = ({ className }) => {
   const recentAppointments = appointments.filter(apt => apt.status === 'completed');
 
   return (
-    <div className={`bg-transparent  rounded-3xl ${className}`}>
-      <div className="mb-10">
-        <h3 className="text-md font-semibold text-foreground mb-3">Today's Appointments</h3>
-        <div className="space-y-5">
-          {upcomingAppointments.map((appointment) => (
-            <div key={appointment.id} className="bg-background p-3 rounded-lg border border-border">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-[#18E614] rounded-full flex items-center justify-center text-white font-semibold text-xs">
-                    {appointment.patientAvatar}
+    <div className={`bg-transparent rounded-3xl h-full flex flex-col overflow-hidden scrollbar-custom ${className}`}>
+      <div className="flex-1 overflow-y-auto scrollbar-custom p-4">
+        <div className="mb-8">
+          <h3 className="text-md font-semibold text-foreground mb-3">Today's Appointments</h3>
+          <div className="space-y-5">
+            {upcomingAppointments.map((appointment) => (
+              <div key={appointment.id} className="bg-background p-3 rounded-lg border border-border">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-[#18E614] rounded-full flex items-center justify-center text-white font-semibold text-xs">
+                      {appointment.patientAvatar}
+                    </div>
+                    <div>
+                      <div className="font-medium text-sm text-foreground">{appointment.patientName}</div>
+                      <div className="text-xs text-muted-foreground">{appointment.condition}</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="font-medium text-sm text-foreground">{appointment.patientName}</div>
-                    <div className="text-xs text-muted-foreground">{appointment.condition}</div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm font-medium text-foreground">{appointment.time}</div>
-                  <div className="text-xs text-muted-foreground">{appointment.duration}</div>
-                </div>
-              </div>
-              <div className="flex items-center justify-between mt-2">
-                <div className="flex items-center space-x-2">
-                  <span className={`${getTypeColor(appointment.type)}`}>
-                    {getTypeIcon(appointment.type)}
-                  </span>
-                  <span className="text-xs text-muted-foreground capitalize">{appointment.type}</span>
-                </div>
-                <div className="flex space-x-1">
-                  <button className="p-1 text-[#18E614] hover:bg-[#18E614]/10 rounded transition-colors">
-                    <MessageCircle className="h-3 w-3" />
-                  </button>
-                  <button className="p-1 text-[#F80D38] hover:bg-[#F80D38]/10 rounded transition-colors">
-                    <Calendar className="h-3 w-3" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {recentAppointments.length > 0 && (
-        <div>
-          <h3 className="text-md font-semibold text-foreground mb-3">Recent Appointments</h3>
-          <div className="space-y-2">
-            {recentAppointments.slice(0, 2).map((appointment) => (
-              <div key={appointment.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <div className="w-6 h-6 bg-gray-500 rounded-full flex items-center justify-center text-white font-semibold text-xs">
-                    {appointment.patientAvatar}
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-foreground">{appointment.patientName}</div>
-                    <div className="text-xs text-muted-foreground">{appointment.date} at {appointment.time}</div>
+                  <div className="text-right">
+                    <div className="text-sm font-medium text-foreground">{appointment.time}</div>
+                    <div className="text-xs text-muted-foreground">{appointment.duration}</div>
                   </div>
                 </div>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(appointment.status)}`}>
-                  {getStatusText(appointment.status)}
-                </span>
+                <div className="flex items-center justify-between mt-2">
+                  <div className="flex items-center space-x-2">
+                    <span className={`${getTypeColor(appointment.type)}`}>
+                      {getTypeIcon(appointment.type)}
+                    </span>
+                    <span className="text-xs text-muted-foreground capitalize">{appointment.type}</span>
+                  </div>
+                  <div className="flex space-x-1">
+                    <button className="p-1 text-[#18E614] hover:bg-[#18E614]/10 rounded transition-colors">
+                      <MessageCircle className="h-3 w-3" />
+                    </button>
+                    <button className="p-1 text-[#F80D38] hover:bg-[#F80D38]/10 rounded transition-colors">
+                      <Calendar className="h-3 w-3" />
+                    </button>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
         </div>
-      )}
 
-      <div className="mt-4 text-center">
-        <Link 
-          to="/therapist/appointments" 
-          className="text-sm text-[#18E614] hover:text-[#18E614]/80 transition-colors inline-block"
-        >
-          View All Appointments
-        </Link>
+        {recentAppointments.length > 0 && (
+          <div>
+            <h3 className="text-md font-semibold text-foreground mb-3">Recent Appointments</h3>
+            <div className="space-y-2">
+              {recentAppointments.slice(0, 2).map((appointment) => (
+                <div key={appointment.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-6 h-6 bg-gray-500 rounded-full flex items-center justify-center text-white font-semibold text-xs">
+                      {appointment.patientAvatar}
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-foreground">{appointment.patientName}</div>
+                      <div className="text-xs text-muted-foreground">{appointment.date} at {appointment.time}</div>
+                    </div>
+                  </div>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(appointment.status)}`}>
+                    {getStatusText(appointment.status)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="mt-6 text-center">
+          <Link 
+            to="/therapist/appointments" 
+            className="text-sm text-[#18E614] hover:text-[#18E614]/80 transition-colors inline-block"
+          >
+            View All Appointments
+          </Link>
+        </div>
       </div>
     </div>
   );

@@ -50,7 +50,7 @@ const chartConfig = {
   },
   women: {
     label: "WOMEN",
-    color: "#0DB16A",
+    color: "#18E614",
   },
   children: {
     label: "CHILDREN",

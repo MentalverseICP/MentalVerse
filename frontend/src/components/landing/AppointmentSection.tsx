@@ -14,7 +14,7 @@ export const AppointmentSection: React.FC = () => {
         >
           <div className="flex items-center justify-center mb-4">
             <div className="w-8 h-8 bg-[#18E614] rounded-lg flex items-center justify-center mr-3">
-              <Calendar className="w-4 h-4 text-primary-foreground" />
+              <Calendar className="w-4 h-4 text-[#18E614]-foreground" />
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground">
               Book An Appointment Today

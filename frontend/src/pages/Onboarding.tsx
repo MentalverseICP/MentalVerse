@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { authService } from '../services/backend';
-import { User, Stethoscope, ArrowUpRight, CheckCircle } from 'lucide-react';
+import { User, Stethoscope, ArrowUpRight, CheckCircle, ArrowLeft } from 'lucide-react';
 import SecureInput from '../components/ui/SecureInput';
 import { ValidationResult } from '../utils/inputSecurity';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface OnboardingFormData {
   firstName: string;
@@ -347,7 +348,7 @@ const Onboarding: React.FC = () => {
             {/* Login Button */}
             <button
               onClick={handleExistingUserLogin}
-              className="w-full bg-[#18E614] hover:bg-[#16d012] text-black font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
+              className="w-full bg-[#18E614] hover:bg-[#16d012] text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
             >
               <span>Continue to Dashboard</span>
               <ArrowUpRight className="w-4 h-4" />
@@ -403,50 +404,78 @@ const Onboarding: React.FC = () => {
           </div>
 
           {/* Progress Steps */}
-          <div className="flex items-center justify-center space-x-2">
+          <div className="flex items-center justify-center space-x-3">
             {[1, 2, 3].map((step) => (
-              <div
+              <motion.div
                 key={step}
-                className={`w-3 h-3 rounded-full ${
-                  step <= currentStep 
-                    ? 'bg-[#18E614]' 
-                    : 'bg-muted'
-                }`}
-              />
+                className="flex items-center"
+                animate={{ scale: step === currentStep ? 1.2 : 1 }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              >
+                <motion.div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm transition-all duration-300 ${
+                    step <= currentStep 
+                      ? 'bg-[#18E614] text-white' 
+                      : 'bg-muted text-muted-foreground'
+                  }`}
+                  animate={{
+                    boxShadow: step === currentStep ? '0 0 20px rgba(24, 230, 20, 0.3)' : 'none'
+                  }}
+                >
+                  {step <= currentStep - 1 ? <CheckCircle className="w-5 h-5" /> : step}
+                </motion.div>
+                {step < 3 && (
+                  <motion.div
+                    className={`w-8 h-1 mx-2 rounded-full transition-all duration-300 ${
+                      step < currentStep ? 'bg-[#18E614]' : 'bg-muted'
+                    }`}
+                    animate={{ scaleX: step < currentStep ? 1 : 0.5 }}
+                    transition={{ type: "spring", stiffness: 400 }}
+                  />
+                )}
+              </motion.div>
             ))}
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Step 1: Basic Information */}
-            {currentStep === 1 && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+            <AnimatePresence mode="wait">
+              {/* Step 1: Basic Information */}
+              {currentStep === 1 && (
+                <motion.div
+                  key="step-1"
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -50 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-4"
+                >
+                  <div className="grid grid-cols-2 gap-4">
+                    <SecureInput
+                      inputType="name"
+                      type="text"
+                      label="First Name"
+                      value={formData.firstName}
+                      onChange={(value, isValid) => handleInputChange('firstName', value, isValid)}
+                      onValidationChange={handleValidationChange('firstName')}
+                      placeholder="Enter first name"
+                      required
+                      maxLength={50}
+                      autoComplete="given-name"
+                    />
+                    <SecureInput
+                      inputType="name"
+                      type="text"
+                      label="Last Name"
+                      value={formData.lastName}
+                      onChange={(value, isValid) => handleInputChange('lastName', value, isValid)}
+                      onValidationChange={handleValidationChange('lastName')}
+                      placeholder="Enter last name"
+                      required
+                      maxLength={50}
+                      autoComplete="family-name"
+                    />
+                  </div>
                   <SecureInput
-                    inputType="name"
-                    type="text"
-                    label="First Name"
-                    value={formData.firstName}
-                    onChange={(value, isValid) => handleInputChange('firstName', value, isValid)}
-                    onValidationChange={handleValidationChange('firstName')}
-                    placeholder="Enter first name"
-                    required
-                    maxLength={50}
-                    autoComplete="given-name"
-                  />
-                  <SecureInput
-                    inputType="name"
-                    type="text"
-                    label="Last Name"
-                    value={formData.lastName}
-                    onChange={(value, isValid) => handleInputChange('lastName', value, isValid)}
-                    onValidationChange={handleValidationChange('lastName')}
-                    placeholder="Enter last name"
-                    required
-                    maxLength={50}
-                    autoComplete="family-name"
-                  />
-                </div>
-                <SecureInput
                   inputType="email"
                   type="email"
                   label="Email Address"
@@ -458,24 +487,33 @@ const Onboarding: React.FC = () => {
                   maxLength={100}
                   autoComplete="email"
                 />
-              </div>
-            )}
+                </motion.div>
+              )}
 
             {/* Step 2: Role Selection */}
             {currentStep === 2 && (
-              <div className="space-y-4">
+              <motion.div
+                key="step-2"
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -50 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-4"
+              >
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-4 text-center">
                     I am registering as a:
                   </label>
                   <div className="grid grid-cols-1 gap-4">
-                    <button
+                    <motion.button
                       type="button"
                       onClick={() => handleRoleSelect('patient')}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                       className={`p-6 border-2 rounded-xl text-left transition-all duration-200 ${
                         formData.role === 'patient'
-                          ? 'border-[#18E614] bg-[#18E614]/10'
-                          : 'border-input hover:border-[#18E614]/50'
+                          ? 'border-[#18E614] bg-[#18E614]/10 shadow-lg shadow-[#18E614]/20'
+                          : 'border-input hover:border-[#18E614]/50 hover:bg-accent/30'
                       }`}
                     >
                       <div className="flex items-center space-x-3">
@@ -485,15 +523,17 @@ const Onboarding: React.FC = () => {
                           <p className="text-sm text-muted-foreground">I need mental health support and care</p>
                         </div>
                       </div>
-                    </button>
+                    </motion.button>
                     
-                    <button
+                    <motion.button
                       type="button"
                       onClick={() => handleRoleSelect('therapist')}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                       className={`p-6 border-2 rounded-xl text-left transition-all duration-200 ${
                         formData.role === 'therapist'
-                          ? 'border-[#18E614] bg-[#18E614]/10'
-                          : 'border-input hover:border-[#18E614]/50'
+                          ? 'border-[#18E614] bg-[#18E614]/10 shadow-lg shadow-[#18E614]/20'
+                          : 'border-input hover:border-[#18E614]/50 hover:bg-accent/30'
                       }`}
                     >
                       <div className="flex items-center space-x-3">
@@ -503,14 +543,21 @@ const Onboarding: React.FC = () => {
                           <p className="text-sm text-muted-foreground">I provide mental health therapy services</p>
                         </div>
                       </div>
-                    </button>
+                    </motion.button>
                   </div>
                   {validationErrors.role && (
-                    <p className="text-red-500 text-xs mt-1">{validationErrors.role}</p>
+                    <motion.p 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="text-red-500 text-xs mt-2"
+                    >
+                      {validationErrors.role}
+                    </motion.p>
                   )}
                 </div>
-              </div>
+              </motion.div>
             )}
+            </AnimatePresence>
 
             {/* Step 3: Role-specific Information */}
             {currentStep === 3 && formData.role === 'therapist' && (
@@ -657,36 +704,47 @@ const Onboarding: React.FC = () => {
             )}
 
             {/* Navigation Buttons */}
-            <div className="flex justify-between pt-4">
+            <div className="flex justify-between pt-6 gap-4">
               {currentStep > 1 && (
-                <button
+                <motion.button
                   type="button"
+                  whileHover={{ x: -4 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => setCurrentStep(prev => prev - 1)}
-                  className="px-6 py-2 text-foreground hover:text-[#18E614] transition-colors"
+                  className="px-6 py-3 rounded-lg text-foreground hover:text-[#18E614] hover:bg-accent/50 border border-border/40 transition-all duration-300 flex items-center space-x-2 font-semibold"
                 >
-                  Back
-                </button>
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Back</span>
+                </motion.button>
               )}
               
               <div className="ml-auto">
                 {currentStep < 3 ? (
-                  <button
+                  <motion.button
                     type="button"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={handleContinue}
-                    className="px-6 py-2 bg-[#18E614] text-white rounded-lg hover:bg-[#18E614]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+                    className="px-8 py-3 bg-[#18E614] text-white rounded-lg hover:bg-[#18E614]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold shadow-lg hover:shadow-md hover:shadow-[#18E614]/30"
                   >
                     <span>Continue</span>
                     <ArrowUpRight className="w-4 h-4" />
-                  </button>
+                  </motion.button>
                 ) : (
-                  <button
+                  <motion.button
                     type="submit"
                     disabled={isSubmitting}
-                    className="px-6 py-2 bg-[#18E614] text-white rounded-lg hover:bg-[#18E614]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="px-8 py-3 bg-[#18E614] text-white rounded-lg hover:bg-[#18E614]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center space-x-2 font-semibold shadow-lg hover:shadow-md hover:shadow-[#18E614]/30"
                   >
                     {isSubmitting ? (
                       <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <motion.div 
+                          className="w-4 h-4 border-2 border-black border-t-transparent rounded-full"
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        />
                         <span>Setting up...</span>
                       </>
                     ) : (
@@ -695,11 +753,12 @@ const Onboarding: React.FC = () => {
                         <ArrowUpRight className="w-4 h-4" />
                       </>
                     )}
-                  </button>
+                  </motion.button>
                 )}
               </div>
             </div>
           </form>
+
         </div>
       </div>
 

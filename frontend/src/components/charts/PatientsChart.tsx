@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react"
 import { Label, Pie, PieChart } from "recharts"
+import { motion } from "framer-motion"
 import {
   Card,
   CardContent,
@@ -19,7 +20,7 @@ import { useTheme } from "../shared/theme-provider"
 const chartConfig = {
   men: {
     label: "Men",
-    color: "#0DB16A",
+    color: "#12B80E",
   },
   women: {
     label: "Women",
@@ -31,7 +32,6 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-// Mock API function for patient demographics
 const fetchPatientsData = async () => {
   await new Promise(resolve => setTimeout(resolve, 500))
   
@@ -62,6 +62,7 @@ type ChartDataItem = {
 };
 
 export default function PatientsChart({ className = "" }) {
+  const { theme } = useTheme()
   const [chartData, setChartData] = useState<ChartDataItem[]>([])
   const [loading, setLoading] = useState(true)
   const [lastUpdated, setLastUpdated] = useState(new Date())
@@ -87,145 +88,203 @@ export default function PatientsChart({ className = "" }) {
 
   useEffect(() => {
     fetchData()
-    const interval = setInterval(fetchData, 15000) // Update every 15 seconds
+    const interval = setInterval(fetchData, 15000)
     return () => clearInterval(interval)
   }, [])
 
   if (loading) {
     return (
-      <Card className={`flex flex-col h-full rounded-3xl shadow-md ${className}`}>
-        <CardHeader className="items-start pb-2 mb-0 px-3 pt-3 sm:px-6 sm:pt-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className={`relative flex flex-col h-full rounded-3xl overflow-hidden ${className}`}
+      >
+        <div className={`absolute inset-0 ${
+          theme === 'dark' ? 'bg-[#0B0B0C]/80' : 'bg-white/80'
+        } backdrop-blur-xl`} />
+        <div className="absolute inset-0 border border-white/10 rounded-3xl" />
+        <div className="absolute top-0 -right-20 w-40 h-40 bg-[#F80D38]/20 rounded-full blur-3xl" />
+        <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-[#FECA57]/20 rounded-full blur-3xl" />
+        
+        <CardHeader className="relative items-start pb-2 mb-0 px-6 pt-6">
           <CardTitle className="uppercase font-bold text-xs sm:text-sm">Patients</CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-1 justify-center items-center pb-0 px-3 sm:px-6">
-          <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-green-500"></div>
+        <CardContent className="relative flex flex-1 justify-center items-center pb-0 px-6">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#18E614]"></div>
         </CardContent>
-        <CardFooter className="flex-col gap-2 text-sm px-3 pb-3 sm:px-6 sm:pb-6">
+        <CardFooter className="relative flex-col gap-2 text-sm px-6 pb-6">
           <div className="text-gray-500 text-xs">Loading patient data...</div>
         </CardFooter>
-      </Card>
+      </motion.div>
     )
   }
 
   if (error) {
     return (
-      <Card className={`flex flex-col h-full rounded-3xl shadow-md ${className}`}>
-        <CardHeader className="items-start pb-2 mb-0 px-3 pt-3 sm:px-6 sm:pt-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className={`relative flex flex-col h-full rounded-3xl overflow-hidden ${className}`}
+      >
+        <div className={`absolute inset-0 ${
+          theme === 'dark' ? 'bg-[#0B0B0C]/80' : 'bg-white/80'
+        } backdrop-blur-xl`} />
+        <div className="absolute inset-0 border border-white/10 rounded-3xl" />
+        
+        <CardHeader className="relative items-start pb-2 mb-0 px-6 pt-6">
           <CardTitle className="uppercase font-bold text-xs sm:text-sm">Patients</CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-1 justify-center items-center pb-0 px-3 sm:px-6">
+        <CardContent className="relative flex flex-1 justify-center items-center pb-0 px-6">
           <div className="text-red-500 text-xs sm:text-sm text-center px-2">{error}</div>
         </CardContent>
-        <CardFooter className="flex-col gap-2 text-sm px-3 pb-3 sm:px-6 sm:pb-6">
+        <CardFooter className="relative flex-col gap-2 text-sm px-6 pb-6">
           <button 
             onClick={fetchData}
-            className="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-500 text-white rounded text-xs sm:text-sm hover:bg-blue-600 transition-colors"
+            className="px-4 py-2 bg-[#18E614] text-black rounded-full text-xs hover:bg-[#18E614]/90 transition-colors"
           >
             Retry
           </button>
         </CardFooter>
-      </Card>
+      </motion.div>
     )
   }
 
   return (
-    <Card className={`flex flex-col h-full rounded-3xl shadow-md ${className}`}>
-      <CardHeader className="flex-row items-start space-y-0 pb-0">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center w-full gap-1 sm:gap-0">
-          <CardTitle className="uppercase font-bold text-xs max-lg:text-md">
-            Patients
-            <span className="ml-2 inline-block w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full animate-pulse"></span>
-          </CardTitle>
-          <div className="text-xs text-gray-500 order-2 sm:order-none">
-            Updated: {lastUpdated.toLocaleTimeString([], { 
-              hour: '2-digit', 
-              minute: '2-digit',
-              hour12: false 
-            })}
-          </div>
-        </div>
-      </CardHeader>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -2 }}
+      transition={{ duration: 0.3, delay: 0.1 }}
+      className={`relative flex flex-col h-full rounded-3xl overflow-hidden ${className}`}
+    >
+      {/* Glassmorphic  */}
+      <div className={`absolute inset-0 ${
+        theme === 'dark' 
+          ? 'bg-[#0B0B0C]/80' 
+          : 'bg-white/80'
+      } backdrop-blur-xl`} />
       
-      <CardContent className="flex flex-1 justify-center pb-0">
-        <ChartContainer
-          config={chartConfig}
-          className="mx-auto aspect-square w-[200px] max-lg:w-[180px] max-md:w-[160px] max-sm:w-[140px] max-[400px]:w-[120px]"
-        >
-          <PieChart>
-            <ChartStyle id="patients-pie" config={chartConfig} />
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent hideLabel />}
-            />
-            <Pie
-              data={chartData}
-              dataKey="patients"
-              nameKey="gender"
-              innerRadius={50}
-              strokeWidth={2}
-              stroke="#fff"
-              className="focus:outline-none"
-            >
-              <Label
-                content={({ viewBox }) => {
-                  if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                    return (
-                      <text
-                        x={viewBox.cx}
-                        y={viewBox.cy}
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                        className="cursor-pointer"
-                        onClick={fetchData}
-                      >
-                        <tspan
+      {/* Border */}
+      <div className="absolute inset-0 rounded-3xl border border-white/10" />
+      
+      {/* Corner glows */}
+      <div className="absolute top-0 -right-20 w-40 h-40 bg-[#F80D38]/10 rounded-full blur-3xl" />
+      <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-[#FECA57]/10 rounded-full blur-3xl" />
+      
+      {/* Top highlight */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+      
+      <Card className="relative flex flex-col h-full bg-transparent border-none shadow-none">
+        <CardHeader className="flex-row items-start space-y-0 pb-3">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center w-full gap-1 sm:gap-0">
+            <CardTitle className="uppercase font-bold text-xs flex items-center gap-2">
+              Patients
+              <motion.span 
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="inline-block w-2 h-2 bg-[#18E614] rounded-full"
+              />
+            </CardTitle>
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              {lastUpdated.toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: false 
+              })}
+            </div>
+          </div>
+        </CardHeader>
+        
+        <CardContent className="flex flex-1 justify-center pb-0">
+          <ChartContainer
+            config={chartConfig}
+            className="mx-auto aspect-square w-[200px] max-lg:w-[180px] max-md:w-[160px] max-sm:w-[140px]"
+          >
+            <PieChart>
+              <ChartStyle id="patients-pie" config={chartConfig} />
+              <ChartTooltip
+                cursor={false}
+                content={<ChartTooltipContent hideLabel />}
+              />
+              <Pie
+                data={chartData}
+                dataKey="patients"
+                nameKey="gender"
+                innerRadius={50}
+                strokeWidth={2}
+                stroke={theme === 'dark' ? '#1f1f1f' : '#fff'}
+                className="focus:outline-none"
+              >
+                <Label
+                  content={({ viewBox }) => {
+                    if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                      return (
+                        <text
                           x={viewBox.cx}
                           y={viewBox.cy}
-                          className="text-2xl max-lg:text-xl max-md:text-lg max-sm:text-base max-[400px]:text-sm font-bold fill-green-500 dark:fill-white"
+                          textAnchor="middle"
+                          dominantBaseline="middle"
+                          className="cursor-pointer"
+                          onClick={fetchData}
                         >
-                          {totalPatients >= 1000000 
-                            ? `${Math.floor(totalPatients / 1000000)}M` 
-                            : totalPatients.toLocaleString()
-                          }
-                        </tspan>
-                        <tspan
-                          x={viewBox.cx}
-                          y={(viewBox.cy || 0) + 24}
-                          className="fill-green-500 dark:fill-white text-[10px] max-sm:text-[9px] max-[400px]:text-[8px] font-bold uppercase tracking-wide"
-                        >
-                          Patients
-                        </tspan>
-                      </text>
-                    )
-                  }
-                }}
-              />
-            </Pie>
-          </PieChart>
-        </ChartContainer>
-      </CardContent>
-      
-      <CardFooter className="flex-col gap-2">
-        <div className="flex flex-wrap items-center gap-4 max-sm:grid max-sm:grid-cols-3 max-sm:gap-2">
-          {chartData.map((item, index) => {
-            const colors = ['#0DB16A', '#F80D38', '#FECA57']
-            const labels = ['Men', 'Women', 'Children']
-            const percentage = Math.round((item.patients / totalPatients) * 100)
-            return (
-              <div key={`${labels[index]}-${index}`} className="flex items-center gap-1 min-w-0">
-                <div 
-                  className="w-2 h-2 max-sm:w-1.5 max-sm:h-1.5 rounded-full flex-shrink-0" 
-                  style={{ backgroundColor: colors[index] }}
+                          <tspan
+                            x={viewBox.cx}
+                            y={viewBox.cy}
+                            className={`text-2xl max-lg:text-xl max-md:text-lg font-bold ${
+                              theme === 'dark' ? 'fill-white' : 'fill-[#18E614]'
+                            }`}
+                          >
+                            {totalPatients >= 1000000 
+                              ? `${Math.floor(totalPatients / 1000000)}M` 
+                              : totalPatients.toLocaleString()
+                            }
+                          </tspan>
+                          <tspan
+                            x={viewBox.cx}
+                            y={(viewBox.cy || 0) + 24}
+                            className={`text-[10px] font-bold uppercase tracking-wide ${
+                              theme === 'dark' ? 'fill-gray-400' : 'fill-gray-600'
+                            }`}
+                          >
+                            Patients
+                          </tspan>
+                        </text>
+                      )
+                    }
+                  }}
                 />
-                <span className="font-semibold text-[8px] max-sm:text-[10px] tracking-wide truncate">
-                  {labels[index]}: {percentage}%
-                </span>  
-              </div>
-            )
-          })}
-        </div>
-      </CardFooter>
-    </Card>
+              </Pie>
+            </PieChart>
+          </ChartContainer>
+        </CardContent>
+        
+        <CardFooter className="flex-col gap-2 relative">
+          <div className="flex flex-wrap items-center gap-4 max-sm:grid max-sm:grid-cols-3 max-sm:gap-2">
+            {chartData.map((item, index) => {
+              const colors = ['#18E614', '#F80D38', '#FECA57']
+              const labels = ['Men', 'Women', 'Children']
+              const percentage = Math.round((item.patients / totalPatients) * 100)
+              return (
+                <motion.div 
+                  key={`${labels[index]}-${index}`}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="flex items-center gap-1 min-w-0"
+                >
+                  <div 
+                    className="w-2 h-2 max-sm:w-1.5 max-sm:h-1.5 rounded-full flex-shrink-0" 
+                    style={{ backgroundColor: colors[index] }}
+                  />
+                  <span className="font-semibold text-[8px] max-sm:text-[10px] tracking-wide truncate">
+                    {labels[index]}: {percentage}%
+                  </span>  
+                </motion.div>
+              )
+            })}
+          </div>
+        </CardFooter>
+      </Card>
+    </motion.div>
   )
 }
-

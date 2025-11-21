@@ -47,7 +47,7 @@ export const TestimonialsSection: React.FC = () => {
               transition={{ duration: 0.8, delay: index * 0.2 }}
               viewport={{ once: true }}
               whileHover={{ scale: 1.02 }}
-              className="bg-card border border-border/30 rounded-xl p-6 hover:shadow-lg transition-all duration-300"
+              className="bg-card border border-border/30 rounded-xl p-6 hover:shadow-lg hover:border-[#18E614]/70 transition-all duration-300"
             >
               <div className="flex items-start space-x-4">
                 <div className="w-8 h-8 bg-[#18E614]/20 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">

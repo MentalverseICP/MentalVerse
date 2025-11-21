@@ -82,12 +82,13 @@ export const Footer: React.FC = () => {
                       key={social.label}
                       href={social.href}
                       target='_blank'
-                      whileHover={{ scale: 1.1 }}
+                      whileHover={{ scale: 1.1, rotate: 5 }}
+                      transition={{ type: "spring", stiffness: 400 }}
                       whileTap={{ scale: 0.95 }}
-                      className="w-10 h-10 bg-muted hover:bg-primary rounded-lg flex items-center justify-center transition-colors duration-300 group"
+                      className="w-10 h-10 bg-muted hover:bg-[#18E614]/30 rounded-lg flex items-center justify-center transition-colors duration-300 group"
                       aria-label={social.label}
                     >
-                      <social.icon className="w-5 h-5 text-muted-foreground group-hover:text-primary-foreground" />
+                      <social.icon className="w-5 h-5 text-muted-foreground group-hover:text-[#18E614]-foreground" />
                     </motion.a>
                   ))}
                 </div>

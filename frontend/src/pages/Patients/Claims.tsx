@@ -1,10 +1,8 @@
 import React, { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/Button";
-import { useSidebar } from "@/components/ui/Sidebar";
-import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/components/shared/theme-provider";
+import { motion } from "framer-motion";
+import { Gift, Search } from "lucide-react";
 
 const claimsData = [
   {
@@ -26,16 +24,16 @@ const claimsData = [
 ];
 
 const statusColors: Record<string, string> = {
-  Pending: "bg-yellow-500",
-  Approved: "bg-green-500",
-  Rejected: "bg-red-500",
+  Pending:
+    "bg-yellow-500/20 border-yellow-500/30 text-yellow-600 dark:text-yellow-400",
+  Approved:
+    "bg-[#18E614]/20 border-[#18E614]/30 text-[#12B80E] dark:text-[#7FF54A]",
+  Rejected: "bg-red-500/20 border-red-500/30 text-red-600 dark:text-red-400",
 };
 
 const statusOptions = ["All", "Pending", "Approved", "Rejected"];
 
 const Claims: React.FC = () => {
-  const { state } = useSidebar();
-  const isCollapsed = state === "collapsed";
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const navigate = useNavigate();
@@ -49,118 +47,221 @@ const Claims: React.FC = () => {
   );
 
   return (
-    <div
-      className={cn(
-        "w-full flex items-center justify-center transition-colors duration-500 px-2 py-8 sm:p-4 md:p-8 p-5 relative max-[640px]:ml-16 max-[640px]:w-[calc(100vw-5rem)] max-[500px]:overflow-x-auto max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)] dark:bg-transparent",
-        isCollapsed ? "md:w-[90vw]" : "md:w-[80vw]"
-      )}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="w-full min-h-screen flex items-center justify-center transition-colors duration-500 px-2 py-8 sm:p-4 md:p-8 p-5 relative max-[640px]:ml-16 max-[640px]:w-[calc(100vw-5rem)] max-[500px]:overflow-x-auto max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)]"
     >
-      <div className="w-full mx-auto p-4 sm:p-8 md:p-12 mt-4 flex flex-col gap-8 transition-all duration-300">
-        {/* Header */}
-        <div className="mb-2">
-          <h1 className="font-extrabold text-2xl text-red-500 mb-2">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="w-full mx-auto p-4 sm:p-8 md:p-12 flex flex-col gap-8 transition-all duration-300"
+      >
+        <div>
+          <h1
+            className={`font-bold text-3xl sm:text-4xl mb-2 flex items-center gap-3 ${
+              theme === "dark" ? "text-white" : "text-gray-900"
+            }`}
+          >
+            <Gift className="w-8 h-8 text-[#18E614]" />
             Claims
           </h1>
-          <p className="text-gray-500 dark:text-gray-400">
+          <p
+            className={`text-sm ${
+              theme === "dark" ? "text-gray-400" : "text-gray-600"
+            }`}
+          >
             Submit a claim for medical expenses, lab tests, or other eligible
-            reimbursements. Track the status of your claims below.
+            reimbursements.
           </p>
         </div>
-        {/* Info Card */}
-        <div className="bg-[#18E614]dark:bg-gray-900 rounded-xl p-4 mb-4 border border-[#18E614] dark:border-gray-800 flex flex-col md:flex-row items-center gap-4 shadow-sm">
-          <div className="flex-1">
-            <h2 className="font-semibold text-black dark:text-white text-lg mb-1">
-              How to make a claim?
-            </h2>
-            <ul className="list-disc ml-5 text-gray-600 dark:text-gray-400 text-sm">
-              <li>Gather your medical receipts or documents.</li>
-              <li>
-                Click the{" "}
-                <span className="font-semibold text-[#18E614] dark:text-[#18E614]">
-                  New Claim
-                </span>{" "}
-                button.
-              </li>
-              <li>Fill in the claim form and upload your documents.</li>
-              <li>Track your claim status below.</li>
-            </ul>
-          </div>
-          <Button
-            className="rounded-xl bg-gradient-to-r from-[#6b9a41] to-[#18e614c0] text-white font-bold px-8 py-3 shadow-lg hover:from-[#18e614c4] hover:to-[#109326] transition-all"
-            onClick={() => navigate("/claims/new")}
-          >
-            New Claim
-          </Button>
-        </div>
-        {/* Search & Filter Bar */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-4">
-          <Input
-            className="w-full sm:w-1/2 rounded-xl bg-white dark:bg-gray-900 border border-[#18E614] dark:border-gray-700 text-black dark:text-white shadow-sm"
-            placeholder="Search claims by title or status"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <select
-            title="Status"
-            className="w-full sm:w-1/4 rounded-xl bg-white dark:bg-gray-900 border border-[#18E614] dark:border-gray-700 text-black dark:text-white shadow-sm px-4 py-2"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            {statusOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </div>
-        {/* Claims List */}
-        <div className="flex flex-col gap-4">
-          {filteredClaims.length === 0 && (
-            <div className="text-center text-gray-400">No claims found.</div>
-          )}
-          {filteredClaims.map((claim) => (
-            <div
-              key={claim.id}
-              className="flex flex-col md:flex-row items-start md:items-center justify-between bg-[#18E614]dark:bg-gray-900 rounded-xl p-4 border border-[#18E614] dark:border-gray-800 shadow hover:shadow-lg transition-all"
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className={`rounded-2xl p-6 sm:p-8 border ${
+            theme === "dark"
+              ? "bg-[#18E614]/20 border-[#18E614]/30"
+              : "bg-[#12B80E]/10 border-[#12B80E]/20"
+          }`}
+        >
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+            <div className="flex-1">
+              <h2
+                className={`font-bold text-lg mb-3 ${
+                  theme === "dark" ? "text-white" : "text-gray-900"
+                }`}
+              >
+                How to make a claim?
+              </h2>
+              <ul className="space-y-2">
+                {[
+                  "Gather your medical receipts or documents.",
+                  "Click the New Claim button.",
+                  "Fill in the claim form and upload your documents.",
+                  "Track your claim status below.",
+                ].map((item, i) => (
+                  <li
+                    key={i}
+                    className={`text-sm flex items-start gap-3 ${
+                      theme === "dark" ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
+                    <span className="text-emerald-500 font-bold mt-0.5">✓</span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              className="px-8 py-3 rounded-xl bg-[#18E614]/40 text-white font-bold text-sm hover:shadow-lg hover:shadow-[#18E614]/20 transition-all whitespace-nowrap"
+              onClick={() => navigate("/claims/new")}
             >
-              <div className="flex-1 mb-2 md:mb-0">
-                <div className="font-semibold text-black dark:text-white">
-                  {claim.title}
-                </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                  {claim.date}
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">
-                  {claim.description}
-                </div>
+              New Claim
+            </motion.button>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className={`relative rounded-3xl overflow-hidden ${
+            theme === "dark" ? "bg-[#0B0B0C]/60" : "bg-white/60"
+          } backdrop-blur-xl border border-white/10`}
+        >
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-[#18E614]/10 rounded-full blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl" />
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+
+          <div className="relative p-6 md:p-8">
+            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+              <div
+                className={`flex-grow flex items-center rounded-xl p-2 overflow-hidden ${
+                  theme === "dark"
+                    ? "bg-white/[0.02] border border-white/10"
+                    : "bg-black/[0.02] border border-black/10"
+                }`}
+              >
+                <Search className="h-5 w-5 flex-none text-gray-500 ml-3" />
+                <input
+                  type="text"
+                  placeholder="Search claims..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="flex-1 bg-transparent outline-none text-gray-700 dark:text-gray-300 py-2 px-4 text-sm"
+                />
               </div>
-              <div className="flex items-center gap-4 mt-2 md:mt-0">
-                <span
-                  className={`text-xs px-3 py-1 rounded-full text-white font-semibold ${
-                    statusColors[claim.status] || "bg-gray-500"
-                  }`}
-                >
-                  {claim.status}
-                </span>
-                <span className="font-bold text-black dark:text-white">
-                  {claim.amount}
-                </span>
-                <Button
-                  className={`px-6 sm:px-8 py-2 sm:py-3 rounded-full font-bold border hover:-translate-y-1 transition-all duration-300 hover:border-t hover:border-b text-sm ${
-                    theme === 'dark'
-                      ? 'bg-black hover:bg-black hover:shadow-[0_2px_0_0_rgba(24,230,20,0.811)] hover:border-[#18E614]'
-                      : 'bg-white text-[#18E614] hover:bg-zinc-100 hover:border-black hover:shadow-[0_2px_0_0_rgba(0,0,0,0.811)]'
-                  }`}
-                  onClick={() => navigate(`/claims/${claim.id}`)}
-                >
-                  View
-                </Button>
+
+              <div className="flex gap-2">
+                {statusOptions.map((option) => (
+                  <motion.button
+                    key={option}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setStatusFilter(option)}
+                    className={`px-4 py-2 rounded-lg font-semibold text-xs transition-all ${
+                      statusFilter === option
+                        ? "bg-[#18E614]/40 text-white"
+                        : theme === "dark"
+                        ? "bg-white/10 text-gray-300 hover:bg-white/20"
+                        : "bg-black/10 text-gray-700 hover:bg-black/20"
+                    }`}
+                  >
+                    {option}
+                  </motion.button>
+                ))}
               </div>
             </div>
-          ))}
-        </div>
-      </div>
-    </div>
+
+            <div className="space-y-3">
+              {filteredClaims.length > 0 ? (
+                filteredClaims.map((claim, index) => (
+                  <motion.div
+                    key={claim.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.35 + index * 0.05 }}
+                    className={`p-4 rounded-xl border ${
+                      theme === "dark"
+                        ? "bg-white/[0.02] border-white/10 hover:bg-white/[0.05]"
+                        : "bg-black/[0.02] border-black/10 hover:bg-black/[0.05]"
+                    } transition-all cursor-pointer group`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3
+                            className={`font-semibold ${
+                              theme === "dark" ? "text-white" : "text-gray-900"
+                            }`}
+                          >
+                            {claim.title}
+                          </h3>
+                          <span
+                            className={`text-xs font-bold px-3 py-1 rounded-full border ${
+                              statusColors[claim.status]
+                            }`}
+                          >
+                            {claim.status}
+                          </span>
+                        </div>
+                        <p
+                          className={`text-sm ${
+                            theme === "dark" ? "text-gray-400" : "text-gray-600"
+                          } mb-2`}
+                        >
+                          {claim.description}
+                        </p>
+                        <p
+                          className={`text-xs ${
+                            theme === "dark" ? "text-gray-500" : "text-gray-600"
+                          }`}
+                        >
+                          {claim.date}
+                        </p>
+                      </div>
+                      <p
+                        className={`font-bold text-lg ml-4 ${
+                          theme === "dark"
+                            ? "text-emerald-400"
+                            : "text-emerald-600"
+                        }`}
+                      >
+                        {claim.amount}
+                      </p>
+                    </div>
+                  </motion.div>
+                ))
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className={`p-8 text-center rounded-xl ${
+                    theme === "dark"
+                      ? "bg-white/[0.02] border border-white/10"
+                      : "bg-black/[0.02] border border-black/10"
+                  }`}
+                >
+                  <p
+                    className={`text-sm ${
+                      theme === "dark" ? "text-gray-400" : "text-gray-600"
+                    }`}
+                  >
+                    No claims found matching your filters.
+                  </p>
+                </motion.div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    </motion.div>
   );
 };
 

@@ -15,8 +15,10 @@ export const SmilesSection: React.FC = () => {
             viewport={{ once: true }}
             className="relative flex items-center"
           >
-            <div className="relative w-full h-full">
-              <img
+            <div className="relative w-full h-full overflow-hidden rounded-2xl">
+              <motion.img
+                whileHover={{ scale: 1.08 }}
+                transition={{ duration: 0.3 }}
                 src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2088&q=80"
                 alt="Supportive community and mental wellness journey"
                 className="absolute inset-0 w-full h-full object-cover rounded-2xl shadow-2xl"
@@ -60,7 +62,7 @@ export const SmilesSection: React.FC = () => {
             viewport={{ once: true }}
             className="flex items-center"
           >
-            <div className="bg-secondary/30 dark:bg-secondary/20 backdrop-blur-sm border border-border/5 rounded-2xl p-8 w-full h-full flex flex-col justify-center space-y-8">
+            <div className="bg-secondary/30 dark:bg-secondary/20 backdrop-blur-sm border border-border/5 rounded-2xl p-6 xl:p-8 w-full h-full flex flex-col justify-center space-y-8">
               <div>
                 <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
                   Where Smiles Blossom Into Stories
@@ -86,20 +88,20 @@ export const SmilesSection: React.FC = () => {
               </motion.button>
 
               {/* Feature Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-8">
                 <motion.div
                   whileHover={{ scale: 1.02 }}
-                  className="bg-card/60 backdrop-blur-sm border border-border/10 rounded-xl p-6 hover:shadow-lg transition-all duration-300"
+                  className="bg-card/60 backdrop-blur-sm border border-border/10 rounded-xl p-3 hover:shadow-lg transition-all duration-300"
                 >
-                  <div className="flex items-center space-x-3 mb-3">
+                  <div className="flex items-center space-x-2 mb-3">
                     <div className="w-10 h-10 bg-[#18E614]/20 rounded-lg flex items-center justify-center">
                       <Lock className="w-5 h-5 text-[#18E614]" />
                     </div>
-                    <h3 className="text-lg font-semibold text-foreground">
+                    <h3 className="text-lg lg:text-md xl:text-lg font-semibold text-foreground">
                       Confidentiality
                     </h3>
                   </div>
-                  <p className="text-muted-foreground text-sm">
+                  <p className="text-muted-foreground xl:text-sm lg:text-xs text-sm">
                     Your privacy is our priority. All conversations and data are
                     encrypted and protected with the highest security standards.
                   </p>
@@ -107,17 +109,17 @@ export const SmilesSection: React.FC = () => {
 
                 <motion.div
                   whileHover={{ scale: 1.02 }}
-                  className="bg-card/60 backdrop-blur-sm border border-border/10 rounded-xl p-6 hover:shadow-lg transition-all duration-300"
+                  className="bg-card/60 backdrop-blur-sm border border-border/10 rounded-xl p-3 hover:shadow-lg transition-all duration-300"
                 >
-                  <div className="flex items-center space-x-3 mb-3">
+                  <div className="flex items-center space-x-2 mb-3">
                     <div className="w-10 h-10 bg-[#18E614]/20 rounded-lg flex items-center justify-center">
                       <Accessibility className="w-5 h-5 text-[#18E614]" />
                     </div>
-                    <h3 className="text-lg font-semibold text-foreground">
+                    <h3 className="text-lg lg:text-md xl:text-lg font-semibold text-foreground">
                       Accessibility
                     </h3>
                   </div>
-                  <p className="text-muted-foreground text-sm">
+                  <p className="text-muted-foreground xl:text-sm lg:text-xs text-sm">
                     Available in multiple languages with features designed for
                     users of all abilities and backgrounds.
                   </p>

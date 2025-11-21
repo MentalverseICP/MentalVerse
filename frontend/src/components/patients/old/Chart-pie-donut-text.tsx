@@ -21,7 +21,7 @@ const chartConfig = {
   },
   anxiety: {
     label: "Anxiety",
-    color: "#0DB16A",
+    color: "#18E614",
   },
   depression: {
     label: "Depression",
@@ -224,7 +224,7 @@ export default function ChartDonut({ className = "" }) {
       <CardFooter className="flex-col gap-2">
         <div className="flex flex-wrap items-center gap-4 max-sm:grid max-sm:grid-cols-4 max-sm:gap-2">
           {chartData.map((item, index) => {
-            const colors = ['#0DB16A', '#FECA57', '#18E614', '#F80D38']
+            const colors = ['#18E614', '#FECA57', '#18E614', '#F80D38']
             const labels = ['Anxiety', 'Depression', 'Stress', 'Other']
             return (
               <div key={`${labels[index]}-${index}`} className="flex items-center gap-1 min-w-0">

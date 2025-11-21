@@ -77,7 +77,7 @@ export const Header: React.FC<{ onWalletDisconnect?: () => void }> = () => {
           : 'bg-background/95'
       }`}
     >
-      <div className="container mx-auto px-6 py-4">
+      <div className="mx-auto px-10 py-6">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <motion.div 
@@ -92,7 +92,7 @@ export const Header: React.FC<{ onWalletDisconnect?: () => void }> = () => {
           
           {/* Desktop Navigation */}
 
-          <nav className="hidden lg:flex items-center space-x-8">
+          <nav className="hidden xl:flex items-center space-x-8">
             {navigationItems.map((item) => (
               <motion.button
                 key={item.id}

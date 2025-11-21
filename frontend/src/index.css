@@ -252,6 +252,13 @@ input::-webkit-calendar-picker-indicator {
 }
 
 /* Scrollbar Track */
+/* .scrollbar-custom {
+  height: 6px; 
+  width: 3px;  
+  background: transparent; 
+  scrollbar-width: thin;
+} */
+
 .scrollbar-custom::-webkit-scrollbar {
   height: 6px; 
   width: 3px;  
@@ -269,13 +276,11 @@ input::-webkit-calendar-picker-indicator {
 .scrollbar-custom::-webkit-scrollbar-thumb:hover {
   background-color: #8180808b; /* Darker on hover */
   scrollbar-width: thin;
-
 }
 
 .scrollbar-custom::-webkit-scrollbar-track {
   background-color: inherit; /* Match the background of the table/page */
   scrollbar-width: thin;
-
 }
 
 .calendar-container {  /* Or whatever class you use for the calendar's parent */

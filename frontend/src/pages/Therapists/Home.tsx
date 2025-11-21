@@ -16,29 +16,34 @@ export default function DoctorHome() {
   return (
     <>
       <div
-        className={`grid grid-cols-12 justify-evenly max-sm:ml-[4.5rem] max-lg:ml-20 mt-4 mb-4 mr-2 w-fit max-sm:w-fit ${
+        className={`grid grid-cols-12 h-screen max-sm:ml-[4.5rem] max-lg:ml-20 mt-4 mb-4 mr-2 ${
           isCollapsed
             ? "gap-2 lg:gap-3 xl:gap-4 w-full max-md:w-fit md:pr-4 md:pl-2"
             : "gap-2 lg:gap-3 xl:gap-4 px-2"
         }`}
       >
-        <DiagnosticsChart className="col-start-1 col-span-3 max-xl:col-span-4 max-lg:col-span-6 max-md:col-span-12 max-sm:col-span-full dark:border-[#2f3339] border-2 bg-transparent" />
-        
-        <PatientsChart className="col-start-4 col-span-3 max-xl:col-start-5 max-xl:col-span-4 max-lg:col-start-7 max-lg:col-span-6 max-md:col-span-12 max-sm:col-span-full dark:border-[#2f3339] border-2 bg-transparent" />
-        
-        <HealthIndexChart className="col-start-7 col-span-3 max-xl:col-start-9 max-xl:col-span-4 max-lg:col-start-1 max-lg:col-span-6 max-md:col-span-12 max-sm:col-span-full dark:border-[#2f3339] border-2 bg-transparent" />
-        
-        <div className="col-start-10 col-span-3 max-xl:col-start-1 max-xl:col-span-full row-start-1 max-xl:row-start-4 row-span-3 max-md:row-start-4 max-sm:col-start-1 max-sm:col-span-full rounded-3xl shadow-lg dark:border-[#2f3339] border-2 bg-transparent p-4 flex flex-col gap-4">
-          <AppointmentsChart className="w-full" />
-          <AppointmentList className="mt-20 w-full" />
+        {/* Left Column - Appointments (3 columns) */}
+        <div className="col-span-12 lg:col-span-3 rounded-3xl shadow-lg dark:border-[#2f3339] border-2 bg-transparent p-4 flex flex-col gap-4 overflow-hidden">
+          <AppointmentsChart className="w-full h-1/3 flex-shrink-0" />
+          <div className="flex-1 overflow-hidden">
+            <AppointmentList className="w-full h-full overflow-y-auto scrollbar-custom" />
+          </div>
         </div>
-        
-        <MapComponent className="col-start-1 col-span-6 max-xl:col-span-8 row-span-1 max-lg:col-span-full max-md:col-span-12 max-sm:row-start-7 dark:border-[#2f3339] border-2 " />
-        
-        <CompanyGrowthChart className="row-span-1 col-start-7 col-span-3 max-xl:col-start-9 max-xl:col-span-4 max-lg:col-start-7 max-lg:row-start-2 max-lg:col-span-6 max-md:col-span-12 max-sm:col-span-full dark:border-[#2f3339] border-2 bg-transparent" />
-        
-        <PatientList className="col-start-1 col-span-9 max-xl:col-span-9 max-lg:col-span-full max-md:col-span-12 max-sm:col-span-full dark:border-[#2f3339] border-2 " />
 
+        {/* Main Content Grid - Right Side */}
+        <div className="col-span-12 lg:col-span-9 grid grid-cols-3 gap-2 lg:gap-3 xl:gap-4 overflow-y-auto scrollbar-custom">
+          <DiagnosticsChart className="col-start-1 col-span-3 max-xl:col-span-4 max-lg:col-span-6 max-md:col-span-12 max-sm:col-span-full dark:border-[#2f3339] border-2 bg-transparent h-80" />
+          
+          <PatientsChart className="col-start-1 col-span-3 max-xl:col-span-4 max-lg:col-span-6 max-md:col-span-12 max-sm:col-span-full dark:border-[#2f3339] border-2 bg-transparent h-80" />
+          
+          <HealthIndexChart className="col-start-1 col-span-3 max-xl:col-span-4 max-lg:col-span-6 max-md:col-span-12 max-sm:col-span-full dark:border-[#2f3339] border-2 bg-transparent h-80" />
+          
+          <MapComponent className="col-start-1 col-span-2 max-lg:col-span-full max-md:col-span-12 max-sm:col-span-full dark:border-[#2f3339] border-2 h-96" />
+          
+          <CompanyGrowthChart className="col-span-1 max-lg:col-span-full max-md:col-span-12 max-sm:col-span-full dark:border-[#2f3339] border-2 bg-transparent h-96" />
+          
+          <PatientList className="col-start-1 col-span-3 max-lg:col-span-full max-md:col-span-12 max-sm:col-span-full dark:border-[#2f3339] border-2" />
+        </div>
       </div>
     </>
   );

@@ -197,7 +197,7 @@ const SecureChat: React.FC<SecureChatProps> = ({ className }) => {
   }
 
   return (
-    <div className={cn('flex h-full bg-background', className)}>
+    <div className={cn('flex h-full bg-transparent', className)}>
       {/* Conversations Sidebar */}
       <div className={cn(
         'w-80 border-r border-border flex flex-col',

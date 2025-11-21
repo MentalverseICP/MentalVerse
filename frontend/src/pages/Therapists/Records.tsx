@@ -86,7 +86,7 @@ export default function MentalHealthRecords() {
   const getRecordTypeColor = (type: string) => {
     switch (type) {
       case 'session': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
-      case 'assessment': return 'text-white dark:text-white' + (theme === 'dark' ? ' bg-[#0DB16A]' : ' bg-[#18E614]');
+      case 'assessment': return 'text-white dark:text-white' + (theme === 'dark' ? ' bg-[#18E614]' : ' bg-[#18E614]');
       case 'diagnosis': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
       case 'treatment': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300';
       case 'progress': return 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-300';
@@ -97,7 +97,7 @@ export default function MentalHealthRecords() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'draft': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
-      case 'finalized': return 'text-white dark:text-white' + (theme === 'dark' ? ' bg-[#0DB16A]' : ' bg-[#18E614]');
+      case 'finalized': return 'text-white dark:text-white' + (theme === 'dark' ? ' bg-[#18E614]' : ' bg-[#18E614]');
       case 'archived': return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
       default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
     }

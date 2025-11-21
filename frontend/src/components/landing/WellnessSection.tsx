@@ -30,7 +30,7 @@ export const WellnessSection: React.FC = () => {
                 />
 
                 {/* Overlay Button */}
-                <motion.button className="absolute inset-0 bg-black/40 hover:bg-black/40 transition-all duration-300 rounded-2xl flex items-center justify-center group">
+                <motion.button className="absolute inset-0  bg-black/40 hover:bg-black/40 transition-all duration-300 rounded-2xl flex items-center justify-center group">
                   <div className="bg-[#18E614] rounded-full p-3 md:p-4 group-hover:scale-110 transition-transform duration-300">
                     <Play className="w-4 h-4 md:w-6 md:h-6 text-white ml-1" />
                   </div>
@@ -75,16 +75,24 @@ export const WellnessSection: React.FC = () => {
 
               {/* Small Images Grid */}
               <div className="grid grid-cols-2 gap-2 md:gap-4">
-                <img
-                  src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
-                  alt="Mental wellness and mindfulness practice"
-                  className="w-full h-24 md:h-32 object-cover rounded-xl shadow-lg"
-                />
-                <img
-                  src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
-                  alt="Mindfulness and stress relief"
-                  className="w-full h-24 md:h-32 object-cover rounded-xl shadow-lg"
-                />
+                <div className="overflow-hidden rounded-xl">
+                  <motion.img
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ duration: 0.3 }}
+                    src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+                    alt="Mental wellness and mindfulness practice"
+                    className="w-full h-24 md:h-32 object-cover rounded-xl shadow-lg"
+                  />
+                </div>
+                <div className="overflow-hidden rounded-xl">
+                  <motion.img
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ duration: 0.3 }}
+                    src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+                    alt="Mindfulness and stress relief"
+                    className="w-full h-24 md:h-32 object-cover rounded-xl shadow-lg"
+                  />
+                </div>
               </div>
             </div>
           </motion.div>
