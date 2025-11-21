@@ -1,0 +1,13 @@
+{
+  "canisters": {
+    "my_mcp_server": {
+      "main": "src/main.mo",
+      "type": "motoko"
+    }
+  },
+  "defaults": {
+    "build": {
+      "packtool": "mops sources"
+    }
+  }
+}

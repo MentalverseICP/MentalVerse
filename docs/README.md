@@ -1,6 +1,6 @@
 # MentalVerse Documentation
 
-[![Build Status](https://github.com/mentalverse/mentalverse-docs/workflows/Deploy/badge.svg)](https://github.com/mentalverse/mentalverse-docs/actions)
+[![Build Status](https://github.com/MentalverseICP/MentalVerse/workflows/Deploy/badge.svg)](https://github.com/MentalverseICP/MentalVerse/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Docusaurus](https://img.shields.io/badge/Built%20with-Docusaurus-blue)](https://docusaurus.io/)
 
@@ -64,7 +64,7 @@ This documentation covers:
 
 ```bash
 # Clone the repository
-git clone https://github.com/mentalverse/mentalverse-docs.git
+git clone https://github.com/MentalverseICP/MentalVerse.git
 cd mentalverse-docs
 
 # Install dependencies
@@ -180,7 +180,7 @@ We welcome contributions to improve the documentation!
 
 ## 📞 Support
 
-- **Documentation Issues**: [GitHub Issues](https://github.com/mentalverse/mentalverse-docs/issues)
+- **Documentation Issues**: [GitHub Issues](https://github.com/MentalverseICP/MentalVerse/issues)
 - **General Support**: [Discord Community](https://discord.gg/mentalverse)
 - **Email**: docs@mentalverse.com
 
@@ -192,7 +192,7 @@ This documentation is licensed under the [MIT License](LICENSE).
 
 - **Live Documentation**: https://docs.mentalverse.com
 - **MentalVerse Platform**: https://mentalverse.com
-- **GitHub Repository**: https://github.com/mentalverse/mentalverse-docs
+- **GitHub Repository**: https://github.com/MentalverseICP/MentalVerse
 - **Community Discord**: https://discord.gg/mentalverse
 - **Twitter**: https://twitter.com/mentalverse
 

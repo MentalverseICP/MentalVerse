@@ -75,10 +75,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mentalverse/mentalverse-docs.git"
+    "url": "https://github.com/MentalverseICP/MentalVerse.git"
   },
   "bugs": {
-    "url": "https://github.com/mentalverse/mentalverse-docs/issues"
+    "url": "https://github.com/MentalverseICP/MentalVerse/issues"
   },
   "homepage": "https://docs.mentalverse.com"
 }

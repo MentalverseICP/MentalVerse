@@ -30,12 +30,12 @@ const config = {
           sidebarPath: './sidebars.js',
           routeBasePath: '/',
           editUrl:
-            'https://github.com/willy264/MentalVerse/tree/main/docs/docs/',
+            'https://github.com/MentalverseICP/MentalVerse/tree/main/docs/docs/',
         },
         blog: {
           showReadingTime: true,
           editUrl:
-            'https://github.com/willy264/MentalVerse/tree/main/docs/blog/',
+            'https://github.com/MentalverseICP/MentalVerse/tree/main/docs/blog/',
         },
         theme: {
           customCss: './src/css/custom.css',
@@ -79,7 +79,7 @@ const config = {
           },
           {to: '/blog', label: 'Blog', position: 'left'},
           {
-            href: 'https://github.com/willy264/MentalVerse',
+            href: 'https://github.com/MentalverseICP/MentalVerse',
             label: 'GitHub',
             position: 'right',
           },
@@ -123,7 +123,7 @@ const config = {
       //         },
       //         {
       //           label: 'GitHub',
-      //           href: 'https://github.com/willy264/MentalVerse',
+      //           href: 'https://github.com/MentalverseICP/MentalVerse',
       //         },
       //       ],
       //     },

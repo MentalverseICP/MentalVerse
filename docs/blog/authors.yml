@@ -2,7 +2,7 @@ dr_sarah_chen:
   name: Dr. Sarah Chen
   title: Chief Medical Officer & Co-founder
   url: https://linkedin.com/in/drsarahchen
-  image_url: https://github.com/mentalverse.png
+  image_url: https://github.com/MentalverseICP.png
   page: true
   socials:
     x: drsarahchen
@@ -13,7 +13,7 @@ alex_blockchain:
   name: Alex Rodriguez
   title: Lead Blockchain Developer
   url: https://linkedin.com/in/alexrodriguez
-  image_url: https://github.com/mentalverse.png
+  image_url: https://github.com/MentalverseICP.png
   page: true
   socials:
     x: alexblockchain
@@ -24,7 +24,7 @@ dr_michael_wellness:
   name: Dr. Michael Thompson
   title: Head of AI & Mental Health Research
   url: https://linkedin.com/in/drmichaelthompson
-  image_url: https://github.com/mentalverse.png
+  image_url: https://github.com/MentalverseICP.png
   page: true
   socials:
     x: drmichaelwellness
@@ -35,16 +35,16 @@ mentalverse_team:
   name: MentalVerse Team
   title: Core Development Team
   url: https://mentalverse.com
-  image_url: https://github.com/mentalverse.png
+  image_url: https://github.com/MentalverseICP.png
   page: true
   socials:
     x: mentalverse
-    github: mentalverse
+    github: MentalverseICP
     discord: https://discord.gg/mentalverse
 
 emmanuel_joseph:
   name: Emmanuel Joseph
   title: Lead Blockchain Developer
-  url: https://github.com/willy264/MentalVerse
-  image_url: https://github.com/willy264/MentalVerse/blob/main/docs/static/img/logo.svg
+  url: https://github.com/MentalverseICP/MentalVerse
+  image_url: https://github.com/MentalverseICP/MentalVerse/blob/main/docs/static/img/logo.svg
   email: emmanuel@mentalverse.io

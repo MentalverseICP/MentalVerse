@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "my-mcp-server": {
+      "command": "dfx",
+      "args": ["canister", "call", "my_mcp_server", "list_tools", "()"],
+      "cwd": "./my_mcp_server",
+      "env": {
+        "BACKEND_CANISTER_ID": "cytcv-raaaa-aaaac-a4aoa-cai",
+        "MVT_TOKEN_CANISTER_ID": "c7seb-4yaaa-aaaac-a4aoq-cai"
+      }
+    }
+  }
+}

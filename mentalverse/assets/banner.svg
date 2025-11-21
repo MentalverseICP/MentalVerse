@@ -1,0 +1,65 @@
+<svg width="1200" height="400" viewBox="0 0 1200 400" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#16213e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f3460;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#4facfe;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="400" fill="url(#bgGradient)"/>
+  
+  <!-- Brain icon -->
+  <g transform="translate(100, 120)">
+    <path d="M80 40c-22.091 0-40 17.909-40 40 0 8.837 2.87 17.001 7.719 23.594C42.87 110.187 40 118.351 40 127.188c0 22.091 17.909 40 40 40s40-17.909 40-40c0-8.837-2.87-17.001-7.719-23.594C117.13 96.999 120 88.835 120 80c0-22.091-17.909-40-40-40z" fill="#4facfe" opacity="0.8"/>
+    <circle cx="65" cy="65" r="8" fill="#00f2fe"/>
+    <circle cx="95" cy="65" r="8" fill="#00f2fe"/>
+    <circle cx="80" cy="90" r="6" fill="#00f2fe"/>
+    <path d="M60 110 Q80 120 100 110" stroke="#00f2fe" stroke-width="3" fill="none"/>
+  </g>
+  
+  <!-- Main title -->
+  <text x="300" y="150" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="url(#textGradient)">
+    MentalVerse
+  </text>
+  
+  <!-- Subtitle -->
+  <text x="300" y="190" font-family="Arial, sans-serif" font-size="24" fill="#ffffff" opacity="0.9">
+    Decentralized Mental Health Platform
+  </text>
+  
+  <!-- Web3 elements -->
+  <g transform="translate(300, 220)">
+    <text font-family="Arial, sans-serif" font-size="16" fill="#4facfe">
+      ⚡ Powered by Internet Computer Protocol
+    </text>
+  </g>
+  
+  <g transform="translate(300, 250)">
+    <text font-family="Arial, sans-serif" font-size="16" fill="#4facfe">
+      🔒 Secure • Private • Decentralized
+    </text>
+  </g>
+  
+  <!-- Decorative elements -->
+  <circle cx="950" cy="100" r="30" fill="#4facfe" opacity="0.3"/>
+  <circle cx="1050" cy="150" r="20" fill="#00f2fe" opacity="0.4"/>
+  <circle cx="1100" cy="80" r="15" fill="#4facfe" opacity="0.5"/>
+  
+  <!-- Network nodes -->
+  <g transform="translate(900, 250)">
+    <circle cx="0" cy="0" r="8" fill="#4facfe"/>
+    <circle cx="40" cy="-20" r="6" fill="#00f2fe"/>
+    <circle cx="80" cy="10" r="7" fill="#4facfe"/>
+    <circle cx="120" cy="-10" r="5" fill="#00f2fe"/>
+    <line x1="0" y1="0" x2="40" y2="-20" stroke="#4facfe" stroke-width="2" opacity="0.6"/>
+    <line x1="40" y1="-20" x2="80" y2="10" stroke="#4facfe" stroke-width="2" opacity="0.6"/>
+    <line x1="80" y1="10" x2="120" y2="-10" stroke="#4facfe" stroke-width="2" opacity="0.6"/>
+  </g>
+</svg>
