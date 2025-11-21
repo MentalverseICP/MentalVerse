@@ -29,7 +29,7 @@ interface Event {
   doctor?: string;
 }
 
-type WeekDayPopoverProps = {
+type CreatePopoverProps = {
   closePopover: () => void;
   popoverPosition: { top: number; left: number };
   eventTitle: string;
@@ -63,7 +63,7 @@ const CreatePopover = ({
   deleteEvent,
   selectedDoctor,
   setSelectedDoctor,
-}: WeekDayPopoverProps) => {
+}: CreatePopoverProps) => {
   const doctors = doctorsData.map((doctor) => doctor.name);
 
   // Get the actual dates from selectedEvent or use current date
