@@ -80,7 +80,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className={`relative rounded-b-3xl max-lg:rounded-bl-none h-24 mx-2 p-5 max-sm:p-3 grid xl:gap-8 lg:gap-6 md:gap-4 sm:gap-3 gap-2 grid-flow-col items-center justify-between z-20 overflow-hidden ${className}`}
+      className={`relative rounded-b-3xl max-lg:rounded-b-none h-24 mx-2 p-5 max-sm:p-3 grid xl:gap-8 lg:gap-6 md:gap-4 sm:gap-3 gap-2 grid-flow-col items-center justify-between z-20 overflow-hidden ${className}`}
     >
       {/* Glassmorphic background */}
       <div
@@ -93,7 +93,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
       <div
         className={`absolute inset-0 border-2 ${
           theme === "dark" ? "border-white/10" : "border-black/15"
-        } dark:border-[#2f3339] rounded-b-3xl max-lg:rounded-bl-none`}
+        } dark:border-[#2f3339] rounded-b-3xl max-lg:rounded-b-none`}
       />
 
       {/* Accent glows */}

@@ -97,14 +97,14 @@ const Doctors: React.FC<DoctorsProps> = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className={`min-h-screen sm:p-4 md:p-8 w-full p-5 relative 
-      max-[640px]:ml-16 max-[640px]:w-[calc(100vw-5rem)] max-[500px]:overflow-x-auto
-      max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 
+      className={`min-h-screen lg:p-4 w-full relative 
+      max-[640px]:ml-16 max-[640px]:w-[calc(100vw-4rem)] max-[500px]:overflow-x-auto
+      max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-4
       max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)]`}
     >
       {/* Main Container with glassmorphic background */}
       <div
-        className={`rounded-3xl overflow-hidden backdrop-blur-xl border transition-all p-6 md:p-8 ${
+        className={`lg:rounded-3xl overflow-hidden backdrop-blur-xl border transition-all p-6 ${
           theme === "dark"
             ? "border-white/10 bg-[#0B0B0C]/60"
             : "border-black/15 bg-white/60"
@@ -260,7 +260,7 @@ const Doctors: React.FC<DoctorsProps> = ({
           </div>
 
           {/* Doctors Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 mb-8">
             {paginatedDoctors.map((doc, idx) => (
               <motion.div
                 key={doc.id}

@@ -8,21 +8,26 @@ const Chats: React.FC = () => {
   const { theme } = useTheme();
 
   return (
-    <div className="w-full h-screen flex relative sm:p-4 md:p-8 p-5 max-[640px]:ml-16 max-[640px]:w-[calc(100vw-5rem)] max-[500px]:overflow-x-auto max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-2 max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)]">
+    <div 
+      className={`min-h-screen lg:p-4 w-full relative 
+      max-[640px]:ml-16 max-[640px]:w-[calc(100vw-4rem)] max-[500px]:overflow-x-auto
+      max-sm:ml-[3rem] max-lg:ml-14 max-md:mr-10 -ml-4
+      max-sm:w-screen max-lg:w-[calc(100vw-3.5rem)]`}
+    >
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
         className="w-full"
       >
-        <div className="relative w-full h-full rounded-3xl overflow-hidden">
+        <div className="relative w-full h-full lg:rounded-3xl overflow-hidden">
           <div
             className={`absolute inset-0 ${
               theme === "dark" ? "bg-[#0B0B0C]/80" : "bg-white/80"
             } backdrop-blur-xl`}
           />
           <div
-            className={`absolute inset-0 rounded-3xl border ${
+            className={`absolute inset-0 lg:rounded-3xl border ${
               theme === "dark" ? "border-white/10" : "border-black/15"
             }`}
           />
